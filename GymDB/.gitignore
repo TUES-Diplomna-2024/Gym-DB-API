@@ -1,0 +1,5 @@
+/.vs
+/GymDB.API/bin
+/GymDB.API/obj
+/GymDB.API/appsettings.json
+/GymDB.API/appsettings.Development.json
