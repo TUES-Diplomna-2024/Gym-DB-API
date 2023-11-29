@@ -1,11 +1,19 @@
+using GymDB.API.Data;
+using GymDB.API.Services;
+using GymDB.API.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// DB Context
+builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql());
+
+// Custom services
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 

@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace GymDB.API.Data
+namespace GymDB.API.Data.ValidationAttributes
 {
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class BirthDate : ValidationAttribute
