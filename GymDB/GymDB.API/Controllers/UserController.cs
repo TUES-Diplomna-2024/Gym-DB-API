@@ -31,7 +31,7 @@ namespace GymDB.API.Controllers
             return Ok();
         }
 
-        [HttpGet("signin")]
+        [HttpPost("signin")]
         IActionResult ValidateSignInAttempt(UserSignInModel login)
         {
             if (!ModelState.IsValid)
