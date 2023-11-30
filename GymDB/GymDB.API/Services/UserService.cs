@@ -14,6 +14,9 @@ namespace GymDB.API.Services
             this.context = context;
         }
 
+        public List<User> GetAll()
+            => context.Users.ToList();
+
         public User? GetByEmail(string email)
             => context.Users.FirstOrDefault(user => user.Email == email);
 

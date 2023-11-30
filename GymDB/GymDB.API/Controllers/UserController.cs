@@ -11,13 +11,23 @@ namespace GymDB.API.Controllers
     {
         private readonly IUserService userService;
 
-        UserController(IUserService userService)
+        public UserController(IUserService userService)
         {
             this.userService = userService;
         }
 
+        [HttpGet]
+        public IActionResult GetAllUsers()
+        {
+            List<UserCompressedInfoModel> users = userService.GetAll()
+                                                             .Select(user => new UserCompressedInfoModel(user))
+                                                             .ToList();
+
+            return Ok(users);
+        }
+
         [HttpPost("signup")]
-        IActionResult SignUpNewUser(UserSignUpModel userInput)
+        public IActionResult SignUpNewUser(UserSignUpModel userInput)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -32,7 +42,7 @@ namespace GymDB.API.Controllers
         }
 
         [HttpPost("signin")]
-        IActionResult ValidateSignInAttempt(UserSignInModel login)
+        public IActionResult ValidateSignInAttempt(UserSignInModel login)
         {
             if (!ModelState.IsValid)
                 return BadRequest();

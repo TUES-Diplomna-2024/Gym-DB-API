@@ -14,7 +14,7 @@ namespace GymDB.API.Data.ValidationAttributes
 
             DateTime currDate = DateTime.Now;
             DateTime date;
-            bool isParsed = DateTime.TryParse((string)value, out date);
+            bool isParsed = DateTime.TryParse(value.ToString(), out date);
 
             if (!isParsed || date.Year < currDate.Year - 122 || date > currDate)
                 return false;

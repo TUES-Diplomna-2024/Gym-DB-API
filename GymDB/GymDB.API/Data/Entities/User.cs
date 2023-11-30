@@ -29,7 +29,7 @@ namespace GymDB.API.Data.Entities
         public string Email { get; set; }
 
         [BirthDate(ErrorMessage = "Invalid birth date!")]
-        public DateTime BirthDate { get; set; }
+        public DateOnly BirthDate { get; set; }
 
         [Password(ErrorMessage = "Invalid password!")]
         public string Password { get; set; }

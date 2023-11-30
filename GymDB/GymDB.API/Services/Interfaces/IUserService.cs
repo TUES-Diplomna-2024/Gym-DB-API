@@ -5,6 +5,8 @@ namespace GymDB.API.Services.Interfaces
 {
     public interface IUserService
     {
+        List<User> GetAll();
+
         User? GetByEmail(string email);
 
         User? GetByEmailAndPassword(string email, string password);
