@@ -11,11 +11,13 @@ namespace GymDB.API.Data.Entities
 
         public User(UserSignUpModel input)
         {
-            Id = Guid.NewGuid();
-            Username = input.Username;
-            Email = input.Email;
-            BirthDate = input.BirthDate;
-            Password = input.Password;
+            Id          = Guid.NewGuid();
+            Username    = input.Username;
+            Email       = input.Email;
+            Password    = input.Password;
+            BirthDate   = input.BirthDate;
+            OnCreated   = DateOnly.FromDateTime(DateTime.Now);
+            OnModified  = DateTime.Now;
         }
 
         [Key]
@@ -28,10 +30,14 @@ namespace GymDB.API.Data.Entities
         [EmailAddress(ErrorMessage = "Invalid email address!")]
         public string Email { get; set; }
 
+        [Password(ErrorMessage = "Invalid password!")]
+        public string Password { get; set; }
+
         [BirthDate(ErrorMessage = "Invalid birth date!")]
         public DateOnly BirthDate { get; set; }
 
-        [Password(ErrorMessage = "Invalid password!")]
-        public string Password { get; set; }
+        public DateOnly OnCreated { get; set; }
+
+        public DateTime OnModified { get; set; }
     }
 }

@@ -8,10 +8,11 @@ namespace GymDB.API.Models.User
     {
         public UserCompressedInfoModel(UserClass user)
         {
-            Id = user.Id;
-            Username = user.Username;
-            Email = user.Email;
+            Id        = user.Id;
+            Username  = user.Username;
+            Email     = user.Email;
             BirthDate = user.BirthDate;
+            OnCreated = user.OnCreated;
         }
 
         public Guid Id { get; set; }
@@ -21,5 +22,7 @@ namespace GymDB.API.Models.User
         public string Email { get; set; }
 
         public DateOnly BirthDate { get; set; }
+
+        public DateOnly OnCreated { get; set; }
     }
 }
