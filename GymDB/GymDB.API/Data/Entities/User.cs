@@ -16,8 +16,8 @@ namespace GymDB.API.Data.Entities
             Email       = input.Email;
             Password    = input.Password;
             BirthDate   = input.BirthDate;
-            OnCreated   = DateOnly.FromDateTime(DateTime.Now);
-            OnModified  = DateTime.Now;
+            OnCreated   = DateOnly.FromDateTime(DateTime.UtcNow);
+            OnModified  = DateTime.UtcNow;
         }
 
         [Key]
