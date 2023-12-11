@@ -1,49 +1,67 @@
 using GymDB.API.Data;
-using GymDB.API.Services;
 using GymDB.API.Services.Interfaces;
+using GymDB.API.Services;
 using Microsoft.EntityFrameworkCore;
 
-var builder = WebApplication.CreateBuilder(args);
-var settings = new ApplicationSettings(builder.Configuration);
-
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-builder.Services.AddCors(options =>
+namespace GymDB.API
 {
-    options.AddDefaultPolicy(
-        builder =>
+    public class Program
+    {
+        public static void ConfigureServices(WebApplicationBuilder builder, ApplicationSettings settings)
         {
-            builder.WithOrigins("*")
-                   .AllowAnyHeader()
-                   .AllowAnyMethod();
-        });
-});
+            builder.Services.AddControllers();
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
 
-// DB Context
-builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql(settings.PostgresConnectionString));
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(
+                    builder =>
+                    {
+                        builder.WithOrigins("*")
+                               .AllowAnyHeader()
+                               .AllowAnyMethod();
+                    });
+            });
 
-// Custom services
-builder.Services.AddScoped<IUserService, UserService>();
+            // DB Context
+            builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql(settings.PostgresConnectionString));
 
-var app = builder.Build();
+            // Custom services
+            builder.Services.AddScoped<IUserService, UserService>();
+        }
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+        public static void ConfigureApplication(WebApplication app)
+        {
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
+            app.UseCors();
+
+            app.UseHttpsRedirection();
+
+            app.UseAuthentication();
+
+            app.UseAuthorization();
+
+            app.MapControllers();
+        }
+
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
+            var settings = new ApplicationSettings(builder.Configuration);
+
+            ConfigureServices(builder, settings);
+
+            var app = builder.Build();
+
+            ConfigureApplication(app);
+
+            app.Run();
+        }
+    }
 }
-
-app.UseCors();
-
-app.UseHttpsRedirection();
-
-app.UseAuthentication();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();

@@ -4,9 +4,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GymDB.API.Models.User
 {
-    public class UserCompressedInfoModel
+    public class UserProfileModel
     {
-        public UserCompressedInfoModel(UserClass user)
+        public UserProfileModel(UserClass user)
         {
             Id        = user.Id;
             Username  = user.Username;
