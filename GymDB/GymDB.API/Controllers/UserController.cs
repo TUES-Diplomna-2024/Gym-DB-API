@@ -19,9 +19,9 @@ namespace GymDB.API.Controllers
         [HttpGet]
         public IActionResult GetAllUsers()
         {
-            List<UserCompressedInfoModel> users = userService.GetAll()
-                                                             .Select(user => new UserCompressedInfoModel(user))
-                                                             .ToList();
+            List<UserProfileModel> users = userService.GetAll()
+                                                      .Select(user => new UserProfileModel(user))
+                                                      .ToList();
 
             return Ok(users);
         }
@@ -52,7 +52,7 @@ namespace GymDB.API.Controllers
             if (user == null)
                 return Unauthorized();
 
-            return Ok(new UserCompressedInfoModel(user));
+            return Ok(new UserProfileModel(user));
         }
     }
 }
