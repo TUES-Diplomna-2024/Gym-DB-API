@@ -36,6 +36,15 @@ namespace GymDB.API.Data.Entities
         [BirthDate(ErrorMessage = "Invalid birth date!")]
         public DateOnly BirthDate { get; set; }
 
+        [Gender(ErrorMessage = "Invalid gender!")]
+        public string Gender { get; set; }
+
+        [Range(minimum: 63, maximum: 251, ErrorMessage = "Height must be between 63 and 251 cm!")]
+        public double Height { get; set; }
+
+        [Range(minimum: 40, maximum: 140, ErrorMessage = "Weight must be between 40 and 140 kg!")]
+        public double Weight { get; set; }
+
         public DateOnly OnCreated { get; set; }
 
         public DateTime OnModified { get; set; }
