@@ -12,12 +12,16 @@ namespace GymDB.API.Data.Entities
         public User(UserSignUpModel input)
         {
             Id          = Guid.NewGuid();
+            OnCreated   = DateOnly.FromDateTime(DateTime.UtcNow);
+            OnModified  = DateTime.UtcNow;
+            
             Username    = input.Username;
             Email       = input.Email;
             Password    = input.Password;
             BirthDate   = input.BirthDate;
-            OnCreated   = DateOnly.FromDateTime(DateTime.UtcNow);
-            OnModified  = DateTime.UtcNow;
+            Gender      = input.Gender;
+            Height      = input.Height;
+            Weight      = input.Weight;
         }
 
         [Key]

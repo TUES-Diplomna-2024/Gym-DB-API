@@ -11,6 +11,9 @@ namespace GymDB.API.Models.User
             Id        = user.Id;
             Username  = user.Username;
             Email     = user.Email;
+            Gender    = user.Gender;
+            Height    = user.Height;
+            Weight    = user.Weight;
             BirthDate = user.BirthDate;
             OnCreated = user.OnCreated;
         }
@@ -20,6 +23,12 @@ namespace GymDB.API.Models.User
         public string Username { get; set; }
 
         public string Email { get; set; }
+
+        public string Gender { get; set; }
+
+        public double Height { get; set; }
+
+        public double Weight { get; set; }
 
         public DateOnly BirthDate { get; set; }
 
