@@ -13,6 +13,8 @@ namespace GymDB.API.Services.Interfaces
 
         bool IsUserAlreadyRegisteredWithEmail(string email);
 
+        string GetHashedPassword(string password);
+
         void Add(User user);
     }
 }

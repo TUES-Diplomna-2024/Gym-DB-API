@@ -34,7 +34,6 @@ namespace GymDB.API.Data.Entities
         [EmailAddress(ErrorMessage = "Invalid email address!")]
         public string Email { get; set; }
 
-        [Password(ErrorMessage = "Invalid password!")]
         public string Password { get; set; }
 
         [BirthDate(ErrorMessage = "Invalid birth date!")]
