@@ -2,6 +2,9 @@ using GymDB.API.Data;
 using GymDB.API.Services.Interfaces;
 using GymDB.API.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace GymDB.API
 {
@@ -24,11 +27,29 @@ namespace GymDB.API
                     });
             });
 
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidIssuer = settings.JwtIssuer,
+                        ValidAudience = settings.JwtAudience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtSecretKey)),
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidateLifetime = true
+                    };
+                });
+
+            builder.Services.AddAuthorization();
+
             // DB Context
             builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql(settings.PostgresConnectionString));
 
             // Custom services
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IJwtService, JwtService>();
         }
 
         public static void ConfigureApplication(WebApplication app)

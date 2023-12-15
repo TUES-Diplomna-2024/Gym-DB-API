@@ -2,6 +2,7 @@
 using GymDB.API.Services.Interfaces;
 using GymDB.API.Models.User;
 using GymDB.API.Data.Entities;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GymDB.API.Controllers
 {
@@ -10,13 +11,15 @@ namespace GymDB.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService userService;
+        private readonly IJwtService jwtService;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, IJwtService jwtService)
         {
             this.userService = userService;
+            this.jwtService = jwtService;
         }
 
-        [HttpGet]
+        [HttpGet, Authorize]
         public IActionResult GetAllUsers()
         {
             List<UserProfileModel> users = userService.GetAll()
@@ -38,7 +41,7 @@ namespace GymDB.API.Controllers
             User user = new User(userInput);
             userService.Add(user);
 
-            return Ok();
+            return Ok(jwtService.GenerateNewJwtToken(user));
         }
 
         [HttpPost("signin")]
@@ -52,7 +55,7 @@ namespace GymDB.API.Controllers
             if (user == null)
                 return Unauthorized();
 
-            return Ok(new UserProfileModel(user));
+            return Ok(jwtService.GenerateNewJwtToken(user));
         }
     }
 }
