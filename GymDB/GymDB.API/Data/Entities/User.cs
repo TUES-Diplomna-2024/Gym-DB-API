@@ -51,5 +51,11 @@ namespace GymDB.API.Data.Entities
         public DateOnly OnCreated { get; set; }
 
         public DateTime OnModified { get; set; }
+
+        public string RefreshToken { get; set; }
+
+        public DateTime RefreshTokenCreated { get; set; }
+
+        public DateTime RefreshTokenExpires { get; set; }
     }
 }
