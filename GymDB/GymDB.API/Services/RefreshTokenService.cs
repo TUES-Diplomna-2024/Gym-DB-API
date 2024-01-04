@@ -19,16 +19,5 @@ namespace GymDB.API.Services
         public RefreshTokenModel GenerateNewRefreshToken()
             => new RefreshTokenModel(Guid.NewGuid().ToString(), DateTime.UtcNow,
                                      DateTime.UtcNow.Add(settings.RefreshTokenLifetime));
-
-        public void UpdateUserRefreshToken(User user)
-        {
-            var newRefreshToken = GenerateNewRefreshToken();
-
-            user.RefreshToken = newRefreshToken.RefreshToken;
-            user.RefreshTokenCreated = newRefreshToken.RefreshTokenCreated;
-            user.RefreshTokenExpires = newRefreshToken.RefreshTokenExpires;
-
-            userService.Update(user);
-        }
     }
 }

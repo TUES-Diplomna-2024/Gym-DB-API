@@ -10,7 +10,7 @@ namespace GymDB.API.Data.Entities
     {
         public User() { }
 
-        public User(UserSignUpModel input, RefreshTokenModel refreshToken)
+        public User(UserSignUpModel input)
         {
             Id                  = Guid.NewGuid();
             OnCreated           = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -23,10 +23,6 @@ namespace GymDB.API.Data.Entities
             Gender              = input.Gender;
             Height              = input.Height;
             Weight              = input.Weight;
-
-            RefreshToken        = refreshToken.RefreshToken;
-            RefreshTokenCreated = refreshToken.RefreshTokenCreated;
-            RefreshTokenExpires = refreshToken.RefreshTokenExpires;
         }
 
         [Key]
@@ -56,11 +52,5 @@ namespace GymDB.API.Data.Entities
         public DateOnly OnCreated { get; set; }
 
         public DateTime OnModified { get; set; }
-
-        public string RefreshToken { get; set; }
-
-        public DateTime RefreshTokenCreated { get; set; }
-
-        public DateTime RefreshTokenExpires { get; set; }
     }
 }

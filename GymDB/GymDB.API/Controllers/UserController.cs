@@ -42,7 +42,7 @@ namespace GymDB.API.Controllers
                 return Conflict();
 
             RefreshTokenModel refreshToken = refreshTokenService.GenerateNewRefreshToken();
-            User user = new User(userInput, refreshToken);
+            User user = new User(userInput);
             userService.Add(user);
 
             return Ok(new AuthModel(jwtService.GenerateNewJwtToken(user), refreshToken.RefreshToken));
@@ -59,13 +59,13 @@ namespace GymDB.API.Controllers
             if (user == null)
                 return Unauthorized();
 
-            return Ok(new AuthModel(jwtService.GenerateNewJwtToken(user), user.RefreshToken));
+            return Ok(new AuthModel(jwtService.GenerateNewJwtToken(user), null));
         }
 
-        [HttpPost("refresh")]
-        public IActionResult Refresh(AuthModel refreshAttempt)
+        /*[HttpPost("refresh")]
+        public IActionResult RefreshJwt()
         {
 
-        }
+        }*/
     }
 }

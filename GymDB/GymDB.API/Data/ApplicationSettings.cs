@@ -13,12 +13,12 @@
             JwtAudience = jwtSettings["Audience"] ?? throw new InvalidOperationException("JWT Audience not found!");
             JwtSecretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not found!");
             JwtLifetime = TimeSpan.Parse(jwtSettings["TokenLifetime"] ??
-                                                throw new InvalidOperationException("JWT TokenLifetime not found!"));
+                          throw new InvalidOperationException("JWT TokenLifetime not found!"));
 
             IConfigurationSection refreshTokenSettings = config.GetSection("RefreshTokenSettings");
 
             RefreshTokenLifetime = TimeSpan.Parse(refreshTokenSettings["TokenLifetime"] ??
-                                         throw new InvalidOperationException("Refresh Token TokenLifetime not found!"));
+                                   throw new InvalidOperationException("Refresh Token TokenLifetime not found!"));
         }
 
         public string PostgresConnectionString { get; private set; }
