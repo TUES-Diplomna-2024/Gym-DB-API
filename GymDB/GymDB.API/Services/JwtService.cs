@@ -19,7 +19,7 @@ namespace GymDB.API.Services
 
         public string GenerateNewJwtToken(User user)
         {
-            var expiration = DateTime.UtcNow.AddMinutes(settings.JwtExpirationMinutes);
+            var expiration = DateTime.UtcNow.Add(settings.JwtLifetime);
 
             var token = new JwtSecurityToken(
                 issuer: settings.JwtIssuer,

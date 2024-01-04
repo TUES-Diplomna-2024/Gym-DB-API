@@ -8,12 +8,10 @@ namespace GymDB.API.Services
     public class UserService : IUserService
     {
         private readonly ApplicationContext context;
-        private readonly ApplicationSettings settings;
 
-        public UserService(ApplicationContext context, IConfiguration config)
+        public UserService(ApplicationContext context)
         {
             this.context = context;
-            settings = new ApplicationSettings(config);
         }
 
         public List<User> GetAll()
@@ -49,21 +47,6 @@ namespace GymDB.API.Services
         {
             context.Update(user);
             context.SaveChanges();
-        }
-
-        public RefreshTokenModel GenerateNewRefreshToken()
-            => new RefreshTokenModel(Guid.NewGuid().ToString(), DateTime.UtcNow,
-                                     DateTime.UtcNow.AddDays(settings.RefreshTokenExpirationDays));
-
-        public void UpdateUserRefreshToken(User user)
-        {
-            var newRefreshToken = GenerateNewRefreshToken();
-
-            user.RefreshToken = newRefreshToken.RefreshToken;
-            user.RefreshTokenCreated = newRefreshToken.RefreshTokenCreated;
-            user.RefreshTokenExpires = newRefreshToken.RefreshTokenExpires;
-
-            Update(user);
         }
     }
 }

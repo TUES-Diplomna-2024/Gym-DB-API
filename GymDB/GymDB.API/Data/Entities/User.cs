@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GymDB.API.Data.ValidationAttributes;
+using GymDB.API.Models;
 using GymDB.API.Models.User;
 
 namespace GymDB.API.Data.Entities
@@ -9,19 +10,23 @@ namespace GymDB.API.Data.Entities
     {
         public User() { }
 
-        public User(UserSignUpModel input)
+        public User(UserSignUpModel input, RefreshTokenModel refreshToken)
         {
-            Id          = Guid.NewGuid();
-            OnCreated   = DateOnly.FromDateTime(DateTime.UtcNow);
-            OnModified  = DateTime.UtcNow;
+            Id                  = Guid.NewGuid();
+            OnCreated           = DateOnly.FromDateTime(DateTime.UtcNow);
+            OnModified          = DateTime.UtcNow;
             
-            Username    = input.Username;
-            Email       = input.Email;
-            Password    = input.Password;
-            BirthDate   = input.BirthDate;
-            Gender      = input.Gender;
-            Height      = input.Height;
-            Weight      = input.Weight;
+            Username            = input.Username;
+            Email               = input.Email;
+            Password            = input.Password;
+            BirthDate           = input.BirthDate;
+            Gender              = input.Gender;
+            Height              = input.Height;
+            Weight              = input.Weight;
+
+            RefreshToken        = refreshToken.RefreshToken;
+            RefreshTokenCreated = refreshToken.RefreshTokenCreated;
+            RefreshTokenExpires = refreshToken.RefreshTokenExpires;
         }
 
         [Key]
