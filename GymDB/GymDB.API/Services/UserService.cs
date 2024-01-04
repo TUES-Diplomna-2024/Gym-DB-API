@@ -1,5 +1,6 @@
 ﻿using GymDB.API.Data;
 using GymDB.API.Data.Entities;
+using GymDB.API.Models;
 using GymDB.API.Services.Interfaces;
 
 namespace GymDB.API.Services
@@ -7,10 +8,12 @@ namespace GymDB.API.Services
     public class UserService : IUserService
     {
         private readonly ApplicationContext context;
+        private readonly ApplicationSettings settings;
 
-        public UserService(ApplicationContext context)
+        public UserService(ApplicationContext context, IConfiguration config)
         {
             this.context = context;
+            settings = new ApplicationSettings(config);
         }
 
         public List<User> GetAll()
@@ -40,6 +43,27 @@ namespace GymDB.API.Services
             user.Password = GetHashedPassword(user.Password);
             context.Add(user);
             context.SaveChanges();
+        }
+
+        public void Update(User user)
+        {
+            context.Update(user);
+            context.SaveChanges();
+        }
+
+        public RefreshTokenModel GenerateNewRefreshToken()
+            => new RefreshTokenModel(Guid.NewGuid().ToString(), DateTime.UtcNow,
+                                     DateTime.UtcNow.AddDays(settings.RefreshTokenExpirationDays));
+
+        public void UpdateUserRefreshToken(User user)
+        {
+            var newRefreshToken = GenerateNewRefreshToken();
+
+            user.RefreshToken = newRefreshToken.RefreshToken;
+            user.RefreshTokenCreated = newRefreshToken.RefreshTokenCreated;
+            user.RefreshTokenExpires = newRefreshToken.RefreshTokenExpires;
+
+            Update(user);
         }
     }
 }

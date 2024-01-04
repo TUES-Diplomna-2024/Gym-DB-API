@@ -14,6 +14,11 @@
             JwtSecretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not found!");
             JwtExpirationMinutes = double.Parse(jwtSettings["ExpirationMinutes"] ??
                                                 throw new InvalidOperationException("JWT ExpirationMinutes not found!"));
+
+            IConfigurationSection refreshTokenSettings = config.GetSection("RefreshTokenSettings");
+
+            RefreshTokenExpirationDays = double.Parse(refreshTokenSettings["ExpirationDays"] ??
+                                         throw new InvalidOperationException("Refresh Token ExpirationDays not found!"));
         }
 
         public string PostgresConnectionString { get; private set; }
@@ -25,5 +30,7 @@
         public string JwtSecretKey { get; private set; }
 
         public double JwtExpirationMinutes { get; private set; }
+
+        public double RefreshTokenExpirationDays { get; private set; }
     }
 }

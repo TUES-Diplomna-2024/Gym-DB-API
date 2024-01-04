@@ -1,4 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
+using GymDB.API.Models;
 using GymDB.API.Models.User;
 
 namespace GymDB.API.Services.Interfaces
@@ -16,5 +17,11 @@ namespace GymDB.API.Services.Interfaces
         string GetHashedPassword(string password);
 
         void Add(User user);
+
+        void Update(User user);
+
+        RefreshTokenModel GenerateNewRefreshToken();
+
+        void UpdateUserRefreshToken(User user);
     }
 }
