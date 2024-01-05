@@ -15,10 +15,10 @@
             JwtLifetime = TimeSpan.Parse(jwtSettings["TokenLifetime"] ??
                           throw new InvalidOperationException("JWT TokenLifetime not found!"));
 
-            IConfigurationSection refreshTokenSettings = config.GetSection("RefreshTokenSettings");
+            IConfigurationSection sessionSettings = config.GetSection("SessionSettings");
 
-            RefreshTokenLifetime = TimeSpan.Parse(refreshTokenSettings["TokenLifetime"] ??
-                                   throw new InvalidOperationException("Refresh Token TokenLifetime not found!"));
+            SessionLifetime = TimeSpan.Parse(sessionSettings["SessionLifetime"] ??
+                              throw new InvalidOperationException("Session SessionLifetime not found!"));
         }
 
         public string PostgresConnectionString { get; private set; }
@@ -31,6 +31,6 @@
 
         public TimeSpan JwtLifetime { get; private set; }
 
-        public TimeSpan RefreshTokenLifetime { get; private set; }
+        public TimeSpan SessionLifetime { get; private set; }
     }
 }

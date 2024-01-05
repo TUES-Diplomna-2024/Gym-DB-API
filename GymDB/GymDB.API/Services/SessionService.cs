@@ -24,7 +24,7 @@ namespace GymDB.API.Services
             {
                 Id = Guid.NewGuid(),
                 RefreshToken = refreshToken,
-                ExpireDate = DateTime.UtcNow.Add(settings.RefreshTokenLifetime),
+                ExpireDate = DateTime.UtcNow.Add(settings.SessionLifetime),
                 UserId = user.Id,
                 User = user
             };
