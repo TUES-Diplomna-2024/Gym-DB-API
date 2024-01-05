@@ -8,6 +8,8 @@ namespace GymDB.API.Services.Interfaces
     {
         List<User> GetAll();
 
+        User? GetById(Guid id);
+
         User? GetByEmail(string email);
 
         User? GetByEmailAndPassword(string email, string password);

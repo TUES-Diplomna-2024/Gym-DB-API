@@ -2,6 +2,7 @@
 using GymDB.API.Data.Entities;
 using GymDB.API.Models;
 using GymDB.API.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace GymDB.API.Services
 {
@@ -34,5 +35,10 @@ namespace GymDB.API.Services
 
             return refreshToken;
         }
+
+        public Session? GetUserSessionByRefreshToken(Guid userId, string refreshToken)
+            => context.Sessions
+                      .Include(session => session.User)
+                      .FirstOrDefault(session => session.UserId == userId && session.RefreshToken == refreshToken);
     }
 }

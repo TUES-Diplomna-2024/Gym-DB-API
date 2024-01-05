@@ -17,6 +17,9 @@ namespace GymDB.API.Services
         public List<User> GetAll()
             => context.Users.ToList();
 
+        public User? GetById(Guid id)
+            => context.Users.FirstOrDefault(user => user.Id == id);
+
         public User? GetByEmail(string email)
             => context.Users.FirstOrDefault(user => user.Email == email);
 

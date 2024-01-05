@@ -65,10 +65,20 @@ namespace GymDB.API.Controllers
             return Ok(new AuthModel(jwtService.GenerateNewJwtToken(user), refreshToken));
         }
 
-        /*[HttpPost("refresh")]
-        public IActionResult RefreshJwt()
+        [HttpPost("refresh")]
+        public IActionResult RefreshJwt(RefreshAttemptModel refreshAttempt)
         {
+            User? user = userService.GetById(refreshAttempt.UserId);
 
-        }*/
+            if (user == null)
+                return NotFound($"User with id {refreshAttempt.UserId} not found!");
+
+            Session? userSession = sessionService.GetUserSessionByRefreshToken(refreshAttempt.UserId, refreshAttempt.RefreshToken);
+
+            if (userSession == null)
+                return Unauthorized("You must sign in again!");
+
+            return Ok(jwtService.GenerateNewJwtToken(user));
+        }
     }
 }
