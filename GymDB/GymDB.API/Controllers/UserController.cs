@@ -13,13 +13,13 @@ namespace GymDB.API.Controllers
     {
         private readonly IUserService userService;
         private readonly IJwtService jwtService;
-        private readonly IRefreshTokenService refreshTokenService;
+        private readonly ISessionService sessionService;
 
-        public UserController(IUserService userService, IJwtService jwtService, IRefreshTokenService refreshTokenService)
+        public UserController(IUserService userService, IJwtService jwtService, ISessionService sessionService)
         {
             this.userService = userService;
             this.jwtService = jwtService;
-            this.refreshTokenService = refreshTokenService;
+            this.sessionService = sessionService;
         }
 
         [HttpGet, Authorize]
@@ -41,11 +41,12 @@ namespace GymDB.API.Controllers
             if (userService.IsUserAlreadyRegisteredWithEmail(userInput.Email))
                 return Conflict();
 
-            RefreshTokenModel refreshToken = refreshTokenService.GenerateNewRefreshToken();
             User user = new User(userInput);
             userService.Add(user);
 
-            return Ok(new AuthModel(jwtService.GenerateNewJwtToken(user), refreshToken.RefreshToken));
+            string refreshToken = sessionService.CreateNewSession(user);
+
+            return Ok(new AuthModel(jwtService.GenerateNewJwtToken(user), refreshToken));
         }
 
         [HttpPost("signin")]
@@ -59,7 +60,9 @@ namespace GymDB.API.Controllers
             if (user == null)
                 return Unauthorized();
 
-            return Ok(new AuthModel(jwtService.GenerateNewJwtToken(user), null));
+            string refreshToken = sessionService.CreateNewSession(user);
+
+            return Ok(new AuthModel(jwtService.GenerateNewJwtToken(user), refreshToken));
         }
 
         /*[HttpPost("refresh")]

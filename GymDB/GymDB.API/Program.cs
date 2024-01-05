@@ -50,7 +50,7 @@ namespace GymDB.API
             // Custom services
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
-            builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+            builder.Services.AddScoped<ISessionService, SessionService>();
         }
 
         public static void ConfigureApplication(WebApplication app)

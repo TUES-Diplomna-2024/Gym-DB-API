@@ -3,8 +3,8 @@ using GymDB.API.Models;
 
 namespace GymDB.API.Services.Interfaces
 {
-    public interface IRefreshTokenService
+    public interface ISessionService
     {
-        RefreshTokenModel GenerateNewRefreshToken();
+        string CreateNewSession(User user);
     }
 }
