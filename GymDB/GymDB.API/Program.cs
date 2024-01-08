@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Hangfire;
+using Hangfire.PostgreSql;
 
 namespace GymDB.API
 {
@@ -44,6 +46,11 @@ namespace GymDB.API
 
             builder.Services.AddAuthorization();
 
+            builder.Services.AddHangfire(options => 
+                             options.UsePostgreSqlStorage(c => c.UseNpgsqlConnection(settings.PostgresConnectionString)));
+            
+            builder.Services.AddHangfireServer();
+
             // DB Context
             builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql(settings.PostgresConnectionString));
 
@@ -59,6 +66,7 @@ namespace GymDB.API
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+                app.UseHangfireDashboard();
             }
 
             app.UseCors();
@@ -72,6 +80,11 @@ namespace GymDB.API
             app.MapControllers();
         }
 
+        public static void ConfigureRecurringJobs(ApplicationSettings settings)
+        {
+            RecurringJob.AddOrUpdate<ISessionService>("remove-inactive-sessions-job", service => service.RemoveAllInactiveSessions(), "0 */2 * * *");
+        }
+
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -82,6 +95,8 @@ namespace GymDB.API
             var app = builder.Build();
 
             ConfigureApplication(app);
+
+            ConfigureRecurringJobs(settings);
 
             app.Run();
         }
