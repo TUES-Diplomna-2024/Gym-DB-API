@@ -37,10 +37,6 @@ namespace GymDB.API.Services
             return refreshToken;
         }
 
-        public Session? GetById(Guid sessionId)
-            => context.Sessions.Include(session => session.User)
-                               .FirstOrDefault(session => session.Id == sessionId);
-
         public Session? GetUserSessionByRefreshToken(Guid userId, string refreshToken)
             => context.Sessions.Include(session => session.User)
                                .FirstOrDefault(session => session.UserId == userId && session.RefreshToken == refreshToken);

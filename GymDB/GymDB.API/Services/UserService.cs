@@ -14,6 +14,9 @@ namespace GymDB.API.Services
             this.context = context;
         }
 
+        public bool AreAnyUsersRegistered()
+            => context.Users.Any();
+
         public List<User> GetAll()
             => context.Users.ToList();
 

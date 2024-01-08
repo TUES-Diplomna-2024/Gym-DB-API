@@ -56,6 +56,7 @@ namespace GymDB.API
 
             // Custom services
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IRoleService, RoleService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<ISessionService, SessionService>();
         }

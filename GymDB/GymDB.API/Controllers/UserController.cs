@@ -12,12 +12,14 @@ namespace GymDB.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService userService;
+        private readonly IRoleService roleService;
         private readonly IJwtService jwtService;
         private readonly ISessionService sessionService;
 
-        public UserController(IUserService userService, IJwtService jwtService, ISessionService sessionService)
+        public UserController(IUserService userService, IRoleService roleService, IJwtService jwtService, ISessionService sessionService)
         {
             this.userService = userService;
+            this.roleService = roleService;
             this.jwtService = jwtService;
             this.sessionService = sessionService;
         }
@@ -42,6 +44,11 @@ namespace GymDB.API.Controllers
                 return Conflict();
 
             User user = new User(signUpAttempt);
+            string userRole = !userService.AreAnyUsersRegistered() ? "admin" : "normie";
+
+            if (!roleService.AssignUserRole(user, userRole))
+                return StatusCode(500, $"Role {userRole} could not be found!");
+
             userService.Add(user);
 
             string refreshToken = sessionService.CreateNewSession(user);

@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using GymDB.API.Data.ValidationAttributes;
 using GymDB.API.Models;
 using GymDB.API.Models.User;
+using Microsoft.EntityFrameworkCore;
 
 namespace GymDB.API.Data.Entities
 {
