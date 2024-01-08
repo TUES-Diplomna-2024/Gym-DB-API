@@ -7,6 +7,7 @@ namespace GymDB.API.Data.ValidationAttributes
     public class Password : ValidationAttribute
     {
         static private readonly string pattern = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,16}$";
+        
         private readonly Regex re = new Regex(pattern);
 
         public override bool IsValid(object? value)

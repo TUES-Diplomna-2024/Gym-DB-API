@@ -29,10 +29,11 @@ namespace GymDB.API.Data.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
 
-        [StringLength(32, MinimumLength = 3, ErrorMessage = "Username must be between 3 and 32 characters!")]
+        [StringLength(32, MinimumLength = 3, ErrorMessage = "Username must be between 3 and 32 characters long!")]
         public string Username { get; set; }
 
         [EmailAddress(ErrorMessage = "Invalid email address!")]
+        [StringLength(256, ErrorMessage = "Email must be up to 256 characters long!")]
         public string Email { get; set; }
 
         public string Password { get; set; }
@@ -41,6 +42,7 @@ namespace GymDB.API.Data.Entities
         public DateOnly BirthDate { get; set; }
 
         [Gender(ErrorMessage = "Invalid gender!")]
+        [StringLength(10, ErrorMessage = "Gender must be up to 10 characters long!")]
         public string Gender { get; set; }
 
         [Range(minimum: 63, maximum: 251, ErrorMessage = "Height must be between 63 and 251 cm!")]
