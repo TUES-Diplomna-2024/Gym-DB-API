@@ -1,6 +1,4 @@
 ﻿using UserClass = GymDB.API.Data.Entities.User;
-using GymDB.API.Data.ValidationAttributes;
-using System.ComponentModel.DataAnnotations;
 
 namespace GymDB.API.Models.User
 {
@@ -11,6 +9,8 @@ namespace GymDB.API.Models.User
             Id        = user.Id;
             Username  = user.Username;
             Email     = user.Email;
+            RoleName  = user.Role.Name;
+            RoleColor = user.Role.Color;
             Gender    = user.Gender;
             Height    = user.Height;
             Weight    = user.Weight;
@@ -23,6 +23,10 @@ namespace GymDB.API.Models.User
         public string Username { get; set; }
 
         public string Email { get; set; }
+
+        public string RoleName { get; set; }
+
+        public string RoleColor { get; set; }
 
         public string Gender { get; set; }
 

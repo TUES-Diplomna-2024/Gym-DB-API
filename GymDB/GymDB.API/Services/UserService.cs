@@ -1,7 +1,7 @@
 ﻿using GymDB.API.Data;
 using GymDB.API.Data.Entities;
-using GymDB.API.Models;
 using GymDB.API.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace GymDB.API.Services
 {
@@ -18,13 +18,15 @@ namespace GymDB.API.Services
             => context.Users.Any();
 
         public List<User> GetAll()
-            => context.Users.ToList();
+            => context.Users.Include(user => user.Role).ToList();
 
         public User? GetById(Guid id)
-            => context.Users.FirstOrDefault(user => user.Id == id);
+            => context.Users.Include(user => user.Role)
+                            .FirstOrDefault(user => user.Id == id);
 
         public User? GetByEmail(string email)
-            => context.Users.FirstOrDefault(user => user.Email == email);
+            => context.Users.Include(user => user.Role)
+                            .FirstOrDefault(user => user.Email == email);
 
         public User? GetByEmailAndPassword(string email, string password)
         {
