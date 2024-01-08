@@ -1,8 +1,8 @@
-﻿namespace GymDB.API.Models
+﻿namespace GymDB.API.Models.User
 {
-    public class AuthModel
+    public class UserAuthModel
     {
-        public AuthModel(string jwt, string refreshToken)
+        public UserAuthModel(string jwt, string refreshToken)
         {
             Jwt = jwt;
             RefreshToken = refreshToken;

@@ -33,45 +33,58 @@ namespace GymDB.API.Controllers
         }
 
         [HttpPost("signup")]
-        public IActionResult SignUpNewUser(UserSignUpModel userInput)
+        public IActionResult SignUp(UserSignUpModel signUpAttempt)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
             
-            if (userService.IsUserAlreadyRegisteredWithEmail(userInput.Email))
+            if (userService.IsUserAlreadyRegisteredWithEmail(signUpAttempt.Email))
                 return Conflict();
 
-            User user = new User(userInput);
+            User user = new User(signUpAttempt);
             userService.Add(user);
 
             string refreshToken = sessionService.CreateNewSession(user);
 
-            return Ok(new AuthModel(jwtService.GenerateNewJwtToken(user), refreshToken));
+            return Ok(new UserAuthModel(jwtService.GenerateNewJwtToken(user), refreshToken));
         }
 
         [HttpPost("signin")]
-        public IActionResult ValidateSignInAttempt(UserSignInModel login)
+        public IActionResult SignIn(UserSignInModel signInAttempt)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            User? user = userService.GetByEmailAndPassword(login.Email, login.Password);
+            User? user = userService.GetByEmailAndPassword(signInAttempt.Email, signInAttempt.Password);
 
             if (user == null)
                 return Unauthorized();
 
             string refreshToken = sessionService.CreateNewSession(user);
 
-            return Ok(new AuthModel(jwtService.GenerateNewJwtToken(user), refreshToken));
+            return Ok(new UserAuthModel(jwtService.GenerateNewJwtToken(user), refreshToken));
+        }
+
+        [HttpPost("signout")]
+        public IActionResult SignOut(UserSessionRetrievalModel signOutAttempt)
+        {
+            Session? userSession = sessionService.GetUserSessionByRefreshToken(signOutAttempt.UserId, signOutAttempt.RefreshToken);
+
+            if (userSession == null)
+                return Unauthorized();
+
+            sessionService.Remove(userSession);
+
+            return Ok();
         }
 
         [HttpPost("refresh")]
-        public IActionResult RefreshJwt(RefreshAttemptModel refreshAttempt)
+        public IActionResult Refresh(UserSessionRetrievalModel refreshAttempt)
         {
             User? user = userService.GetById(refreshAttempt.UserId);
 
             if (user == null)
-                return NotFound($"User with id {refreshAttempt.UserId} not found!");
+                return NotFound($"User with id {refreshAttempt.UserId} could not be found!");
 
             Session? userSession = sessionService.GetUserSessionByRefreshToken(refreshAttempt.UserId, refreshAttempt.RefreshToken);
 

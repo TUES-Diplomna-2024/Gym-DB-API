@@ -1,6 +1,6 @@
-﻿namespace GymDB.API.Models
+﻿namespace GymDB.API.Models.User
 {
-    public class RefreshAttemptModel
+    public class UserSessionRetrievalModel
     {
         public Guid UserId { get; set; }
 
