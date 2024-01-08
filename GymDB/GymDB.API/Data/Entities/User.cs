@@ -38,6 +38,11 @@ namespace GymDB.API.Data.Entities
 
         public string Password { get; set; }
 
+        [ForeignKey(nameof(Role))]
+        public Guid RoleId { get; set; }
+
+        public Role Role { get; set; }
+
         [BirthDate(ErrorMessage = "Invalid birth date!")]
         public DateOnly BirthDate { get; set; }
 

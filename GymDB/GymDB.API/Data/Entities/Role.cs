@@ -9,13 +9,13 @@ namespace GymDB.API.Data.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
 
-        [StringLength(255)]
+        [StringLength(60, ErrorMessage = "Name must be up to 60 characters long!")]
         public string Name { get; set; }
 
-        [StringLength(255)]
+        [StringLength(60, ErrorMessage = "NormalizedName must be up to 60 characters long!")]
         public string NormalizedName { get; set; }
 
-        [StringLength(255)]
-        public string Colors { get; set; }
+        [StringLength(256, ErrorMessage = "Color must be up to 256 characters long!")]
+        public string Color { get; set; }
     }
 }
