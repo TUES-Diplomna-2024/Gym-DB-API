@@ -1,5 +1,6 @@
 ﻿using GymDB.API.Data;
 using GymDB.API.Data.Entities;
+using GymDB.API.Migrations;
 using GymDB.API.Models;
 using GymDB.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -36,9 +37,32 @@ namespace GymDB.API.Services
             return refreshToken;
         }
 
+        public Session? GetById(Guid sessionId)
+            => context.Sessions.Include(session => session.User)
+                               .FirstOrDefault(session => session.Id == sessionId);
+
         public Session? GetUserSessionByRefreshToken(Guid userId, string refreshToken)
-            => context.Sessions
-                      .Include(session => session.User)
-                      .FirstOrDefault(session => session.UserId == userId && session.RefreshToken == refreshToken);
+            => context.Sessions.Include(session => session.User)
+                               .FirstOrDefault(session => session.UserId == userId && session.RefreshToken == refreshToken);
+
+        public List<Session> GetAllInactiveSessions()
+        {
+            return context.Sessions.Include(session => session.User)
+                                   .Where(session => session.ExpireDate < DateTime.UtcNow)
+                                   .ToList();
+        }
+
+        public void Remove(Session session)
+        {
+            context.Sessions.Remove(session);
+            context.SaveChanges();
+        }
+
+        public void RemoveAllInactiveSessions()
+        {
+            List<Session> toBeRemoved = GetAllInactiveSessions();
+            context.Sessions.RemoveRange(toBeRemoved);
+            context.SaveChanges();
+        }
     }
 }
