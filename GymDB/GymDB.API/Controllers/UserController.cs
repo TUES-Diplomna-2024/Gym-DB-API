@@ -3,7 +3,6 @@ using GymDB.API.Services.Interfaces;
 using GymDB.API.Models.User;
 using GymDB.API.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
-using GymDB.API.Models;
 using GymDB.API.Data.Settings;
 
 namespace GymDB.API.Controllers
