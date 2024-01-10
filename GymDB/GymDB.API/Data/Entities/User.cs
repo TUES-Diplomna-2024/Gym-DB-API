@@ -26,6 +26,22 @@ namespace GymDB.API.Data.Entities
             Weight              = input.Weight;
         }
 
+        public User(Guid id, string username, string email, string password, Guid roleId, Role role, DateOnly birthDate, string gender, double height, double weight, DateOnly onCreated, DateTime onModified)
+        {
+            Id = id;
+            Username = username;
+            Email = email;
+            Password = password;
+            RoleId = roleId;
+            Role = role;
+            BirthDate = birthDate;
+            Gender = gender;
+            Height = height;
+            Weight = weight;
+            OnCreated = onCreated;
+            OnModified = onModified;
+        }
+
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }

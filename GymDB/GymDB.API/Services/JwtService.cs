@@ -1,5 +1,5 @@
-﻿using GymDB.API.Data;
-using GymDB.API.Data.Entities;
+﻿using GymDB.API.Data.Entities;
+using GymDB.API.Data.Settings;
 using GymDB.API.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -19,11 +19,11 @@ namespace GymDB.API.Services
 
         public string GenerateNewJwtToken(User user)
         {
-            var expiration = DateTime.UtcNow.Add(settings.JwtLifetime);
+            var expiration = DateTime.UtcNow.Add(settings.JwtSettings.TokenLifetime);
 
             var token = new JwtSecurityToken(
-                issuer: settings.JwtIssuer,
-                audience: settings.JwtAudience,
+                issuer: settings.JwtSettings.Issuer,
+                audience: settings.JwtSettings.Audience,
                 claims: CreateClaims(user),
                 expires: expiration,
                 signingCredentials: CreateSigningCredentials()
@@ -47,7 +47,7 @@ namespace GymDB.API.Services
 
         public SigningCredentials CreateSigningCredentials()
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtSecretKey));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtSettings.ServerSecretKey));
 
             return new SigningCredentials(
                 securityKey,

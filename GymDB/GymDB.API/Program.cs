@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Hangfire;
 using Hangfire.PostgreSql;
+using GymDB.API.Data.Settings;
 
 namespace GymDB.API
 {
@@ -34,9 +35,9 @@ namespace GymDB.API
                 {
                     options.TokenValidationParameters = new TokenValidationParameters()
                     {
-                        ValidIssuer = settings.JwtIssuer,
-                        ValidAudience = settings.JwtAudience,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtSecretKey)),
+                        ValidIssuer = settings.JwtSettings.Issuer,
+                        ValidAudience = settings.JwtSettings.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtSettings.ServerSecretKey)),
                         ValidateIssuer = true,
                         ValidateAudience = true,
                         ValidateIssuerSigningKey = true,
@@ -47,12 +48,12 @@ namespace GymDB.API
             builder.Services.AddAuthorization();
 
             builder.Services.AddHangfire(options => 
-                             options.UsePostgreSqlStorage(c => c.UseNpgsqlConnection(settings.PostgresConnectionString)));
+                             options.UsePostgreSqlStorage(c => c.UseNpgsqlConnection(settings.ConnectionStrings.PostgresConnection)));
             
             builder.Services.AddHangfireServer();
 
             // DB Context
-            builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql(settings.PostgresConnectionString));
+            builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql(settings.ConnectionStrings.PostgresConnection));
 
             // Custom services
             builder.Services.AddScoped<IUserService, UserService>();
@@ -81,7 +82,7 @@ namespace GymDB.API
             app.MapControllers();
         }
 
-        public static void ConfigureRecurringJobs(ApplicationSettings settings)
+        public static void ConfigureRecurringJobs()
         {
             RecurringJob.AddOrUpdate<ISessionService>("remove-inactive-sessions-job", service => service.RemoveAllInactiveSessions(), "0 */2 * * *");
         }
@@ -97,7 +98,9 @@ namespace GymDB.API
 
             ConfigureApplication(app);
 
-            ConfigureRecurringJobs(settings);
+            ConfigureRecurringJobs();
+
+            app.SeedDB(settings);
 
             app.Run();
         }

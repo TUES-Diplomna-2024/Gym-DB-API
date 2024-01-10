@@ -14,9 +14,6 @@ namespace GymDB.API.Services
             this.context = context;
         }
 
-        public bool AreAnyUsersRegistered()
-            => context.Users.Any();
-
         public List<User> GetAll()
             => context.Users.Include(user => user.Role).ToList();
 
@@ -47,6 +44,8 @@ namespace GymDB.API.Services
         public void Add(User user)
         {
             user.Password = GetHashedPassword(user.Password);
+            user.Gender = user.Gender.ToLower();
+
             context.Add(user);
             context.SaveChanges();
         }

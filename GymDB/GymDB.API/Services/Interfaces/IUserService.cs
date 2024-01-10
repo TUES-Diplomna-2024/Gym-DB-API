@@ -6,8 +6,6 @@ namespace GymDB.API.Services.Interfaces
 {
     public interface IUserService
     {
-        bool AreAnyUsersRegistered();
-
         List<User> GetAll();
 
         User? GetById(Guid id);

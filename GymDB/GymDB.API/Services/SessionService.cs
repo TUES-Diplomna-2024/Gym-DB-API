@@ -1,5 +1,6 @@
 ﻿using GymDB.API.Data;
 using GymDB.API.Data.Entities;
+using GymDB.API.Data.Settings;
 using GymDB.API.Migrations;
 using GymDB.API.Models;
 using GymDB.API.Services.Interfaces;
@@ -26,7 +27,7 @@ namespace GymDB.API.Services
             {
                 Id = Guid.NewGuid(),
                 RefreshToken = refreshToken,
-                ExpireDate = DateTime.UtcNow.Add(settings.SessionLifetime),
+                ExpireDate = DateTime.UtcNow.Add(settings.SessionSettings.SessionLifetime),
                 UserId = user.Id,
                 User = user
             };

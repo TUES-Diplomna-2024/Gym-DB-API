@@ -4,6 +4,7 @@ using GymDB.API.Models.User;
 using GymDB.API.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using GymDB.API.Models;
+using GymDB.API.Data.Settings;
 
 namespace GymDB.API.Controllers
 {
@@ -11,13 +12,17 @@ namespace GymDB.API.Controllers
     [Route("users")]
     public class UserController : ControllerBase
     {
+        private readonly ApplicationSettings settings;
+
         private readonly IUserService userService;
         private readonly IRoleService roleService;
         private readonly IJwtService jwtService;
         private readonly ISessionService sessionService;
 
-        public UserController(IUserService userService, IRoleService roleService, IJwtService jwtService, ISessionService sessionService)
+        public UserController(IConfiguration config, IUserService userService, IRoleService roleService, IJwtService jwtService, ISessionService sessionService)
         {
+            settings = new ApplicationSettings(config);
+
             this.userService = userService;
             this.roleService = roleService;
             this.jwtService = jwtService;
@@ -44,10 +49,9 @@ namespace GymDB.API.Controllers
                 return Conflict();
 
             User user = new User(signUpAttempt);
-            string userRole = !userService.AreAnyUsersRegistered() ? "admin" : "normie";
 
-            if (!roleService.AssignUserRole(user, userRole))
-                return StatusCode(500, $"Role {userRole} could not be found!");
+            if (!roleService.AssignUserRole(user, settings.DBSeed.DefaultRole))
+                return StatusCode(500, $"Role '{settings.DBSeed.DefaultRole}' could not be found!");
 
             userService.Add(user);
 
