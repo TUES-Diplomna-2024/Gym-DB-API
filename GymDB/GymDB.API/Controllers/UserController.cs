@@ -28,16 +28,6 @@ namespace GymDB.API.Controllers
             this.sessionService = sessionService;
         }
 
-        [HttpGet, Authorize(Roles = "ADMIN")]
-        public IActionResult GetAllUsers()
-        {
-            List<UserProfileModel> users = userService.GetAll()
-                                                      .Select(user => new UserProfileModel(user))
-                                                      .ToList();
-
-            return Ok(users);
-        }
-
         [HttpPost("signup")]
         public IActionResult SignUp(UserSignUpModel signUpAttempt)
         {
@@ -97,6 +87,27 @@ namespace GymDB.API.Controllers
                 return Unauthorized("You must sign in again!");
 
             return Ok(jwtService.GenerateNewJwtToken(userSession.User));
+        }
+
+        [HttpGet("{id}"), Authorize]
+        public IActionResult GetUserById(Guid id)
+        {
+            User? user = userService.GetById(id);
+
+            if (user == null)
+                return NotFound($"User with id {id} could not be found!");
+            
+            return Ok(new UserProfileModel(user));
+        }
+
+        [HttpGet, Authorize(Roles = "ADMIN")]
+        public IActionResult GetAllUsers()
+        {
+            List<UserProfileModel> users = userService.GetAll()
+                                                      .Select(user => new UserProfileModel(user))
+                                                      .ToList();
+
+            return Ok(users);
         }
     }
 }
