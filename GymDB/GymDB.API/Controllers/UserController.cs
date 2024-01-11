@@ -42,7 +42,7 @@ namespace GymDB.API.Controllers
             if (!roleService.AssignUserRole(user, settings.DBSeed.DefaultRole))
                 return StatusCode(500, $"Role '{settings.DBSeed.DefaultRole}' could not be found!");
 
-            userService.Add(user);
+            userService.AddUser(user);
 
             string refreshToken = sessionService.CreateNewSession(user);
 
@@ -55,7 +55,7 @@ namespace GymDB.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            User? user = userService.GetByEmailAndPassword(signInAttempt.Email, signInAttempt.Password);
+            User? user = userService.GetUserByEmailAndPassword(signInAttempt.Email, signInAttempt.Password);
 
             if (user == null)
                 return Unauthorized();
@@ -73,7 +73,7 @@ namespace GymDB.API.Controllers
             if (userSession == null)
                 return Unauthorized();
 
-            sessionService.Remove(userSession);
+            sessionService.RemoveSession(userSession);
 
             return Ok();
         }
@@ -92,7 +92,7 @@ namespace GymDB.API.Controllers
         [HttpGet("{id}"), Authorize]
         public IActionResult GetUserById(Guid id)
         {
-            User? user = userService.GetById(id);
+            User? user = userService.GetUserById(id);
 
             if (user == null)
                 return NotFound($"User with id {id} could not be found!");
@@ -103,7 +103,7 @@ namespace GymDB.API.Controllers
         [HttpGet, Authorize(Roles = "ADMIN")]
         public IActionResult GetAllUsers()
         {
-            List<UserProfileModel> users = userService.GetAll()
+            List<UserProfileModel> users = userService.GetAllUsers()
                                                       .Select(user => new UserProfileModel(user))
                                                       .ToList();
 

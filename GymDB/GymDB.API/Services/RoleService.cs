@@ -15,12 +15,12 @@ namespace GymDB.API.Services
             this.userService = userService;
         }
 
-        public Role? GetByNormalizedName(string normalizedName)
+        public Role? GetRoleByNormalizedName(string normalizedName)
             => context.Roles.FirstOrDefault(role => role.NormalizedName == normalizedName);
 
         public bool AssignUserRole(User user, string roleName)
         {
-            Role? role = GetByNormalizedName(roleName.ToUpper());
+            Role? role = GetRoleByNormalizedName(roleName.ToUpper());
 
             if (role == null)
                 return false;

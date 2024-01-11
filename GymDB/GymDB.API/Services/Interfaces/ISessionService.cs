@@ -11,7 +11,7 @@ namespace GymDB.API.Services.Interfaces
 
         List<Session> GetAllInactiveSessions();
 
-        void Remove(Session session);
+        void RemoveSession(Session session);
 
         void RemoveAllInactiveSessions();
     }

@@ -14,20 +14,20 @@ namespace GymDB.API.Services
             this.context = context;
         }
 
-        public List<User> GetAll()
+        public List<User> GetAllUsers()
             => context.Users.Include(user => user.Role).ToList();
 
-        public User? GetById(Guid id)
+        public User? GetUserById(Guid id)
             => context.Users.Include(user => user.Role)
                             .FirstOrDefault(user => user.Id == id);
 
-        public User? GetByEmail(string email)
+        public User? GetUserByEmail(string email)
             => context.Users.Include(user => user.Role)
                             .FirstOrDefault(user => user.Email == email);
 
-        public User? GetByEmailAndPassword(string email, string password)
+        public User? GetUserByEmailAndPassword(string email, string password)
         {
-            User? user = GetByEmail(email);
+            User? user = GetUserByEmail(email);
 
             if (user != null && BCrypt.Net.BCrypt.EnhancedVerify(password, user.Password))
                 return user;
@@ -36,12 +36,12 @@ namespace GymDB.API.Services
         }
 
         public bool IsUserAlreadyRegisteredWithEmail(string email)
-            => GetByEmail(email) != null;
+            => GetUserByEmail(email) != null;
 
         public string GetHashedPassword(string password)
             => BCrypt.Net.BCrypt.EnhancedHashPassword(password, 13);
 
-        public void Add(User user)
+        public void AddUser(User user)
         {
             user.Password = GetHashedPassword(user.Password);
             user.Gender = user.Gender.ToLower();
@@ -50,7 +50,7 @@ namespace GymDB.API.Services
             context.SaveChanges();
         }
 
-        public void Update(User user)
+        public void UpdateUser(User user)
         {
             context.Update(user);
             context.SaveChanges();

@@ -6,20 +6,20 @@ namespace GymDB.API.Services.Interfaces
 {
     public interface IUserService
     {
-        List<User> GetAll();
+        List<User> GetAllUsers();
 
-        User? GetById(Guid id);
+        User? GetUserById(Guid id);
 
-        User? GetByEmail(string email);
+        User? GetUserByEmail(string email);
 
-        User? GetByEmailAndPassword(string email, string password);
+        User? GetUserByEmailAndPassword(string email, string password);
 
         bool IsUserAlreadyRegisteredWithEmail(string email);
 
         string GetHashedPassword(string password);
 
-        void Add(User user);
+        void AddUser(User user);
 
-        void Update(User user);
+        void UpdateUser(User user);
     }
 }

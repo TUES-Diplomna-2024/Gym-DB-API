@@ -49,7 +49,7 @@ namespace GymDB.API.Services
                                    .ToList();
         }
 
-        public void Remove(Session session)
+        public void RemoveSession(Session session)
         {
             context.Sessions.Remove(session);
             context.SaveChanges();

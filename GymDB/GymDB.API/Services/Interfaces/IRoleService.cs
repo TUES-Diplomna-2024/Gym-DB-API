@@ -4,7 +4,7 @@ namespace GymDB.API.Services.Interfaces
 {
     public interface IRoleService
     {
-        Role? GetByNormalizedName(string normalizedName);
+        Role? GetRoleByNormalizedName(string normalizedName);
 
         bool AssignUserRole(User user, string roleName);
     }
