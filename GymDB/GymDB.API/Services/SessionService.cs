@@ -38,13 +38,13 @@ namespace GymDB.API.Services
             return refreshToken;
         }
 
-        public Session? GetUserSessionByRefreshToken(Guid userId, string refreshToken)
-            => context.Sessions.Include(session => session.User)
-                               .FirstOrDefault(session => session.UserId == userId && session.RefreshToken == refreshToken);
+        public Session? GetSessionByRefreshToken(string refreshToken)
+            => context.Sessions.Include(session => session.User.Role)
+                               .FirstOrDefault(session => session.RefreshToken == refreshToken);
 
         public List<Session> GetAllInactiveSessions()
         {
-            return context.Sessions.Include(session => session.User)
+            return context.Sessions.Include(session => session.User.Role)
                                    .Where(session => session.ExpireDate < DateTime.UtcNow)
                                    .ToList();
         }

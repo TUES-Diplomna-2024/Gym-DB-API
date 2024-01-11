@@ -28,7 +28,7 @@ namespace GymDB.API.Controllers
             this.sessionService = sessionService;
         }
 
-        [HttpGet, Authorize]
+        [HttpGet, Authorize(Roles = "ADMIN")]
         public IActionResult GetAllUsers()
         {
             List<UserProfileModel> users = userService.GetAll()
@@ -78,7 +78,7 @@ namespace GymDB.API.Controllers
         [HttpPost("signout")]
         public IActionResult SignOut(UserSessionRetrievalModel signOutAttempt)
         {
-            Session? userSession = sessionService.GetUserSessionByRefreshToken(signOutAttempt.UserId, signOutAttempt.RefreshToken);
+            Session? userSession = sessionService.GetSessionByRefreshToken(signOutAttempt.RefreshToken);
 
             if (userSession == null)
                 return Unauthorized();
@@ -91,17 +91,12 @@ namespace GymDB.API.Controllers
         [HttpPost("refresh")]
         public IActionResult Refresh(UserSessionRetrievalModel refreshAttempt)
         {
-            User? user = userService.GetById(refreshAttempt.UserId);
-
-            if (user == null)
-                return NotFound($"User with id {refreshAttempt.UserId} could not be found!");
-
-            Session? userSession = sessionService.GetUserSessionByRefreshToken(refreshAttempt.UserId, refreshAttempt.RefreshToken);
+            Session? userSession = sessionService.GetSessionByRefreshToken(refreshAttempt.RefreshToken);
 
             if (userSession == null)
                 return Unauthorized("You must sign in again!");
 
-            return Ok(jwtService.GenerateNewJwtToken(user));
+            return Ok(jwtService.GenerateNewJwtToken(userSession.User));
         }
     }
 }

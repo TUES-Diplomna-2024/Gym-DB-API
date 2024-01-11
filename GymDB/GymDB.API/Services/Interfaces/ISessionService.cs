@@ -7,7 +7,7 @@ namespace GymDB.API.Services.Interfaces
     {
         string CreateNewSession(User user);
 
-        Session? GetUserSessionByRefreshToken(Guid userId, string refreshToken);
+        Session? GetSessionByRefreshToken(string refreshToken);
 
         List<Session> GetAllInactiveSessions();
 

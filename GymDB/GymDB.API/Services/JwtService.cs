@@ -39,7 +39,8 @@ namespace GymDB.API.Services
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("userId", user.Id.ToString())
+                new Claim("userId", user.Id.ToString()),
+                new Claim("role", user.Role.NormalizedName)
             };
 
             return claims;
