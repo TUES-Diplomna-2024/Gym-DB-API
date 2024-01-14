@@ -7,19 +7,24 @@ namespace GymDB.API.Data.ValidationAttributes
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class BirthDate : ValidationAttribute
     {
-        public override bool IsValid(object? value)
+        private readonly int allowableYearsRange = 122;
+
+        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
             if (value == null)
-                return false;
+                return new ValidationResult("Date cannot be null!");
 
             DateTime currDate = DateTime.Now;
             DateTime date;
             bool isParsed = DateTime.TryParse(value.ToString(), out date);
 
-            if (!isParsed || date.Year < currDate.Year - 122 || date > currDate)
-                return false;
+            if (!isParsed)
+                return new ValidationResult("Invalid date format!");
 
-            return true;
+            if (date.Year < currDate.Year - allowableYearsRange || date > currDate)
+                return new ValidationResult($"Date must be within the last {allowableYearsRange} years and cannot be in the future!");
+
+            return ValidationResult.Success;
         }
     }
 }

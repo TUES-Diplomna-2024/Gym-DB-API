@@ -12,14 +12,13 @@ namespace GymDB.API.Models.User
         [StringLength(256, ErrorMessage = "Email must be up to 256 characters long!")]
         public string Email { get; set; }
 
-        [Password(ErrorMessage = "Invalid password!")]
+        [Password]
         public string Password { get; set; }
 
-        [BirthDate(ErrorMessage = "Invalid birth date!")]
+        [BirthDate]
         public DateOnly BirthDate { get; set; }
 
-        [Gender(ErrorMessage = "Invalid gender!")]
-        [StringLength(10, ErrorMessage = "Gender must be up to 10 characters long!")]
+        [Gender]
         public string Gender { get; set; }
 
         [Range(minimum: 63, maximum: 251, ErrorMessage = "Height must be between 63 and 251 cm!")]

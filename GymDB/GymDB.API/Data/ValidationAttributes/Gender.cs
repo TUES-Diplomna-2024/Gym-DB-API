@@ -7,14 +7,19 @@ namespace GymDB.API.Data.ValidationAttributes
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class Gender : ValidationAttribute
     {
-        public override bool IsValid(object? value)
+        private readonly string[] validGenders = { "male", "female", "other" };
+
+        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
-            if (value == null)
-                return false;
+            string? gender = value as string;
 
-            string[] genders = { "male", "female", "other" };
+            if (gender == null || gender == "")
+                return new ValidationResult("Gender cannot be null or empty!");
 
-            return genders.Contains(((string)value).ToLower());
+            if (!validGenders.Contains(gender.ToLower()))
+                return new ValidationResult($"Invalid gender! Accepted values are: {string.Join(", ", validGenders.Select(g => $"'{g}'"))}!");
+            
+            return ValidationResult.Success;
         }
     }
 }
