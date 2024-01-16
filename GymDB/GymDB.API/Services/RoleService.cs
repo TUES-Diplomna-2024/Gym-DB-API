@@ -7,20 +7,18 @@ namespace GymDB.API.Services
     public class RoleService : IRoleService
     {
         private readonly ApplicationContext context;
-        private readonly IUserService userService;
 
-        public RoleService(ApplicationContext context, IUserService userService)
+        public RoleService(ApplicationContext context)
         {
             this.context = context;
-            this.userService = userService;
         }
 
         public Role? GetRoleByNormalizedName(string normalizedName)
             => context.Roles.FirstOrDefault(role => role.NormalizedName == normalizedName);
 
-        public bool AssignUserRole(User user, string roleName)
+        public bool AssignUserRole(User user, string roleNormalizedName)
         {
-            Role? role = GetRoleByNormalizedName(roleName.ToUpper());
+            Role? role = GetRoleByNormalizedName(roleNormalizedName);
 
             if (role == null)
                 return false;

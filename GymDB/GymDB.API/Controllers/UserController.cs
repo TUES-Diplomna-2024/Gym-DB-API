@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using GymDB.API.Data.Settings;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
+using System.ComponentModel.DataAnnotations;
 
 namespace GymDB.API.Controllers
 {
@@ -35,7 +36,10 @@ namespace GymDB.API.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest();
-            
+
+            if (signUpAttempt.Username == settings.DBSeed.RootUser.Username)
+                return BadRequest($"Username '{signUpAttempt.Username}' is prohibited for use!");
+
             if (userService.IsUserAlreadyRegisteredWithEmail(signUpAttempt.Email))
                 return Conflict();
 
@@ -97,7 +101,7 @@ namespace GymDB.API.Controllers
             User? currUser = userService.GetCurrUser(HttpContext);
 
             if (currUser == null)
-                return NotFound($"Current user could not be found!");
+                return NotFound($"Current user no longer exists!");
 
             return Ok(new UserProfileModel(currUser));
         }
@@ -108,7 +112,7 @@ namespace GymDB.API.Controllers
             User? user = userService.GetUserById(id);
 
             if (user == null)
-                return NotFound($"User with id {id} could not be found!");
+                return NotFound($"User with id '{id}' could not be found!");
             
             return Ok(new UserProfileModel(user));
         }
@@ -130,12 +134,41 @@ namespace GymDB.API.Controllers
             User? currUser = userService.GetCurrUser(HttpContext);
 
             if (currUser == null)
-                return NotFound($"Current user could not be found!");
+                return NotFound("Current user no longer exists!");
 
             if (!ModelState.IsValid)
                 return BadRequest();
 
+            if (update.Username == settings.DBSeed.RootUser.Username)
+                return BadRequest($"Username '{update.Username}' is prohibited for use!");
+
             userService.UpdateUser(currUser, update);
+
+            return Ok();
+        }
+
+        [HttpPut("{id}/role"), Authorize(Roles = "ADMIN")]
+        public IActionResult AssignUserRole(Guid id, UserAssignRoleModel assignRoleAttempt)
+        {
+            User? user = userService.GetUserById(id);
+            User? currUser = userService.GetCurrUser(HttpContext);
+
+            if (user == null)
+                return NotFound($"User with id '{id}' could not be found!");
+
+            if (currUser == null)
+                return NotFound("Current user no longer exists!");
+
+            if (user.Role.NormalizedName == assignRoleAttempt.RoleNormalizedName)
+                return BadRequest($"User has already role '{assignRoleAttempt.RoleNormalizedName}'!");
+
+            if (user.Role.NormalizedName == "ADMIN" && currUser.Username != settings.DBSeed.RootUser.Username)
+                return BadRequest("You can't re-assign new role to an admin user! That is only possible if you are root admin!");
+
+            if (!roleService.AssignUserRole(user, assignRoleAttempt.RoleNormalizedName))
+                return NotFound($"Role with normalized name '{assignRoleAttempt.RoleNormalizedName}' could not be found!");
+
+            userService.UpdateUser(user);
 
             return Ok();
         }
