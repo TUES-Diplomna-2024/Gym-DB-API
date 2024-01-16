@@ -1,5 +1,6 @@
 ﻿using GymDB.API.Data;
 using GymDB.API.Data.Entities;
+using GymDB.API.Models.User;
 using GymDB.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -58,6 +59,19 @@ namespace GymDB.API.Services
             user.Gender = user.Gender.ToLower();
 
             context.Add(user);
+            context.SaveChanges();
+        }
+
+        public void UpdateUser(User user, UserUpdateModel update)
+        {
+            user.Username = update.Username;
+            user.BirthDate = update.BirthDate;
+            user.Gender = update.Gender;
+            user.Height = update.Height;
+            user.Weight = update.Weight;
+            user.OnModified = DateTime.UtcNow;
+
+            context.Update(user);
             context.SaveChanges();
         }
 

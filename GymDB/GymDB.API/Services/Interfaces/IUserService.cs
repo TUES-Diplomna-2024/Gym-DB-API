@@ -22,6 +22,8 @@ namespace GymDB.API.Services.Interfaces
 
         void AddUser(User user);
 
+        void UpdateUser(User user, UserUpdateModel update);
+
         void UpdateUser(User user);
     }
 }

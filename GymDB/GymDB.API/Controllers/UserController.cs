@@ -91,6 +91,17 @@ namespace GymDB.API.Controllers
             return Ok(jwtService.GenerateNewJwtToken(userSession.User));
         }
 
+        [HttpGet("current"), Authorize]
+        public IActionResult GetCurrUser()
+        {
+            User? currUser = userService.GetCurrUser(HttpContext);
+
+            if (currUser == null)
+                return NotFound($"Current user could not be found!");
+
+            return Ok(new UserProfileModel(currUser));
+        }
+
         [HttpGet("{id}"), Authorize]
         public IActionResult GetUserById(Guid id)
         {
@@ -113,15 +124,20 @@ namespace GymDB.API.Controllers
             return Ok(users);
         }
 
-        [HttpGet("curr-user"), Authorize]
-        public IActionResult GetCurrUser()
+        [HttpPut("current"), Authorize]
+        public IActionResult UpdateCurrUser(UserUpdateModel update)
         {
             User? currUser = userService.GetCurrUser(HttpContext);
 
             if (currUser == null)
                 return NotFound($"Current user could not be found!");
 
-            return Ok(new UserProfileModel(currUser));
+            if (!ModelState.IsValid)
+                return BadRequest();
+
+            userService.UpdateUser(currUser, update);
+
+            return Ok();
         }
     }
 }
