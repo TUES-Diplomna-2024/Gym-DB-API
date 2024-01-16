@@ -37,7 +37,7 @@ namespace GymDB.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            if (signUpAttempt.Username == settings.DBSeed.RootUser.Username)
+            if (signUpAttempt.Username == settings.DBSeed.RootAdmin.Username)
                 return BadRequest($"Username '{signUpAttempt.Username}' is prohibited for use!");
 
             if (userService.IsUserAlreadyRegisteredWithEmail(signUpAttempt.Email))
@@ -139,7 +139,7 @@ namespace GymDB.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            if (update.Username == settings.DBSeed.RootUser.Username)
+            if (update.Username == settings.DBSeed.RootAdmin.Username)
                 return BadRequest($"Username '{update.Username}' is prohibited for use!");
 
             userService.UpdateUser(currUser, update);
@@ -162,7 +162,7 @@ namespace GymDB.API.Controllers
             if (user.Role.NormalizedName == assignRoleAttempt.RoleNormalizedName)
                 return BadRequest($"User has already role '{assignRoleAttempt.RoleNormalizedName}'!");
 
-            if (user.Role.NormalizedName == "ADMIN" && currUser.Username != settings.DBSeed.RootUser.Username)
+            if (user.Role.NormalizedName == "ADMIN" && currUser.Username != settings.DBSeed.RootAdmin.Username)
                 return BadRequest("You can't re-assign new role to an admin user! That is only possible if you are root admin!");
 
             if (!roleService.AssignUserRole(user, assignRoleAttempt.RoleNormalizedName))

@@ -19,22 +19,22 @@ namespace GymDB.API.Data
                     {
                         var roles = settings.DBSeed.Roles.Select(pair => new Role { Id = Guid.NewGuid(),
                                                                                     Name = pair.Key,
-                                                                                    NormalizedName = pair.Value.NormalizedName,
-                                                                                    Color = pair.Value.Color }
-                                                        ).ToList();
+                                                                                    NormalizedName = pair.Key.ToUpper().Replace(" ", "_"),
+                                                                                    Color = pair.Value })
+                                                         .ToList();
 
                         context.Roles.AddRange(roles);
 
-                        Role rootUserRole = roles.First(role => role.NormalizedName == settings.DBSeed.RootUser.Role);
+                        Role adminRole = roles.First(role => role.NormalizedName == "ADMIN");
 
                         context.Users.Add(
                             new User {
                                 Id = Guid.NewGuid(),
-                                Username = settings.DBSeed.RootUser.Username,
-                                Email = settings.DBSeed.RootUser.Email,
-                                Password = BCrypt.Net.BCrypt.EnhancedHashPassword(settings.DBSeed.RootUser.Password, 13),
-                                RoleId = rootUserRole.Id,
-                                Role = rootUserRole,
+                                Username = settings.DBSeed.RootAdmin.Username,
+                                Email = settings.DBSeed.RootAdmin.Email,
+                                Password = BCrypt.Net.BCrypt.EnhancedHashPassword(settings.DBSeed.RootAdmin.Password, 13),
+                                RoleId = adminRole.Id,
+                                Role = adminRole,
                                 BirthDate = DateOnly.FromDateTime(DateTime.UtcNow),
                                 Gender = "other",
                                 Height = 60,
