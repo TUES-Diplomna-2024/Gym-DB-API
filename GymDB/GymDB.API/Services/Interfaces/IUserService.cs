@@ -10,6 +10,8 @@ namespace GymDB.API.Services.Interfaces
 
         User? GetUserById(Guid id);
 
+        User? GetCurrUser(HttpContext context);
+
         User? GetUserByEmail(string email);
 
         User? GetUserByEmailAndPassword(string email, string password);

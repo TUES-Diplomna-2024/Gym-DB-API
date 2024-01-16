@@ -16,7 +16,6 @@ namespace GymDB.API.Data.Entities
         [StringLength(500, ErrorMessage = "Instructions must be up to 500 characters long!")]
         public string Instructions { get; set; }
 
-        [StringLength(100, ErrorMessage = "MuscleGroups must be up to 100 characters long!")]
         public string MuscleGroups { get; set; }
 
         [ExerciseType]
@@ -27,7 +26,6 @@ namespace GymDB.API.Data.Entities
         [StringLength(12)]
         public string Difficulty { get; set; }
 
-        [StringLength(100, ErrorMessage = "Equipment must be up to 100 characters long!")]
         public string? Equipment { get; set; }
 
         public bool IsCustom { get; set; }

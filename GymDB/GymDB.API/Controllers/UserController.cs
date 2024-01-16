@@ -4,6 +4,8 @@ using GymDB.API.Models.User;
 using GymDB.API.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using GymDB.API.Data.Settings;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 namespace GymDB.API.Controllers
 {
@@ -103,11 +105,23 @@ namespace GymDB.API.Controllers
         [HttpGet, Authorize(Roles = "ADMIN")]
         public IActionResult GetAllUsers()
         {
+
             List<UserProfileModel> users = userService.GetAllUsers()
                                                       .Select(user => new UserProfileModel(user))
                                                       .ToList();
 
             return Ok(users);
+        }
+
+        [HttpGet("curr-user"), Authorize]
+        public IActionResult GetCurrUser()
+        {
+            User? currUser = userService.GetCurrUser(HttpContext);
+
+            if (currUser == null)
+                return NotFound($"Current user could not be found!");
+
+            return Ok(new UserProfileModel(currUser));
         }
     }
 }

@@ -2,6 +2,7 @@
 using GymDB.API.Data.Entities;
 using GymDB.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace GymDB.API.Services
 {
@@ -20,6 +21,16 @@ namespace GymDB.API.Services
         public User? GetUserById(Guid id)
             => context.Users.Include(user => user.Role)
                             .FirstOrDefault(user => user.Id == id);
+
+        public User? GetCurrUser(HttpContext context)
+        {
+            Guid id;
+
+            if (Guid.TryParse(context.User.FindFirstValue("userId"), out id))
+                return GetUserById(id);
+
+            return null;
+        }
 
         public User? GetUserByEmail(string email)
             => context.Users.Include(user => user.Role)
