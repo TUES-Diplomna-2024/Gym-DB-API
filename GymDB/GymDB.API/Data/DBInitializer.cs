@@ -25,7 +25,7 @@ namespace GymDB.API.Data
 
                         context.Roles.AddRange(roles);
 
-                        Role adminRole = roles.First(role => role.NormalizedName == "ADMIN");
+                        Role superAdminRole = roles.First(role => role.NormalizedName == "SUPER_ADMIN");
 
                         context.Users.Add(
                             new User {
@@ -33,8 +33,8 @@ namespace GymDB.API.Data
                                 Username = settings.DBSeed.RootAdmin.Username,
                                 Email = settings.DBSeed.RootAdmin.Email,
                                 Password = BCrypt.Net.BCrypt.EnhancedHashPassword(settings.DBSeed.RootAdmin.Password, 13),
-                                RoleId = adminRole.Id,
-                                Role = adminRole,
+                                RoleId = superAdminRole.Id,
+                                Role = superAdminRole,
                                 BirthDate = DateOnly.FromDateTime(DateTime.UtcNow),
                                 Gender = "other",
                                 Height = 60,
