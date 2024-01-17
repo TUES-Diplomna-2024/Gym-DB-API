@@ -175,7 +175,7 @@ namespace GymDB.API.Controllers
                 return StatusCode(403, "The role of the root admin cannot be changed!");
 
             if (user.Role.NormalizedName == "ADMIN" && currUser.Role.NormalizedName != "SUPER_ADMIN")
-                return StatusCode(403, "You can't re-assign new role to another admin user! This can be done only by the root admin!");
+                return StatusCode(403, "You cannot re-assign new role to another admin user! This can be done only by the root admin!");
 
             if (!roleService.AssignUserRole(user, assignRoleAttempt.RoleNormalizedName))
                 return NotFound($"Role with normalized name '{assignRoleAttempt.RoleNormalizedName}' could not be found!");
@@ -204,9 +204,35 @@ namespace GymDB.API.Controllers
             if (!userService.IsUserPasswordCorrect(currUser, deleteAttempt.Password))
                 return Unauthorized("Incorrect password!");
 
-            // TODO: Delete all data connected to the user
+            // TODO: Delete all data connected to the user [first TODO]
             sessionService.RemoveAllUserSessions(currUser);
             userService.RemoveUser(currUser);
+
+            return Ok();
+        }
+
+        [HttpDelete("{id}"), Authorize(Roles = "SUPER_ADMIN,ADMIN")]
+        public IActionResult DeleteUserById(Guid id)
+        {
+            User? currUser = userService.GetCurrUser(HttpContext);
+
+            if (currUser == null)
+                return NotFound("The current user no longer exists!");
+
+            User? user = userService.GetUserById(id);
+
+            if (user == null)
+                return NotFound($"User with id '{id}' could not be found!");
+
+            if (user.Role.NormalizedName == "SUPER_ADMIN")
+                return StatusCode(403, "The root admin cannot be deleted!");
+
+            if (user.Role.NormalizedName == "ADMIN" && currUser.Role.NormalizedName != "SUPER_ADMIN")
+                return StatusCode(403, "You cannot delete another admin user! This can be done only by the root admin!");
+
+            // TODO: Delete all user data
+            sessionService.RemoveAllUserSessions(user);
+            userService.RemoveUser(user);
 
             return Ok();
         }
