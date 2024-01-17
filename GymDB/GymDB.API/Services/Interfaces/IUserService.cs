@@ -18,6 +18,8 @@ namespace GymDB.API.Services.Interfaces
 
         bool IsUserAlreadyRegisteredWithEmail(string email);
 
+        bool IsUserPasswordCorrect(User user, string password);
+
         string GetHashedPassword(string password);
 
         void AddUser(User user);
@@ -25,5 +27,7 @@ namespace GymDB.API.Services.Interfaces
         void UpdateUser(User user, UserUpdateModel update);
 
         void UpdateUser(User user);
+
+        void RemoveUser(User user);
     }
 }

@@ -28,6 +28,8 @@ namespace GymDB.API.Controllers
             this.sessionService = sessionService;
         }
 
+        /* POST REQUESTS */
+
         [HttpPost("signup")]
         public IActionResult SignUp(UserSignUpModel signUpAttempt)
         {
@@ -92,6 +94,8 @@ namespace GymDB.API.Controllers
             return Ok(jwtService.GenerateNewJwtToken(userSession.User));
         }
 
+        /* GET REQUESTS */
+
         [HttpGet("current"), Authorize]
         public IActionResult GetCurrUser()
         {
@@ -130,8 +134,10 @@ namespace GymDB.API.Controllers
             return Ok(users);
         }
 
+        /* PUT REQUESTS */
+
         [HttpPut("current"), Authorize]
-        public IActionResult UpdateCurrUser(UserUpdateModel update)
+        public IActionResult UpdateCurrUser(UserUpdateModel updateAttempt)
         {
             User? currUser = userService.GetCurrUser(HttpContext);
 
@@ -141,7 +147,7 @@ namespace GymDB.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            userService.UpdateUser(currUser, update);
+            userService.UpdateUser(currUser, updateAttempt);
 
             return Ok();
         }
@@ -175,6 +181,32 @@ namespace GymDB.API.Controllers
                 return NotFound($"Role with normalized name '{assignRoleAttempt.RoleNormalizedName}' could not be found!");
 
             userService.UpdateUser(user);
+
+            return Ok();
+        }
+
+        /* DELETE REQUESTS */
+
+        [HttpDelete("current"), Authorize]
+        public IActionResult DeleteCurrUser(UserDeleteModel deleteAttempt)
+        {
+            User? currUser = userService.GetCurrUser(HttpContext);
+
+            if (currUser == null)
+                return NotFound("The current user no longer exists!");
+
+            if (currUser.Role.NormalizedName == "SUPER_ADMIN")
+                return StatusCode(403, "The root admin cannot be deleted!");
+
+            if (!ModelState.IsValid)
+                return BadRequest();
+
+            if (!userService.IsUserPasswordCorrect(currUser, deleteAttempt.Password))
+                return Unauthorized("Incorrect password!");
+
+            // TODO: Delete all data connected to the user
+            sessionService.RemoveAllUserSessions(currUser);
+            userService.RemoveUser(currUser);
 
             return Ok();
         }

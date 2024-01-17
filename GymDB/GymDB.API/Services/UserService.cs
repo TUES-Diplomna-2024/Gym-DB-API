@@ -41,7 +41,7 @@ namespace GymDB.API.Services
         {
             User? user = GetUserByEmail(email);
 
-            if (user != null && BCrypt.Net.BCrypt.EnhancedVerify(password, user.Password))
+            if (user != null && IsUserPasswordCorrect(user, password))
                 return user;
 
             return null;
@@ -49,6 +49,9 @@ namespace GymDB.API.Services
 
         public bool IsUserAlreadyRegisteredWithEmail(string email)
             => GetUserByEmail(email) != null;
+
+        public bool IsUserPasswordCorrect(User user, string password)
+            => BCrypt.Net.BCrypt.EnhancedVerify(password, user.Password);
 
         public string GetHashedPassword(string password)
             => BCrypt.Net.BCrypt.EnhancedHashPassword(password, 13);
@@ -58,7 +61,7 @@ namespace GymDB.API.Services
             user.Password = GetHashedPassword(user.Password);
             user.Gender = user.Gender.ToLower();
 
-            context.Add(user);
+            context.Users.Add(user);
             context.SaveChanges();
         }
 
@@ -71,13 +74,18 @@ namespace GymDB.API.Services
             user.Weight = update.Weight;
             user.OnModified = DateTime.UtcNow;
 
-            context.Update(user);
-            context.SaveChanges();
+            UpdateUser(user);
         }
 
         public void UpdateUser(User user)
         {
-            context.Update(user);
+            context.Users.Update(user);
+            context.SaveChanges();
+        }
+
+        public void RemoveUser(User user)
+        {
+            context.Users.Remove(user);
             context.SaveChanges();
         }
     }

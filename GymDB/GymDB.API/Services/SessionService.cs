@@ -42,6 +42,11 @@ namespace GymDB.API.Services
             => context.Sessions.Include(session => session.User.Role)
                                .FirstOrDefault(session => session.RefreshToken == refreshToken);
 
+        public List<Session> GetAllUserSessions(User user)
+            => context.Sessions.Include(session => session.User.Role)
+                               .Where(session => session.UserId == user.Id)
+                               .ToList();
+
         public List<Session> GetAllInactiveSessions()
         {
             return context.Sessions.Include(session => session.User.Role)
@@ -52,6 +57,13 @@ namespace GymDB.API.Services
         public void RemoveSession(Session session)
         {
             context.Sessions.Remove(session);
+            context.SaveChanges();
+        }
+
+        public void RemoveAllUserSessions(User user)
+        {
+            List<Session> toBeRemoved = GetAllUserSessions(user);
+            context.Sessions.RemoveRange(toBeRemoved);
             context.SaveChanges();
         }
 
