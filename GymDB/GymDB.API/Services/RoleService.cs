@@ -16,6 +16,9 @@ namespace GymDB.API.Services
         public Role? GetRoleByNormalizedName(string normalizedName)
             => context.Roles.FirstOrDefault(role => role.NormalizedName == normalizedName);
 
+        public bool HasUserAnyRole(User user, string[] roles)
+            => roles.Contains(user.Role.NormalizedName);
+
         public bool AssignUserRole(User user, string roleNormalizedName)
         {
             Role? role = GetRoleByNormalizedName(roleNormalizedName);

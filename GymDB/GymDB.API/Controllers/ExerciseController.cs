@@ -11,11 +11,13 @@ namespace GymDB.API.Controllers
     public class ExerciseController : ControllerBase
     {
         private readonly IUserService userService;
+        private readonly IRoleService roleService;
         private readonly IExerciseService exerciseService;
 
-        public ExerciseController(IUserService userService, IExerciseService exerciseService)
+        public ExerciseController(IUserService userService, IRoleService roleService, IExerciseService exerciseService)
         {
             this.userService = userService;
+            this.roleService = roleService;
             this.exerciseService = exerciseService;
         }
 
@@ -40,6 +42,27 @@ namespace GymDB.API.Controllers
             exerciseService.AddExercise(exercise);
 
             return Ok();
+        }
+
+        /* GET REQUESTS */
+
+        [HttpGet("{id}"), Authorize]
+        public IActionResult GetExerciseById(Guid id)
+        {
+            User? currUser = userService.GetCurrUser(HttpContext);
+
+            if (currUser == null)
+                return NotFound("The current user no longer exists!");
+
+            Exercise? exercise = exerciseService.GetExerciseById(id);
+
+            if (exercise == null)
+                return NotFound($"Exercise with id '{id}' could not be found!");
+
+            if (exercise.UserId != null && exercise.UserId != currUser.Id && !roleService.HasUserAnyRole(currUser, new string[] { "SUPER_ADMIN", "ADMIN" }))
+                return StatusCode(403, $"You cannot access exercise with id '{exercise.Id}'!");
+
+            return Ok(new ExerciseInfoModel(exercise));
         }
     }
 }

@@ -6,6 +6,8 @@ namespace GymDB.API.Services.Interfaces
     {
         Role? GetRoleByNormalizedName(string normalizedName);
 
+        bool HasUserAnyRole(User user, string[] roles);
+
         bool AssignUserRole(User user, string roleNormalizedName);
     }
 }

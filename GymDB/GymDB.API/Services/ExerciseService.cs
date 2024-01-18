@@ -1,6 +1,7 @@
 ﻿using GymDB.API.Data;
 using GymDB.API.Data.Entities;
 using GymDB.API.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace GymDB.API.Services
 {
@@ -12,6 +13,10 @@ namespace GymDB.API.Services
         {
             this.context = context;
         }
+
+        public Exercise? GetExerciseById(Guid id)
+            => context.Exercises.Include(exercise => exercise.User)
+                                .FirstOrDefault(exercise => exercise.Id == id);
 
         public void AddExercise(Exercise exercise)
         {
