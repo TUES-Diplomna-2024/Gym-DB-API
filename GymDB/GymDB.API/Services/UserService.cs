@@ -72,13 +72,14 @@ namespace GymDB.API.Services
             user.Gender = update.Gender;
             user.Height = update.Height;
             user.Weight = update.Weight;
-            user.OnModified = DateTime.UtcNow;
 
             UpdateUser(user);
         }
 
         public void UpdateUser(User user)
         {
+            user.OnModified = DateTime.UtcNow;
+
             context.Users.Update(user);
             context.SaveChanges();
         }

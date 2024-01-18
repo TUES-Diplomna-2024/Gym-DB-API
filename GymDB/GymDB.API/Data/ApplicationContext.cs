@@ -12,5 +12,7 @@ namespace GymDB.API.Data
         public DbSet<Role> Roles { get; set; }
 
         public DbSet<Session> Sessions { get; set; }
+
+        public DbSet<Exercise> Exercises { get; set; }
     }
 }

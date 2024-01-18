@@ -1,4 +1,5 @@
 ﻿using GymDB.API.Data.ValidationAttributes;
+using GymDB.API.Models.Exercise;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -6,6 +7,26 @@ namespace GymDB.API.Data.Entities
 {
     public class Exercise
     {
+        public Exercise() { }
+
+        public Exercise(ExerciseCreateModel input, User? user)
+        {
+            Id           = Guid.NewGuid();
+            OnCreated    = DateOnly.FromDateTime(DateTime.UtcNow);
+            OnModified   = DateTime.UtcNow;
+
+            Name         = input.Name;
+            Instructions = input.Instructions;
+            MuscleGroups = input.MuscleGroups;
+            Type         = input.Type;
+            Difficulty   = input.Difficulty;
+            Equipment    = input.Equipment;
+
+            IsCustom     = input.UserId != null ? true : false;
+            UserId       = input.UserId;
+            User         = user;
+        }
+
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
@@ -31,8 +52,12 @@ namespace GymDB.API.Data.Entities
         public bool IsCustom { get; set; }
 
         [ForeignKey(nameof(User))]
-        public Guid UserId { get; set; }
+        public Guid? UserId { get; set; }
 
-        public User User { get; set; }
+        public User? User { get; set; }
+
+        public DateOnly OnCreated { get; set; }
+
+        public DateTime OnModified { get; set; }
     }
 }

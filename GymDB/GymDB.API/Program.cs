@@ -60,6 +60,7 @@ namespace GymDB.API
             builder.Services.AddScoped<IRoleService, RoleService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<ISessionService, SessionService>();
+            builder.Services.AddScoped<IExerciseService, ExerciseService>();
         }
 
         public static void ConfigureApplication(WebApplication app)
