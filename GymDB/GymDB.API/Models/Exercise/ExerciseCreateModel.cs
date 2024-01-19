@@ -21,6 +21,6 @@ namespace GymDB.API.Models.Exercise
 
         public string? Equipment { get; set; }
 
-        public Guid? UserId { get; set; }
+        public bool IsPrivate { get; set; }
     }
 }

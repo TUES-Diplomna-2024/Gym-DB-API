@@ -9,7 +9,7 @@ namespace GymDB.API.Data.Entities
     {
         public Exercise() { }
 
-        public Exercise(ExerciseCreateModel input, User? user)
+        public Exercise(ExerciseCreateModel input, User user)
         {
             Id           = Guid.NewGuid();
             OnCreated    = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -21,10 +21,13 @@ namespace GymDB.API.Data.Entities
             Type         = input.Type;
             Difficulty   = input.Difficulty;
             Equipment    = input.Equipment;
+            IsPrivate    = input.IsPrivate;
 
-            IsCustom     = input.UserId != null ? true : false;
-            UserId       = input.UserId;
-            User         = user;
+            if (IsPrivate)
+            {
+                UserId   = user.Id;
+                User     = user;
+            }
         }
 
         [Key]
@@ -49,7 +52,7 @@ namespace GymDB.API.Data.Entities
 
         public string? Equipment { get; set; }
 
-        public bool IsCustom { get; set; }
+        public bool IsPrivate { get; set; }
 
         [ForeignKey(nameof(User))]
         public Guid? UserId { get; set; }

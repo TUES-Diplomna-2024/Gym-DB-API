@@ -1,5 +1,6 @@
 ﻿using GymDB.API.Data.Entities;
 using GymDB.API.Models.Exercise;
+using GymDB.API.Models.User;
 using GymDB.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,21 +24,23 @@ namespace GymDB.API.Controllers
 
         /* POST REQUESTS */
 
-        [HttpPost("create"), Authorize(Roles = "SUPER_ADMIN,ADMIN")]
+        [HttpPost("create"), Authorize]
         public IActionResult CreateNewExercise(ExerciseCreateModel createAttempt)
         {
-            if (userService.GetCurrUser(HttpContext) == null)
+            User? currUser = userService.GetCurrUser(HttpContext);
+
+            if (currUser == null)
                 return NotFound("The current user no longer exists!");
 
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            User? user = userService.GetUserById(createAttempt.UserId ?? Guid.Empty);
+            bool isCurrUserAdmin = roleService.HasUserAnyRole(currUser, new string[] { "SUPER_ADMIN", "ADMIN" });
 
-            if (createAttempt.UserId != null && user == null)
-                return NotFound($"User with id '{createAttempt.UserId}' could not be found!");
+            if (!createAttempt.IsPrivate && !isCurrUserAdmin)
+                return StatusCode(403, "Only admin users can create public еxercises!");
 
-            Exercise exercise = new Exercise(createAttempt, user);
+            Exercise exercise = new Exercise(createAttempt, currUser);
 
             exerciseService.AddExercise(exercise);
 
@@ -59,10 +62,24 @@ namespace GymDB.API.Controllers
             if (exercise == null)
                 return NotFound($"Exercise with id '{id}' could not be found!");
 
-            if (exercise.UserId != null && exercise.UserId != currUser.Id && !roleService.HasUserAnyRole(currUser, new string[] { "SUPER_ADMIN", "ADMIN" }))
-                return StatusCode(403, $"You cannot access exercise with id '{exercise.Id}'!");
+            if (exercise.IsPrivate && exercise.UserId != currUser.Id)
+                return StatusCode(403, $"You cannot access the custom exercise with id '{exercise.Id}'! It's owned by another user!");
 
-            return Ok(new ExerciseInfoModel(exercise));
+            if (roleService.HasUserAnyRole(currUser, new string[] { "SUPER_ADMIN", "ADMIN" }))
+                return Ok(new ExerciseAdvancedInfoModel(exercise));
+
+            return Ok(new ExerciseNormalInfoModel(exercise));
+        }
+
+        [HttpGet, Authorize]
+        public IActionResult GetAllPublicExercisesPreviews()
+        {
+            if (userService.GetCurrUser(HttpContext) == null)
+                return NotFound("The current user no longer exists!");
+
+            List<Exercise> publicExercises = exerciseService.GetAllPublicExercises();
+
+            return Ok(exerciseService.GetExercisesPreviews(publicExercises));
         }
     }
 }

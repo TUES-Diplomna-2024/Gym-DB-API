@@ -8,6 +8,8 @@ namespace GymDB.API.Services.Interfaces
     {
         List<User> GetAllUsers();
 
+        List<UserPreviewModel> GetAllUserPreviews();
+
         User? GetUserById(Guid id);
 
         User? GetCurrUser(HttpContext context);

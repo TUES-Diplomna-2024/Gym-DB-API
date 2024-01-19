@@ -19,6 +19,12 @@ namespace GymDB.API.Services
         public List<User> GetAllUsers()
             => context.Users.Include(user => user.Role).ToList();
 
+        public List<UserPreviewModel> GetAllUserPreviews()
+            => GetAllUsers().Select(user => new UserPreviewModel(user))
+                            .OrderBy(user => user.RoleName)
+                            .ThenBy(user => user.Username)
+                            .ToList(); 
+
         public User? GetUserById(Guid id)
             => context.Users.Include(user => user.Role)
                             .FirstOrDefault(user => user.Id == id);

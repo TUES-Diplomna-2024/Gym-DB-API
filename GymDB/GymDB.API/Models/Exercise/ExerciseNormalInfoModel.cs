@@ -2,9 +2,9 @@
 
 namespace GymDB.API.Models.Exercise
 {
-    public class ExerciseInfoModel
+    public class ExerciseNormalInfoModel
     {
-        public ExerciseInfoModel(ExerciseClass exercise)
+        public ExerciseNormalInfoModel(ExerciseClass exercise)
         {
             Name         = exercise.Name;
             Instructions = exercise.Instructions;
@@ -12,6 +12,7 @@ namespace GymDB.API.Models.Exercise
             Type         = exercise.Type;
             Difficulty   = exercise.Difficulty;
             Equipment    = exercise.Equipment;
+            IsPrivate    = exercise.IsPrivate;
         }
 
         public string Name { get; set; }
@@ -25,5 +26,7 @@ namespace GymDB.API.Models.Exercise
         public string Difficulty { get; set; }
 
         public string? Equipment { get; set; }
+
+        public bool IsPrivate { get; set; }
     }
 }

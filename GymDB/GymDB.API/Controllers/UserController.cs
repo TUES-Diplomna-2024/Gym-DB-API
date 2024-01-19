@@ -4,6 +4,7 @@ using GymDB.API.Models.User;
 using GymDB.API.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using GymDB.API.Data.Settings;
+using GymDB.API.Models.Exercise;
 
 namespace GymDB.API.Controllers
 {
@@ -17,8 +18,9 @@ namespace GymDB.API.Controllers
         private readonly IRoleService roleService;
         private readonly IJwtService jwtService;
         private readonly ISessionService sessionService;
+        private readonly IExerciseService exerciseService;
 
-        public UserController(IConfiguration config, IUserService userService, IRoleService roleService, IJwtService jwtService, ISessionService sessionService)
+        public UserController(IConfiguration config, IUserService userService, IRoleService roleService, IJwtService jwtService, ISessionService sessionService, IExerciseService exerciseService)
         {
             settings = new ApplicationSettings(config);
 
@@ -26,6 +28,7 @@ namespace GymDB.API.Controllers
             this.roleService = roleService;
             this.jwtService = jwtService;
             this.sessionService = sessionService;
+            this.exerciseService = exerciseService;
         }
 
         /* POST REQUESTS */
@@ -122,16 +125,27 @@ namespace GymDB.API.Controllers
         }
 
         [HttpGet, Authorize(Roles = "SUPER_ADMIN,ADMIN")]
-        public IActionResult GetAllUsers()
+        public IActionResult GetAllUserPreviews()
         {
             if (userService.GetCurrUser(HttpContext) == null)
                 return NotFound("The current user no longer exists!");
 
-            List<UserProfileModel> users = userService.GetAllUsers()
-                                                      .Select(user => new UserProfileModel(user))
-                                                      .ToList();
+            List<UserPreviewModel> userPreviews = userService.GetAllUserPreviews();
 
-            return Ok(users);
+            return Ok(userPreviews);
+        }
+
+        [HttpGet("current/custom-exercises"), Authorize]
+        public IActionResult GetCurrUserCustomExercisesPreviews()
+        {
+            User? currUser = userService.GetCurrUser(HttpContext);
+
+            if (currUser == null)
+                return NotFound("The current user no longer exists!");
+
+            List<Exercise> customExercises = exerciseService.GetAllUserCustomExercises(currUser);
+
+            return Ok(exerciseService.GetExercisesPreviews(customExercises));
         }
 
         /* PUT REQUESTS */
