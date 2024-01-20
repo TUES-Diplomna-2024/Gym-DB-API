@@ -6,6 +6,7 @@ namespace GymDB.API.Models.User
     {
         public UserProfileModel(UserClass user)
         {
+            Id        = user.Id;
             Username  = user.Username;
             Email     = user.Email;
             RoleName  = user.Role.Name;
@@ -16,6 +17,8 @@ namespace GymDB.API.Models.User
             BirthDate = user.BirthDate;
             OnCreated = user.OnCreated;
         }
+
+        public Guid Id { get; set; }
 
         public string Username { get; set; }
 

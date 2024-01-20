@@ -6,6 +6,7 @@ namespace GymDB.API.Models.Exercise
     {
         public ExerciseNormalInfoModel(ExerciseClass exercise)
         {
+            Id           = exercise.Id;
             Name         = exercise.Name;
             Instructions = exercise.Instructions;
             MuscleGroups = exercise.MuscleGroups;
@@ -14,6 +15,8 @@ namespace GymDB.API.Models.Exercise
             Equipment    = exercise.Equipment;
             IsPrivate    = exercise.IsPrivate;
         }
+        
+        public Guid Id { get; set; }
 
         public string Name { get; set; }
 

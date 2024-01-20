@@ -20,6 +20,11 @@ namespace GymDB.API.Services
                                 .Where(exercise => !exercise.IsPrivate)
                                 .ToList();
 
+        public List<Exercise> GetAllPrivateAppExercises()
+            => context.Exercises.Include(exercise => exercise.User)
+                                .Where(exercise => exercise.IsPrivate && exercise.UserId == null)
+                                .ToList();
+
         public List<Exercise> GetAllUserCustomExercises(User user)
             => context.Exercises.Include(exercise => exercise.User)
                                 .Where(exercise => exercise.UserId == user.Id)
@@ -38,6 +43,30 @@ namespace GymDB.API.Services
             exercise.Difficulty = exercise.Difficulty.ToLower();
 
             context.Exercises.Add(exercise);
+            context.SaveChanges();
+        }
+
+        public void UpdateExercise(Exercise exercise, ExerciseUpdateModel update)
+        {
+            exercise.Name         = update.Name;
+            exercise.Instructions = update.Instructions;
+            exercise.MuscleGroups = update.MuscleGroups;
+            exercise.Type         = update.Type;
+            exercise.Difficulty   = update.Difficulty;
+            exercise.Equipment    = update.Equipment;
+
+            UpdateExercise(exercise);
+        }
+
+        public void UpdateExercise(Exercise exercise)
+        {
+            context.Exercises.Update(exercise);
+            context.SaveChanges();
+        }
+
+        public void RemoveExercise(Exercise exercise)
+        {
+            context.Exercises.Remove(exercise);
             context.SaveChanges();
         }
     }
