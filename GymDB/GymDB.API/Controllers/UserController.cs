@@ -4,7 +4,6 @@ using GymDB.API.Models.User;
 using GymDB.API.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using GymDB.API.Data.Settings;
-using GymDB.API.Models.Exercise;
 
 namespace GymDB.API.Controllers
 {
@@ -218,8 +217,7 @@ namespace GymDB.API.Controllers
             if (!userService.IsUserPasswordCorrect(currUser, deleteAttempt.Password))
                 return Unauthorized("Incorrect password!");
 
-            // TODO: Delete all data connected to the user [first TODO]
-            sessionService.RemoveAllUserSessions(currUser);
+            userService.RemoveUserRelatedData(currUser);
             userService.RemoveUser(currUser);
 
             return Ok();
@@ -243,9 +241,8 @@ namespace GymDB.API.Controllers
 
             if (user.Role.NormalizedName == "ADMIN" && currUser.Role.NormalizedName != "SUPER_ADMIN")
                 return StatusCode(403, "You cannot delete another admin user! This can be done only by the root admin!");
-
-            // TODO: Delete all user data
-            sessionService.RemoveAllUserSessions(user);
+            
+            userService.RemoveUserRelatedData(user);
             userService.RemoveUser(user);
 
             return Ok();

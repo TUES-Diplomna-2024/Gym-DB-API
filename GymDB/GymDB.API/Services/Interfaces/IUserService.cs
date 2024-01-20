@@ -30,6 +30,8 @@ namespace GymDB.API.Services.Interfaces
 
         void UpdateUser(User user);
 
+        void RemoveUserRelatedData(User user);
+
         void RemoveUser(User user);
     }
 }

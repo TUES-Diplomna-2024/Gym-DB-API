@@ -1,6 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
 using GymDB.API.Models.Exercise;
-using GymDB.API.Models.User;
 using GymDB.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

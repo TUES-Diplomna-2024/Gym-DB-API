@@ -30,6 +30,16 @@ namespace GymDB.API.Services
                                 .Where(exercise => exercise.UserId == user.Id)
                                 .ToList();
 
+        public List<Exercise> GetAllUserPublicExercises(User user)
+            => context.Exercises.Include(exercise => exercise.User)
+                                .Where(exercise => !exercise.IsPrivate && exercise.UserId == user.Id)
+                                .ToList();
+
+        public List<Exercise> GetAllUserPrivateExercises(User user)
+            => context.Exercises.Include(exercise => exercise.User)
+                                .Where(exercise => exercise.IsPrivate && exercise.UserId == user.Id)
+                                .ToList();
+
         public List<ExercisePreviewModel> GetExercisesPreviews(List<Exercise> exercises)
             => exercises.Select(exercise => new ExercisePreviewModel(exercise)).ToList();
 
@@ -67,6 +77,27 @@ namespace GymDB.API.Services
         public void RemoveExercise(Exercise exercise)
         {
             context.Exercises.Remove(exercise);
+            context.SaveChanges();
+        }
+
+        public void RemoveAllUserPrivateExercises(User user)
+        {
+            List<Exercise> toBeRemoved = GetAllUserPrivateExercises(user);
+            context.Exercises.RemoveRange(toBeRemoved);
+            context.SaveChanges();
+        }
+
+        public void RemoveUserOwnershipOfPublicExercises(User user)
+        {
+            List<Exercise> publicExercises = GetAllUserPublicExercises(user);
+
+            foreach (var exercise in publicExercises)
+            {
+                exercise.UserId = null;
+                exercise.User = null;
+            }
+
+            context.Exercises.UpdateRange(publicExercises);
             context.SaveChanges();
         }
     }

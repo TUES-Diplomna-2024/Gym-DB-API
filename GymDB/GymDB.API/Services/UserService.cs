@@ -11,9 +11,14 @@ namespace GymDB.API.Services
     {
         private readonly ApplicationContext context;
 
-        public UserService(ApplicationContext context)
-        {
+        private readonly IExerciseService exerciseService;
+        private readonly ISessionService sessionService;
+
+        public UserService(ApplicationContext context, IExerciseService exerciseService, ISessionService sessionService)
+        {                                              
             this.context = context;
+            this.exerciseService = exerciseService;
+            this.sessionService = sessionService;
         }
 
         public List<User> GetAllUsers()
@@ -88,6 +93,16 @@ namespace GymDB.API.Services
 
             context.Users.Update(user);
             context.SaveChanges();
+        }
+
+        public void RemoveUserRelatedData(User user)
+        {
+            // TODO: Delete all data connected to the user [first TODO]
+
+            exerciseService.RemoveAllUserPrivateExercises(user);
+            exerciseService.RemoveUserOwnershipOfPublicExercises(user);
+
+            sessionService.RemoveAllUserSessions(user);
         }
 
         public void RemoveUser(User user)

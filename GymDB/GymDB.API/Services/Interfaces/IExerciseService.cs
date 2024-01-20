@@ -11,6 +11,10 @@ namespace GymDB.API.Services.Interfaces
 
         List<Exercise> GetAllUserCustomExercises(User user);
 
+        List<Exercise> GetAllUserPublicExercises(User user);
+
+        List<Exercise> GetAllUserPrivateExercises(User user);
+
         List<ExercisePreviewModel> GetExercisesPreviews(List<Exercise> exercises);
 
         Exercise? GetExerciseById(Guid id);
@@ -22,5 +26,9 @@ namespace GymDB.API.Services.Interfaces
         void UpdateExercise(Exercise exercise);
 
         void RemoveExercise(Exercise exercise);
+
+        void RemoveAllUserPrivateExercises(User user);
+
+        void RemoveUserOwnershipOfPublicExercises(User user);
     }
 }
