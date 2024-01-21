@@ -14,13 +14,11 @@ namespace GymDB.API.Controllers
     public class WorkoutController : ControllerBase
     {
         private readonly IUserService userService;
-        private readonly IExerciseService exerciseService;
         private readonly IWorkoutService workoutService;
 
-        public WorkoutController(IUserService userService, IExerciseService exerciseService, IWorkoutService workoutService)
+        public WorkoutController(IUserService userService, IWorkoutService workoutService)
         {
             this.userService = userService;
-            this.exerciseService = exerciseService;
             this.workoutService = workoutService;
         }
 

@@ -82,6 +82,7 @@ namespace GymDB.API.Services
         {
             workout.Name = update.Name;
             workout.Description = update.Description;
+            workout.OnModified = DateTime.UtcNow;
 
             if (workout.ExerciseCount != 0)
                 RemoveAllWorkoutExercises(workout);

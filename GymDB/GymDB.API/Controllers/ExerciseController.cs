@@ -147,6 +147,8 @@ namespace GymDB.API.Controllers
             exercise.IsPrivate = updateVisAttempt.IsPrivate;
             exerciseService.UpdateExercise(exercise);
 
+            // TODO: If the exercise is no longer accessible by any workout, it should be removed from it
+
             return Ok();
         }
 
