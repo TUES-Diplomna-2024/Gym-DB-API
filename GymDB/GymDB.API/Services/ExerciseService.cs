@@ -40,7 +40,7 @@ namespace GymDB.API.Services
                                 .Where(exercise => exercise.IsPrivate && exercise.UserId == user.Id)
                                 .ToList();
 
-        public List<Exercise> GetExercisesByIds(List<Guid> ids)
+        public List<Exercise> GetUserAccessibleExercisesByIds(List<Guid> ids, User user)
         {
             List<Exercise> result = new List<Exercise>();
 
@@ -48,7 +48,7 @@ namespace GymDB.API.Services
             {
                 Exercise? exercise = GetExerciseById(id);
                 
-                if (exercise != null)
+                if (exercise != null && (!exercise.IsPrivate || exercise.UserId == user.Id))
                     result.Add(exercise);
             }
 
