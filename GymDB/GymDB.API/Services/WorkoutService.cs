@@ -4,6 +4,7 @@ using GymDB.API.Models.Exercise;
 using GymDB.API.Models.Workout;
 using GymDB.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GymDB.API.Services
 {
@@ -50,17 +51,60 @@ namespace GymDB.API.Services
             context.SaveChanges();
         }
 
-        public void AddExercisesToWorkout(Workout workout, List<Exercise> exercises)
+        public Guid[]? AddExercisesToWorkout(Workout workout, List<Guid> exercisesIds, User owner)
         {
-            int lastPosition = workout.ExerciseCount - 1;
+            List<Exercise> exercises = exerciseService.GetUserAccessibleExercisesByIds(exercisesIds!, owner);
 
-            List<WorkoutExercise> workoutExercises = exercises.Select(exercise => new WorkoutExercise(workout, exercise, ++lastPosition))
+            int lastPosition = workout.ExerciseCount;
+
+            List<WorkoutExercise> workoutExercises = exercises.Select(exercise => new WorkoutExercise(workout, exercise, lastPosition++))
                                                               .ToList();
 
-            workout.ExerciseCount = lastPosition + 1;
+            workout.ExerciseCount = lastPosition;
 
             context.Workouts.Update(workout);
             context.WorkoutsExercises.AddRange(workoutExercises);
+
+            context.SaveChanges();
+
+            if (exercises.Count() != exercisesIds!.Count())
+            {
+                Guid[] foundExerciseIds = exercises.Select(exercise => exercise.Id).ToArray();
+                Guid[] notFoundExerciseIds = exercisesIds!.Where(id => !foundExerciseIds.Contains(id)).ToArray();
+
+                return notFoundExerciseIds;
+            }
+
+            return null;
+        }
+
+        public Guid[]? UpdateWorkout(Workout workout, WorkoutCreateUpdateModel update, User owner)
+        {
+            workout.Name = update.Name;
+            workout.Description = update.Description;
+
+            if (workout.ExerciseCount != 0)
+                RemoveAllWorkoutExercises(workout);
+
+            if (!update.Exercises.IsNullOrEmpty())
+            {
+                Guid[]? notFoundExerciseIds = AddExercisesToWorkout(workout, update.Exercises!, owner);
+                return notFoundExerciseIds;
+            }
+
+            return null;
+        }
+
+        public void RemoveAllWorkoutExercises(Workout workout)
+        {
+            List<WorkoutExercise> toBeRemoved = context.WorkoutsExercises
+                                                       .Where(workoutExercise => workoutExercise.WorkoutId == workout.Id)
+                                                       .ToList();
+
+            context.WorkoutsExercises.RemoveRange(toBeRemoved);
+
+            workout.ExerciseCount = 0;
+            context.Workouts.Update(workout);
 
             context.SaveChanges();
         }

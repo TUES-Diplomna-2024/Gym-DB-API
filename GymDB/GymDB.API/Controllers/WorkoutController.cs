@@ -27,7 +27,7 @@ namespace GymDB.API.Controllers
         /* POST REQUESTS */
 
         [HttpPost("create"), Authorize]
-        public IActionResult CreateNewWorkout(WorkoutCreateModel createAttempt)
+        public IActionResult CreateNewWorkout(WorkoutCreateUpdateModel createAttempt)
         {
             User? currUser = userService.GetCurrUser(HttpContext);
 
@@ -41,18 +41,14 @@ namespace GymDB.API.Controllers
 
             workoutService.AddWorkout(workout);
 
-            if (!createAttempt.Exercises.IsNullOrEmpty())
+            if (!createAttempt.Exercises!.IsNullOrEmpty())
             {
-                List<Exercise> exercises = exerciseService.GetUserAccessibleExercisesByIds(createAttempt.Exercises!, currUser);
+                Guid[]? notFoundExerciseIds = workoutService.AddExercisesToWorkout(workout, createAttempt.Exercises!, currUser);
 
-                workoutService.AddExercisesToWorkout(workout, exercises);
-
-                if (exercises.Count() != createAttempt.Exercises!.Count())
+                if (notFoundExerciseIds != null)
                 {
-                    Guid[] foundIds = exercises.Select(exercise => exercise.Id).ToArray();
-                    Guid[] notFoundIds = createAttempt.Exercises!.Where(id => !foundIds.Contains(id)).ToArray();
-
-                    return Ok($"Workout was created without exercises with ids {string.Join(", ", notFoundIds.Select(nfi => $"'{nfi}'"))} because they cannot be found or are not available to you!");
+                    string notFound = string.Join(", ", notFoundExerciseIds.Select(nfi => $"'{nfi}'"));
+                    return Ok($"Workout was created without exercises with ids {notFound} because they cannot be found or are not available to you!");
                 }
             }
 
@@ -94,6 +90,36 @@ namespace GymDB.API.Controllers
         }
 
         /* PUT REQUESTS */
+
+        [HttpPut("{id}"), Authorize]
+        public IActionResult UpdateWorkoutById(Guid id, WorkoutCreateUpdateModel updateAttempt)
+        {
+            User? currUser = userService.GetCurrUser(HttpContext);
+
+            if (currUser == null)
+                return NotFound("The current user no longer exists!");
+
+            if (!ModelState.IsValid)
+                return BadRequest();
+
+            Workout? workout = workoutService.GetWorkoutById(id);
+
+            if (workout == null)
+                return NotFound($"Workout with id '{id}' could not be found!");
+
+            if (workout.UserId != currUser.Id)
+                return StatusCode(403, "You cannot access workouts that are owned by another user!");
+
+            Guid[]? notFoundExerciseIds = workoutService.UpdateWorkout(workout, updateAttempt, currUser);
+
+            if (notFoundExerciseIds != null)
+            {
+                string notFound = string.Join(", ", notFoundExerciseIds.Select(nfi => $"'{nfi}'"));
+                return Ok($"Workout was updated without adding exercises with ids {notFound} because they cannot be found or are not available to you!");
+            }
+                
+            return Ok();
+        }
 
         /* DELETE REQUESTS */
     }

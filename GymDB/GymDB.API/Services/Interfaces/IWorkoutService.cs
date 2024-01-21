@@ -15,6 +15,10 @@ namespace GymDB.API.Services.Interfaces
 
         void AddWorkout(Workout workout);
 
-        void AddExercisesToWorkout(Workout workout, List<Exercise> exercises);
+        Guid[]? AddExercisesToWorkout(Workout workout, List<Guid> exercisesIds, User owner);
+
+        Guid[]? UpdateWorkout(Workout workout, WorkoutCreateUpdateModel update, User owner);
+
+        void RemoveAllWorkoutExercises(Workout workout);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace GymDB.API.Models.Workout
 {
-    public class WorkoutCreateModel
+    public class WorkoutCreateUpdateModel
     {
         [StringLength(130, MinimumLength = 3, ErrorMessage = "Name must be between 3 and 130 characters long!")]
         public string Name { get; set; }

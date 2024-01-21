@@ -8,7 +8,7 @@ namespace GymDB.API.Data.Entities
     {
         public Workout() { }
 
-        public Workout(WorkoutCreateModel input, User owner)
+        public Workout(WorkoutCreateUpdateModel input, User owner)
         {
             Id            = Guid.NewGuid();
             OnCreated     = DateOnly.FromDateTime(DateTime.UtcNow);
