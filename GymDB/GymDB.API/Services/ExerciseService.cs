@@ -40,6 +40,21 @@ namespace GymDB.API.Services
                                 .Where(exercise => exercise.IsPrivate && exercise.UserId == user.Id)
                                 .ToList();
 
+        public List<Exercise> GetExercisesByIds(List<Guid> ids)
+        {
+            List<Exercise> result = new List<Exercise>();
+
+            foreach(var id in ids)
+            {
+                Exercise? exercise = GetExerciseById(id);
+                
+                if (exercise != null)
+                    result.Add(exercise);
+            }
+
+            return result;                
+        }
+
         public List<ExercisePreviewModel> GetExercisesPreviews(List<Exercise> exercises)
             => exercises.Select(exercise => new ExercisePreviewModel(exercise)).ToList();
 
@@ -70,12 +85,16 @@ namespace GymDB.API.Services
 
         public void UpdateExercise(Exercise exercise)
         {
+            exercise.OnModified = DateTime.UtcNow;
+
             context.Exercises.Update(exercise);
             context.SaveChanges();
         }
 
         public void RemoveExercise(Exercise exercise)
         {
+            // TODO: Remove exercise from every workout & Update workouts exercise count
+
             context.Exercises.Remove(exercise);
             context.SaveChanges();
         }

@@ -9,7 +9,7 @@ namespace GymDB.API.Data.Entities
     {
         public Exercise() { }
 
-        public Exercise(ExerciseCreateModel input, User user)
+        public Exercise(ExerciseCreateModel input, User owner)
         {
             Id           = Guid.NewGuid();
             OnCreated    = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -25,8 +25,8 @@ namespace GymDB.API.Data.Entities
 
             if (IsPrivate)
             {
-                UserId   = user.Id;
-                User     = user;
+                UserId   = owner.Id;
+                User     = owner;
             }
         }
 

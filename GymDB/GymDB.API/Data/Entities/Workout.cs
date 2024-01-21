@@ -1,11 +1,25 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using GymDB.API.Models.Workout;
 
 namespace GymDB.API.Data.Entities
 {
     public class Workout
     {
         public Workout() { }
+
+        public Workout(WorkoutCreateModel input, User owner)
+        {
+            Id            = Guid.NewGuid();
+            OnCreated     = DateOnly.FromDateTime(DateTime.UtcNow);
+            OnModified    = DateTime.UtcNow;
+            ExerciseCount = 0;
+
+            Name          = input.Name;
+            Description   = input.Description;
+            UserId        = owner.Id;
+            User          = owner;
+        }
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -21,6 +35,8 @@ namespace GymDB.API.Data.Entities
         public Guid UserId { get; set; }
 
         public User User { get; set; }
+
+        public int ExerciseCount { get; set; }
 
         public DateOnly OnCreated { get; set; }
 

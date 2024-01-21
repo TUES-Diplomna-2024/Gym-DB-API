@@ -15,6 +15,8 @@ namespace GymDB.API.Services.Interfaces
 
         List<Exercise> GetAllUserPrivateExercises(User user);
 
+        List<Exercise> GetExercisesByIds(List<Guid> ids);
+
         List<ExercisePreviewModel> GetExercisesPreviews(List<Exercise> exercises);
 
         Exercise? GetExerciseById(Guid id);
