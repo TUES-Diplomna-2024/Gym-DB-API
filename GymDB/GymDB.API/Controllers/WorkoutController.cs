@@ -122,5 +122,26 @@ namespace GymDB.API.Controllers
         }
 
         /* DELETE REQUESTS */
+
+        [HttpDelete("{id}"), Authorize]
+        public IActionResult DeleteWorkoutById(Guid id)
+        {
+            User? currUser = userService.GetCurrUser(HttpContext);
+
+            if (currUser == null)
+                return NotFound("The current user no longer exists!");
+
+            Workout? workout = workoutService.GetWorkoutById(id);
+
+            if (workout == null)
+                return NotFound($"Workout with id '{id}' could not be found!");
+
+            if (workout.UserId != currUser.Id)
+                return StatusCode(403, "You cannot delete workouts that are owned by another user!");
+
+            workoutService.RemoveWorkout(workout);
+
+            return Ok();
+        }
     }
 }

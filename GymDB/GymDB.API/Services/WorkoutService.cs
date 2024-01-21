@@ -108,5 +108,24 @@ namespace GymDB.API.Services
 
             context.SaveChanges();
         }
+
+        public void RemoveWorkout(Workout workout)
+        {
+            RemoveAllWorkoutExercises(workout);
+
+            context.Workouts.Remove(workout);
+            context.SaveChanges();
+        }
+
+        public void RemoveAllUserWorkouts(User user)
+        {
+            List<Workout> toBeRemoved = GetUserWorkouts(user);
+
+            foreach (var workout in toBeRemoved)
+                RemoveAllWorkoutExercises(workout);
+
+            context.Workouts.RemoveRange(toBeRemoved);
+            context.SaveChanges();
+        }
     }
 }

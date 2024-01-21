@@ -20,5 +20,9 @@ namespace GymDB.API.Services.Interfaces
         Guid[]? UpdateWorkout(Workout workout, WorkoutCreateUpdateModel update, User owner);
 
         void RemoveAllWorkoutExercises(Workout workout);
+
+        void RemoveWorkout(Workout workout);
+
+        void RemoveAllUserWorkouts(User user);
     }
 }
