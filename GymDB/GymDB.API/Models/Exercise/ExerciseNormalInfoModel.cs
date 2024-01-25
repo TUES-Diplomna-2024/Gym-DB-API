@@ -1,10 +1,11 @@
-﻿using ExerciseClass = GymDB.API.Data.Entities.Exercise;
+﻿using UserClass = GymDB.API.Data.Entities.User;
+using ExerciseClass = GymDB.API.Data.Entities.Exercise;
 
 namespace GymDB.API.Models.Exercise
 {
     public class ExerciseNormalInfoModel
     {
-        public ExerciseNormalInfoModel(ExerciseClass exercise)
+        public ExerciseNormalInfoModel(ExerciseClass exercise, UserClass? owner)
         {
             Id           = exercise.Id;
             Name         = exercise.Name;
@@ -14,6 +15,12 @@ namespace GymDB.API.Models.Exercise
             Difficulty   = exercise.Difficulty;
             Equipment    = exercise.Equipment;
             IsPrivate    = exercise.IsPrivate;
+
+            if (owner != null)
+            {
+                OwnerId = owner.Id;
+                OwnerUsername = owner.Username;
+            }
         }
         
         public Guid Id { get; set; }
@@ -31,5 +38,9 @@ namespace GymDB.API.Models.Exercise
         public string? Equipment { get; set; }
 
         public bool IsPrivate { get; set; }
+
+        public Guid? OwnerId { get; set; }
+
+        public string? OwnerUsername { get; set; }
     }
 }

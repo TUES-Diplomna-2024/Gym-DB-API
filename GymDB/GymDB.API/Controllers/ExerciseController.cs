@@ -62,14 +62,15 @@ namespace GymDB.API.Controllers
                 return NotFound($"Exercise with id '{id}' could not be found!");
 
             bool isCurrUserAdmin = roleService.HasUserAnyRole(currUser, new string[] { "SUPER_ADMIN", "ADMIN" });
+            bool isCurrUserExerciseOwner = exercise.UserId == currUser.Id;
 
-            if (exercise.IsPrivate && exercise.UserId != currUser.Id && !isCurrUserAdmin)
+            if (exercise.IsPrivate && !isCurrUserExerciseOwner && !isCurrUserAdmin)
                 return StatusCode(403, "You cannot access custom exercises that are owned by another user!");
 
             if (isCurrUserAdmin)
-                return Ok(new ExerciseAdvancedInfoModel(exercise));
+                return Ok(new ExerciseAdvancedInfoModel(exercise, isCurrUserExerciseOwner ? null : exercise.User));
 
-            return Ok(new ExerciseNormalInfoModel(exercise));
+            return Ok(new ExerciseNormalInfoModel(exercise, isCurrUserExerciseOwner ? null : exercise.User));
         }
 
         [HttpGet, Authorize]
