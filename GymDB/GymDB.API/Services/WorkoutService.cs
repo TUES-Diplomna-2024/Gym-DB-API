@@ -27,14 +27,21 @@ namespace GymDB.API.Services
         public List<WorkoutPreviewModel> GetWorkoutsPreviews(List<Workout> workouts)
             => workouts.Select(workout => new WorkoutPreviewModel(workout)).ToList();
 
+        public List<Workout> GetWorkoutsContainingExercise(Exercise exercise)
+            => context.WorkoutsExercises.Include(workoutExercise => workoutExercise.Workout.User)
+                                        .Where(workoutExercise => workoutExercise.ExerciseId == exercise.Id)
+                                        .Select(workoutExercise => workoutExercise.Workout).ToList();
+
+        public List<Exercise> GetWorkoutExercises(Workout workout)
+            => context.WorkoutsExercises.Include(workoutExercise => workoutExercise.Exercise.User)
+                                        .Where(workoutExercise => workoutExercise.WorkoutId == workout.Id)
+                                        .OrderBy(workoutExercise => workoutExercise.Position)
+                                        .Select(workoutExercise => workoutExercise.Exercise).ToList();
+
+
         public WorkoutWithExercisesModel GetWorkoutWithExercises(Workout workout)
         {
-            List<Exercise> exercises = context.WorkoutsExercises
-                                              .Include(workoutExercise => workoutExercise.Exercise)
-                                              .Where(workoutExercise => workoutExercise.WorkoutId == workout.Id)
-                                              .OrderBy(workoutExercise => workoutExercise.Position)
-                                              .Select(workoutExercise => workoutExercise.Exercise)
-                                              .ToList();
+            List<Exercise> exercises = GetWorkoutExercises(workout);
 
             List<ExercisePreviewModel> exercisePreviews = exerciseService.GetExercisesPreviews(exercises);
 
@@ -51,10 +58,8 @@ namespace GymDB.API.Services
             context.SaveChanges();
         }
 
-        public Guid[]? AddExercisesToWorkout(Workout workout, List<Guid> exercisesIds, User owner)
+        public void AddExercisesToWorkout(Workout workout, List<Exercise> exercises)
         {
-            List<Exercise> exercises = exerciseService.GetUserAccessibleExercisesByIds(exercisesIds!, owner);
-
             int lastPosition = workout.ExerciseCount;
 
             List<WorkoutExercise> workoutExercises = exercises.Select(exercise => new WorkoutExercise(workout, exercise, lastPosition++))
@@ -66,6 +71,13 @@ namespace GymDB.API.Services
             context.WorkoutsExercises.AddRange(workoutExercises);
 
             context.SaveChanges();
+        }
+
+        public Guid[]? AddExercisesToWorkout(Workout workout, List<Guid> exercisesIds, User owner)
+        {
+            List<Exercise> exercises = exerciseService.GetUserAccessibleExercisesByIds(exercisesIds, owner);
+
+            AddExercisesToWorkout(workout, exercises);
 
             if (exercises.Count() != exercisesIds!.Count())
             {
@@ -108,6 +120,26 @@ namespace GymDB.API.Services
             context.Workouts.Update(workout);
 
             context.SaveChanges();
+        }
+
+        public void RemoveExerciseFromAllWorkouts(Exercise exercise, bool excludeOwnerWorkouts)
+        {
+            List<Workout> workouts = GetWorkoutsContainingExercise(exercise);
+
+            if (excludeOwnerWorkouts)
+                workouts = workouts.Where(workout => workout.UserId != exercise.UserId).ToList();
+
+            foreach (var workout in workouts)
+            {
+                List<Exercise> workoutExercises = GetWorkoutExercises(workout);
+
+                workoutExercises.RemoveAll(e => e.Id == exercise.Id);
+
+                RemoveAllWorkoutExercises(workout);
+
+                if (workoutExercises.Count != 0)
+                    AddExercisesToWorkout(workout, workoutExercises);
+            }
         }
 
         public void RemoveWorkout(Workout workout)

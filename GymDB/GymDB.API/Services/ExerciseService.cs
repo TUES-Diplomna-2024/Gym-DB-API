@@ -2,6 +2,7 @@
 using GymDB.API.Data.Entities;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Services.Interfaces;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
 namespace GymDB.API.Services
@@ -55,6 +56,12 @@ namespace GymDB.API.Services
             return result;                
         }
 
+        public List<Exercise> GetExercisesBySearch(ExerciseSearchModel search, User user)
+            => context.Exercises.Include(exercise => exercise.User)
+                                .Where(exercise => (!exercise.IsPrivate || exercise.UserId == user.Id) && 
+                                                    exercise.Name.ToLower().Contains(search.Name.ToLower()))
+                                .ToList();
+
         public List<ExercisePreviewModel> GetExercisesPreviews(List<Exercise> exercises)
             => exercises.Select(exercise => new ExercisePreviewModel(exercise)).ToList();
 
@@ -69,6 +76,18 @@ namespace GymDB.API.Services
 
             context.Exercises.Add(exercise);
             context.SaveChanges();
+        }
+
+        public void UpdateExerciseVisibility(Exercise exercise, bool isPrivate)
+        {
+            // TODO: Finish removing the exercise from all workouts not owned by the owner of the exercise
+
+            if (isPrivate)
+                BackgroundJob.Enqueue<IWorkoutService>(workoutService => workoutService.RemoveExerciseFromAllWorkouts(exercise, true));
+
+            exercise.IsPrivate = isPrivate;
+
+            UpdateExercise(exercise);
         }
 
         public void UpdateExercise(Exercise exercise, ExerciseUpdateModel update)
@@ -94,6 +113,8 @@ namespace GymDB.API.Services
         public void RemoveExercise(Exercise exercise)
         {
             // TODO: Remove exercise from every workout & Update workouts exercise count
+
+            BackgroundJob.Enqueue<IWorkoutService>(workoutService => workoutService.RemoveExerciseFromAllWorkouts(exercise, false));
 
             context.Exercises.Remove(exercise);
             context.SaveChanges();

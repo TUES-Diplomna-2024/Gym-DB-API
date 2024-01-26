@@ -95,6 +95,19 @@ namespace GymDB.API.Controllers
             return Ok(exerciseService.GetExercisesPreviews(privateExercises));
         }
 
+        [HttpGet("search"), Authorize]
+        public IActionResult GetExerciseSearchResults([FromQuery] ExerciseSearchModel search)
+        {
+            User? currUser = userService.GetCurrUser(HttpContext);
+
+            if (currUser == null)
+                return NotFound("The current user no longer exists!");
+
+            List<Exercise> results = exerciseService.GetExercisesBySearch(search, currUser);
+
+            return Ok(exerciseService.GetExercisesPreviews(results));
+        }
+
         /* PUT REQUESTS */
 
         [HttpPut("{id}"), Authorize]
@@ -145,10 +158,7 @@ namespace GymDB.API.Controllers
                 return StatusCode(403, $"Exercise with id '{id}' is already {state}!");
             }
 
-            exercise.IsPrivate = updateVisAttempt.IsPrivate;
-            exerciseService.UpdateExercise(exercise);
-
-            // TODO: If the exercise is no longer accessible by any workout, it should be removed from it
+            exerciseService.UpdateExerciseVisibility(exercise, updateVisAttempt.IsPrivate);
 
             return Ok();
         }

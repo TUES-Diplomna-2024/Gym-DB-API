@@ -17,11 +17,15 @@ namespace GymDB.API.Services.Interfaces
 
         List<Exercise> GetUserAccessibleExercisesByIds(List<Guid> ids, User user);
 
+        List<Exercise> GetExercisesBySearch(ExerciseSearchModel search, User user);
+
         List<ExercisePreviewModel> GetExercisesPreviews(List<Exercise> exercises);
 
         Exercise? GetExerciseById(Guid id);
 
         void AddExercise(Exercise exercise);
+
+        void UpdateExerciseVisibility(Exercise exercise, bool isPrivate);
 
         void UpdateExercise(Exercise exercise, ExerciseUpdateModel update);
 
