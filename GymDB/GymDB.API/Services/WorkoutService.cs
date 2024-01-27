@@ -1,5 +1,6 @@
 ﻿using GymDB.API.Data;
 using GymDB.API.Data.Entities;
+using GymDB.API.Mapping;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Models.Workout;
 using GymDB.API.Services.Interfaces;
@@ -25,7 +26,7 @@ namespace GymDB.API.Services
                                .Where(workout => workout.UserId == user.Id).ToList();
 
         public List<WorkoutPreviewModel> GetWorkoutsPreviews(List<Workout> workouts)
-            => workouts.Select(workout => new WorkoutPreviewModel(workout)).ToList();
+            => workouts.Select(workout => workout.ToPreviewModel()).ToList();
 
         public List<Workout> GetWorkoutsContainingExercise(Exercise exercise)
             => context.WorkoutsExercises.Include(workoutExercise => workoutExercise.Workout.User)
@@ -45,12 +46,15 @@ namespace GymDB.API.Services
 
             List<ExercisePreviewModel> exercisePreviews = exerciseService.GetExercisesPreviews(exercises);
 
-            return new WorkoutWithExercisesModel(workout, exercisePreviews);
+            return workout.ToWorkoutWithExercisesModel(exercisePreviews);
         }
 
         public Workout? GetWorkoutById(Guid id)
             => context.Workouts.Include(workout => workout.User)
                                .FirstOrDefault(workout => workout.Id == id);
+
+        public bool IsWorkoutOwnedByUser(Workout workout, User user)
+            => workout.UserId == user.Id;
 
         public void AddWorkout(Workout workout)
         {
@@ -62,7 +66,7 @@ namespace GymDB.API.Services
         {
             int lastPosition = workout.ExerciseCount;
 
-            List<WorkoutExercise> workoutExercises = exercises.Select(exercise => new WorkoutExercise(workout, exercise, lastPosition++))
+            List<WorkoutExercise> workoutExercises = exercises.Select(exercise => workout.ToWorkoutExerciseEntity(exercise, lastPosition++))
                                                               .ToList();
 
             workout.ExerciseCount = lastPosition;

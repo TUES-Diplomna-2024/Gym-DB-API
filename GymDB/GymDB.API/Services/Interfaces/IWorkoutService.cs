@@ -17,6 +17,8 @@ namespace GymDB.API.Services.Interfaces
 
         Workout? GetWorkoutById(Guid id);
 
+        bool IsWorkoutOwnedByUser(Workout workout, User user);
+
         void AddWorkout(Workout workout);
 
         void AddExercisesToWorkout(Workout workout, List<Exercise> exercises);

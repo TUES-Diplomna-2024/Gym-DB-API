@@ -63,7 +63,7 @@ namespace GymDB.API.Controllers
                 return NotFound($"Exercise with id '{id}' could not be found!");
 
             bool isCurrUserAdmin = roleService.HasUserAnyRole(currUser, new string[] { "SUPER_ADMIN", "ADMIN" });
-            bool isCurrUserExerciseOwner = exercise.UserId == currUser.Id;
+            bool isCurrUserExerciseOwner = exerciseService.IsExerciseOwnedByUser(exercise, currUser);
 
             if (exercise.IsPrivate && !isCurrUserExerciseOwner && !isCurrUserAdmin)
                 return StatusCode(403, "You cannot access custom exercises that are owned by another user!");
@@ -134,7 +134,7 @@ namespace GymDB.API.Controllers
                 return StatusCode(403, "Only admin users can update public exercises!");
 
             // Only owners can update their private custom exercises
-            if (exercise.IsPrivate && exercise.UserId != currUser.Id)
+            if (exercise.IsPrivate && !exerciseService.IsExerciseOwnedByUser(exercise, currUser))
                 return StatusCode(403, "You cannot update private exercise that is owned by another user!");
 
             exerciseService.UpdateExercise(exercise, updateAttempt);
@@ -184,7 +184,7 @@ namespace GymDB.API.Controllers
             if (!exercise.IsPrivate && !isCurrUserAdmin)
                 return StatusCode(403, "Only admin users can delete public exercises!");
 
-            if (exercise.IsPrivate && exercise.UserId != null && exercise.UserId != currUser.Id)
+            if (exercise.IsPrivate && exercise.UserId != null && !exerciseService.IsExerciseOwnedByUser(exercise, currUser))
                 return StatusCode(403, "You cannot delete custom exercise that is owned by another user!");
 
             exerciseService.RemoveExercise(exercise);

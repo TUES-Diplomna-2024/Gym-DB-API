@@ -5,18 +5,6 @@ namespace GymDB.API.Data.Entities
 {
     public class WorkoutExercise
     {
-        public WorkoutExercise() { }
-
-        public WorkoutExercise(Workout workout, Exercise exercise, int position)
-        {
-            Id         = Guid.NewGuid();
-            WorkoutId  = workout.Id;
-            Workout    = workout;
-            ExerciseId = exercise.Id;
-            Exercise   = exercise;
-            Position   = position;
-        }
-
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }

@@ -6,21 +6,6 @@ namespace GymDB.API.Data.Entities
 {
     public class Workout
     {
-        public Workout() { }
-
-        public Workout(WorkoutCreateUpdateModel input, User owner)
-        {
-            Id            = Guid.NewGuid();
-            OnCreated     = DateOnly.FromDateTime(DateTime.UtcNow);
-            OnModified    = DateTime.UtcNow;
-            ExerciseCount = 0;
-
-            Name          = input.Name;
-            Description   = input.Description;
-            UserId        = owner.Id;
-            User          = owner;
-        }
-
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }

@@ -23,6 +23,8 @@ namespace GymDB.API.Services.Interfaces
 
         Exercise? GetExerciseById(Guid id);
 
+        bool IsExerciseOwnedByUser(Exercise exercise, User user);
+
         void AddExercise(Exercise exercise);
 
         void UpdateExerciseVisibility(Exercise exercise, bool isPrivate);

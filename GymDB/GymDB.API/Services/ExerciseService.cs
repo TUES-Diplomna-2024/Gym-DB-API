@@ -70,6 +70,9 @@ namespace GymDB.API.Services
             => context.Exercises.Include(exercise => exercise.User)
                                 .FirstOrDefault(exercise => exercise.Id == id);
 
+        public bool IsExerciseOwnedByUser(Exercise exercise, User user)
+            => exercise.UserId == user.Id;
+
         public void AddExercise(Exercise exercise)
         {
             exercise.Type = exercise.Type.ToLower().Replace(" ", "_");

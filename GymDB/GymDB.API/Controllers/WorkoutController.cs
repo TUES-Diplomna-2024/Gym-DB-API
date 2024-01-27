@@ -1,6 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
-using GymDB.API.Data.Settings;
-using GymDB.API.Models.User;
+using GymDB.API.Mapping;
 using GymDB.API.Models.Workout;
 using GymDB.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -35,7 +34,7 @@ namespace GymDB.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            Workout workout = new Workout(createAttempt, currUser);
+            Workout workout = createAttempt.ToEntity(currUser);
 
             workoutService.AddWorkout(workout);
 
@@ -81,7 +80,7 @@ namespace GymDB.API.Controllers
             if (workout == null)
                 return NotFound($"Workout with id '{id}' could not be found!");
 
-            if (workout.UserId != currUser.Id)
+            if (!workoutService.IsWorkoutOwnedByUser(workout, currUser))
                 return StatusCode(403, "You cannot access workouts that are owned by another user!");
 
             return Ok(workoutService.GetWorkoutWithExercises(workout));
@@ -105,7 +104,7 @@ namespace GymDB.API.Controllers
             if (workout == null)
                 return NotFound($"Workout with id '{id}' could not be found!");
 
-            if (workout.UserId != currUser.Id)
+            if (!workoutService.IsWorkoutOwnedByUser(workout, currUser))
                 return StatusCode(403, "You cannot access workouts that are owned by another user!");
 
             Guid[]? notFoundExerciseIds = workoutService.UpdateWorkout(workout, updateAttempt, currUser);
@@ -134,7 +133,7 @@ namespace GymDB.API.Controllers
             if (workout == null)
                 return NotFound($"Workout with id '{id}' could not be found!");
 
-            if (workout.UserId != currUser.Id)
+            if (!workoutService.IsWorkoutOwnedByUser(workout, currUser))
                 return StatusCode(403, "You cannot delete workouts that are owned by another user!");
 
             workoutService.RemoveWorkout(workout);
