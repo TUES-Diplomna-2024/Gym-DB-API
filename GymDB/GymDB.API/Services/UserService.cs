@@ -1,5 +1,6 @@
 ﻿using GymDB.API.Data;
 using GymDB.API.Data.Entities;
+using GymDB.API.Mapping;
 using GymDB.API.Models.User;
 using GymDB.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +28,7 @@ namespace GymDB.API.Services
             => context.Users.Include(user => user.Role).ToList();
 
         public List<UserPreviewModel> GetAllUserPreviews()
-            => GetAllUsers().Select(user => new UserPreviewModel(user))
+            => GetAllUsers().Select(user => user.ToPreviewModel())
                             .OrderBy(user => user.RoleName)
                             .ThenBy(user => user.Username)
                             .ToList(); 

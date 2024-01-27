@@ -7,23 +7,6 @@ namespace GymDB.API.Data.Entities
 {
     public class User
     {
-        public User() { }
-
-        public User(UserSignUpModel input)
-        {
-            Id                  = Guid.NewGuid();
-            OnCreated           = DateOnly.FromDateTime(DateTime.UtcNow);
-            OnModified          = DateTime.UtcNow;
-            
-            Username            = input.Username;
-            Email               = input.Email;
-            Password            = input.Password;
-            BirthDate           = input.BirthDate;
-            Gender              = input.Gender;
-            Height              = input.Height;
-            Weight              = input.Weight;
-        }
-
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }

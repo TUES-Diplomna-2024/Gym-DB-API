@@ -4,6 +4,7 @@ using GymDB.API.Models.User;
 using GymDB.API.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using GymDB.API.Data.Settings;
+using GymDB.API.Mapping;
 
 namespace GymDB.API.Controllers
 {
@@ -41,7 +42,7 @@ namespace GymDB.API.Controllers
             if (userService.IsUserAlreadyRegisteredWithEmail(signUpAttempt.Email))
                 return Conflict($"Email {signUpAttempt.Email} is already in use by another user!");
 
-            User user = new User(signUpAttempt);
+            User user = signUpAttempt.ToEntity();
 
             if (!roleService.AssignUserRole(user, settings.DBSeed.DefaultRole))
                 return StatusCode(500, $"Role '{settings.DBSeed.DefaultRole}' could not be found!");
@@ -106,7 +107,7 @@ namespace GymDB.API.Controllers
             if (currUser == null)
                 return NotFound("The current user no longer exists!");
 
-            return Ok(new UserProfileModel(currUser));
+            return Ok(currUser.ToProfileModel());
         }
 
         [HttpGet("{id}"), Authorize]
@@ -120,7 +121,7 @@ namespace GymDB.API.Controllers
             if (user == null)
                 return NotFound($"User with id '{id}' could not be found!");
             
-            return Ok(new UserProfileModel(user));
+            return Ok(user.ToProfileModel());
         }
 
         [HttpGet, Authorize(Roles = "SUPER_ADMIN,ADMIN")]
@@ -178,16 +179,16 @@ namespace GymDB.API.Controllers
             if (user == null)
                 return NotFound($"User with id '{id}' could not be found!");
 
-            if (user.Role.NormalizedName == assignRoleAttempt.RoleNormalizedName)
+            if (roleService.HasUserRole(user, assignRoleAttempt.RoleNormalizedName))
                 return StatusCode(403, $"User has already role '{assignRoleAttempt.RoleNormalizedName}'!");
 
             if (assignRoleAttempt.RoleNormalizedName == "SUPER_ADMIN")
                 return StatusCode(403, "Role 'SUPER_ADMIN' is reserved for the root admin only! You cannot assign it to another user!");
 
-            if (user.Role.NormalizedName == "SUPER_ADMIN")
+            if (roleService.HasUserRole(user, "SUPER_ADMIN"))
                 return StatusCode(403, "The role of the root admin cannot be changed!");
 
-            if (user.Role.NormalizedName == "ADMIN" && currUser.Role.NormalizedName != "SUPER_ADMIN")
+            if (roleService.HasUserRole(user, "ADMIN") && !roleService.HasUserRole(currUser, "SUPER_ADMIN"))
                 return StatusCode(403, "You cannot re-assign new role to another admin user! This can be done only by the root admin!");
 
             if (!roleService.AssignUserRole(user, assignRoleAttempt.RoleNormalizedName))
@@ -208,7 +209,7 @@ namespace GymDB.API.Controllers
             if (currUser == null)
                 return NotFound("The current user no longer exists!");
 
-            if (currUser.Role.NormalizedName == "SUPER_ADMIN")
+            if (roleService.HasUserRole(currUser, "SUPER_ADMIN"))
                 return StatusCode(403, "The root admin cannot be deleted!");
 
             if (!ModelState.IsValid)
@@ -236,10 +237,10 @@ namespace GymDB.API.Controllers
             if (user == null)
                 return NotFound($"User with id '{id}' could not be found!");
 
-            if (user.Role.NormalizedName == "SUPER_ADMIN")
+            if (roleService.HasUserRole(user, "SUPER_ADMIN"))
                 return StatusCode(403, "The root admin cannot be deleted!");
 
-            if (user.Role.NormalizedName == "ADMIN" && currUser.Role.NormalizedName != "SUPER_ADMIN")
+            if (roleService.HasUserRole(user, "ADMIN") && !roleService.HasUserRole(currUser, "SUPER_ADMIN"))
                 return StatusCode(403, "You cannot delete another admin user! This can be done only by the root admin!");
             
             userService.RemoveUserRelatedData(user);
