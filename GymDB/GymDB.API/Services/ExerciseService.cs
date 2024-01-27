@@ -1,5 +1,6 @@
 ﻿using GymDB.API.Data;
 using GymDB.API.Data.Entities;
+using GymDB.API.Mapping;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Services.Interfaces;
 using Hangfire;
@@ -63,7 +64,7 @@ namespace GymDB.API.Services
                                 .ToList();
 
         public List<ExercisePreviewModel> GetExercisesPreviews(List<Exercise> exercises)
-            => exercises.Select(exercise => new ExercisePreviewModel(exercise)).ToList();
+            => exercises.Select(exercise => exercise.ToPreviewModel()).ToList();
 
         public Exercise? GetExerciseById(Guid id)
             => context.Exercises.Include(exercise => exercise.User)

@@ -1,4 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
+using GymDB.API.Mapping;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -39,7 +40,7 @@ namespace GymDB.API.Controllers
             if (!createAttempt.IsPrivate && !isCurrUserAdmin)
                 return StatusCode(403, "Only admin users can create public еxercises!");
 
-            Exercise exercise = new Exercise(createAttempt, currUser);
+            Exercise exercise = createAttempt.ToEntity(currUser);
 
             exerciseService.AddExercise(exercise);
 
@@ -68,9 +69,9 @@ namespace GymDB.API.Controllers
                 return StatusCode(403, "You cannot access custom exercises that are owned by another user!");
 
             if (isCurrUserAdmin)
-                return Ok(new ExerciseAdvancedInfoModel(exercise, isCurrUserExerciseOwner ? null : exercise.User));
+                return Ok(exercise.ToAdvancedInfoModel(isCurrUserExerciseOwner ? null : exercise.User));
 
-            return Ok(new ExerciseNormalInfoModel(exercise, isCurrUserExerciseOwner ? null : exercise.User));
+            return Ok(exercise.ToNormalInfoModel(isCurrUserExerciseOwner ? null : exercise.User));
         }
 
         [HttpGet, Authorize]
