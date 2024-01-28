@@ -102,9 +102,6 @@ namespace GymDB.API
 
             ConfigureRecurringJobs();
 
-            var t = new AzureBlobService(builder.Configuration);
-            t.Test();
-
             app.SeedDB(settings);
 
             app.Run();

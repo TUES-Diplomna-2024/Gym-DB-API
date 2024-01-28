@@ -7,8 +7,8 @@ namespace GymDB.API.Data.Settings
     {
         private string storageAccount = "";
         private string accessKey = "";
-        private string exerciseImageContainer = "";
-        private string exerciseVideoContainer = "";
+        private string imageContainer = "";
+        private string videoContainer = "";
 
         public AzureSettings(IConfiguration config)
         {
@@ -21,9 +21,19 @@ namespace GymDB.API.Data.Settings
             
             AccessKey = azureSettings["AccessKey"]!;
 
-            ExerciseImageContainer = azureSettings["ExerciseImageContainer"]!;
+            ImageContainer = azureSettings["ImageContainer"]!;
 
-            ExerciseVideoContainer = azureSettings["ExerciseVideoContainer"]!;
+            VideoContainer = azureSettings["VideoContainer"]!;
+
+            if (azureSettings["ImageTypesAccepted"].IsNullOrEmpty())
+                throw new InvalidOperationException("'AzureSettings:ImageTypesAccepted' could not be found or is empty!");
+
+            ImageTypesAccepted = azureSettings["ImageTypesAccepted"]!.Split(";").ToList();
+
+            if (azureSettings["VideoTypesAccepted"].IsNullOrEmpty())
+                throw new InvalidOperationException("'AzureSettings:VideoTypesAccepted' could not be found or is empty!");
+
+            VideoTypesAccepted = azureSettings["VideoTypesAccepted"]!.Split(";").ToList();
 
             Credential = new StorageSharedKeyCredential(StorageAccount, AccessKey);
 
@@ -51,28 +61,32 @@ namespace GymDB.API.Data.Settings
             }
         }
 
-        public string ExerciseImageContainer
+        public string ImageContainer
         {
-            get { return exerciseImageContainer; }
+            get { return imageContainer; }
             private set
             {
                 if (value.IsNullOrEmpty())
-                    throw new InvalidOperationException("'AzureSettings:ExerciseImageContainer' could not be found or is empty!");
+                    throw new InvalidOperationException("'AzureSettings:ImageContainer' could not be found or is empty!");
 
-                exerciseImageContainer = value;
+                imageContainer = value;
             }
         }
 
-        public string ExerciseVideoContainer {
-            get { return exerciseVideoContainer; }
+        public string VideoContainer {
+            get { return videoContainer; }
             private set
             {
                 if (value.IsNullOrEmpty())
-                    throw new InvalidOperationException("'AzureSettings:ExerciseVideoContainer' could not be found or is empty!");
+                    throw new InvalidOperationException("'AzureSettings:VideoContainer' could not be found or is empty!");
 
-                exerciseVideoContainer = value;
+                videoContainer = value;
             }
         }
+
+        public List<string> ImageTypesAccepted { get; private set; }
+
+        public List<string> VideoTypesAccepted { get; private set; }
 
         public StorageSharedKeyCredential Credential { get; private set; }
 
