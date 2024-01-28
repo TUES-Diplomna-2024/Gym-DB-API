@@ -1,4 +1,5 @@
 ﻿using GymDB.API.Data.Settings.DBSeedModels;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GymDB.API.Data.Settings
 {
@@ -6,11 +7,24 @@ namespace GymDB.API.Data.Settings
     {
         public DBSeed(IConfiguration config)
         {
-            config.GetSection("DBSeed:Roles").Bind(Roles);
+
+            if (!config.GetSection("DBSeed").Exists())
+                throw new InvalidOperationException("'DBSeed' section could not be found or is empty!");
+
+            IConfigurationSection roleSection = config.GetSection("DBSeed:Roles");
+            IConfigurationSection rootAdminSection = config.GetSection("DBSeed:RootAdmin");
+
+            if (!roleSection.Exists())
+                throw new InvalidOperationException("'DBSeed:Roles' section could not be found or is empty!");
+
+            if (!rootAdminSection.Exists())
+                throw new InvalidOperationException("'DBSeed:RootAdmin' section could not be found or is empty!");
+
+            roleSection.Bind(Roles);
 
             foreach(KeyValuePair<string, string> pair in Roles)
             {
-                if (pair.Key == null || pair.Value == null)
+                if (pair.Key.IsNullOrEmpty() || pair.Value.IsNullOrEmpty())
                     throw new InvalidOperationException("There is an invalid role in 'DBSeed:Roles'!");
             }
             
@@ -25,12 +39,12 @@ namespace GymDB.API.Data.Settings
 
             DefaultRole = DefaultRole.ToUpper().Replace(" ", "_");
 
-            if (DefaultRole == "Super Admin")
-                throw new InvalidOperationException("Invalid 'DBSeed:DefaultRole'! The default role can't be set to 'Super Admin'! This role can be assigned only to the root admin!");
+            if (DefaultRole == "SUPER_ADMIN")
+                throw new InvalidOperationException("Invalid 'DBSeed:DefaultRole'! The default role cannot be set to 'Super Admin'! This role can be assigned only to the root admin!");
 
-            config.GetSection("DBSeed:RootAdmin").Bind(RootAdmin);
+            rootAdminSection.Bind(RootAdmin);
 
-            if (RootAdmin.Username == null || RootAdmin.Email == null || RootAdmin.Password == null)
+            if (RootAdmin.Username.IsNullOrEmpty() || RootAdmin.Email.IsNullOrEmpty() || RootAdmin.Password.IsNullOrEmpty())
                 throw new InvalidOperationException("'DBSeed:RootAdmin' doesn't have all the necessary settings - 'Username', 'Email', and 'Password'!");
         }
 

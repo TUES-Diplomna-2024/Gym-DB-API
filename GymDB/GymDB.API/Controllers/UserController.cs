@@ -3,8 +3,8 @@ using GymDB.API.Services.Interfaces;
 using GymDB.API.Models.User;
 using GymDB.API.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
-using GymDB.API.Data.Settings;
 using GymDB.API.Mapping;
+using GymDB.API.Data;
 
 namespace GymDB.API.Controllers
 {

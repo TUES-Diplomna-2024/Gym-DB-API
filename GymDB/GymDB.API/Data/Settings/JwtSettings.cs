@@ -6,6 +6,9 @@
         {
             IConfigurationSection jwtSettings = config.GetSection("JwtSettings");
 
+            if (!jwtSettings.Exists())
+                throw new InvalidOperationException("'JwtSettings' section could not be found or is empty!");
+
             Issuer = jwtSettings["Issuer"] ?? throw new InvalidOperationException("'JwtSettings:Issuer' could not be found!");
             
             Audience = jwtSettings["Audience"] ?? throw new InvalidOperationException("'JwtSettings:Audience' could not be found!");

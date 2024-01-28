@@ -1,6 +1,5 @@
 ﻿using GymDB.API.Data;
 using GymDB.API.Data.Entities;
-using GymDB.API.Data.Settings;
 using GymDB.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 

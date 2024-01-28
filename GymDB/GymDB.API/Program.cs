@@ -7,7 +7,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Hangfire;
 using Hangfire.PostgreSql;
-using GymDB.API.Data.Settings;
 
 namespace GymDB.API
 {
