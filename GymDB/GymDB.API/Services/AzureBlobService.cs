@@ -12,6 +12,22 @@ namespace GymDB.API.Services
         public AzureBlobService(IConfiguration config)
         {
             settings = new ApplicationSettings(config);
+            blobServiceClient = new BlobServiceClient(settings.AzureSettings.BlobUri, settings.AzureSettings.Credential);
+        }
+
+        public void Test()
+        {
+            var containers = blobServiceClient.GetBlobContainers();
+
+            Console.WriteLine("==============================");
+
+            foreach(var container in containers)
+            {
+                Console.WriteLine(container.Name);
+            }
+
+            Console.WriteLine("==============================");
+
         }
     }
 }

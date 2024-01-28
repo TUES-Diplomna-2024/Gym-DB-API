@@ -6,8 +6,15 @@
         {
             IConfigurationSection sessionSettings = config.GetSection("SessionSettings");
 
-            SessionLifetime = TimeSpan.Parse(sessionSettings["SessionLifetime"] ??
-                              throw new InvalidOperationException("'SessionSettings:SessionLifetime' could not be found!"));
+            if (!sessionSettings.Exists())
+                throw new InvalidOperationException("'SessionSettings' section could not be found or is empty!");
+
+            TimeSpan result;
+
+            if (!TimeSpan.TryParse(sessionSettings["SessionLifetime"], out result))
+                throw new InvalidOperationException("'SessionSettings:SessionLifetime' could not be found, is empty or is in invalid format!");
+
+            SessionLifetime = result;
         }
 
         public TimeSpan SessionLifetime { get; private set; }

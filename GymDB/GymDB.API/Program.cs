@@ -61,6 +61,7 @@ namespace GymDB.API
             builder.Services.AddScoped<ISessionService, SessionService>();
             builder.Services.AddScoped<IExerciseService, ExerciseService>();
             builder.Services.AddScoped<IWorkoutService, WorkoutService>();
+            builder.Services.AddScoped<IAzureBlobService, AzureBlobService>();
         }
 
         public static void ConfigureApplication(WebApplication app)
@@ -100,6 +101,9 @@ namespace GymDB.API
             ConfigureApplication(app);
 
             ConfigureRecurringJobs();
+
+            var t = new AzureBlobService(builder.Configuration);
+            t.Test();
 
             app.SeedDB(settings);
 
