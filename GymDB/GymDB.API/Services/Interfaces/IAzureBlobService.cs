@@ -1,5 +1,4 @@
-﻿using Azure.Storage.Blobs;
-using GymDB.API.Data.Entities;
+﻿using GymDB.API.Data.Entities;
 
 namespace GymDB.API.Services.Interfaces
 {
