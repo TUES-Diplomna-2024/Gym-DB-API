@@ -1,6 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
 using GymDB.API.Models.Exercise;
-using System.Xml.Linq;
 
 namespace GymDB.API.Mapping
 {
@@ -13,6 +12,7 @@ namespace GymDB.API.Mapping
                 Id = Guid.NewGuid(),
                 OnCreated = DateOnly.FromDateTime(DateTime.UtcNow),
                 OnModified = DateTime.UtcNow,
+                ImageCount = 0,
 
                 Name = createModel.Name,
                 Instructions = createModel.Instructions,
@@ -27,7 +27,19 @@ namespace GymDB.API.Mapping
             };
         }
 
-        public static ExerciseNormalInfoModel ToNormalInfoModel(this Exercise exercise, User? owner)
+        public static ExerciseImage ToExerciseImageEntity(this Exercise exercise, string fileExtension, int position)
+        {
+            return new ExerciseImage
+            {
+                Id = Guid.NewGuid(),
+                ExerciseId = exercise.Id,
+                Exercise = exercise,
+                FileExtension = fileExtension,
+                Position = position
+            };
+        }
+
+        public static ExerciseNormalInfoModel ToNormalInfoModel(this Exercise exercise, User? owner, List<Uri>? imageUris)
         {
             return new ExerciseNormalInfoModel
             {
@@ -39,13 +51,15 @@ namespace GymDB.API.Mapping
                 Difficulty = exercise.Difficulty,
                 Equipment = exercise.Equipment,
                 IsPrivate = exercise.IsPrivate,
+                ImageCount = exercise.ImageCount,
+                ImageUris = imageUris,
 
                 OwnerId = owner != null ? owner.Id : null,
                 OwnerUsername = owner != null ? owner.Username : null
             };
         }
 
-        public static ExerciseAdvancedInfoModel ToAdvancedInfoModel(this Exercise exercise, User? owner)
+        public static ExerciseAdvancedInfoModel ToAdvancedInfoModel(this Exercise exercise, User? owner, List<Uri>? imageUris)
         {
             return new ExerciseAdvancedInfoModel
             {
@@ -57,6 +71,8 @@ namespace GymDB.API.Mapping
                 Difficulty = exercise.Difficulty,
                 Equipment = exercise.Equipment,
                 IsPrivate = exercise.IsPrivate,
+                ImageCount = exercise.ImageCount,
+                ImageUris = imageUris,
 
                 OwnerId = owner != null ? owner.Id : null,
                 OwnerUsername = owner != null ? owner.Username : null,

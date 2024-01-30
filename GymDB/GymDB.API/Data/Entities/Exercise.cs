@@ -29,6 +29,8 @@ namespace GymDB.API.Data.Entities
 
         public string? Equipment { get; set; }
 
+        public int ImageCount { get; set; }
+
         public bool IsPrivate { get; set; }
 
         [ForeignKey(nameof(User))]

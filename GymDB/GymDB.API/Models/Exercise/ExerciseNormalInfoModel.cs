@@ -18,6 +18,10 @@
 
         public bool IsPrivate { get; set; }
 
+        public int ImageCount { get; set; }
+
+        public List<Uri>? ImageUris { get; set; }
+
         public Guid? OwnerId { get; set; }
 
         public string? OwnerUsername { get; set; }

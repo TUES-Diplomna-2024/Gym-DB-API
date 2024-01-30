@@ -1,9 +1,12 @@
-﻿using GymDB.API.Data.Entities;
+﻿using GymDB.API.Data;
+using GymDB.API.Data.Entities;
+using GymDB.API.Data.Settings;
 using GymDB.API.Mapping;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GymDB.API.Controllers
 {
@@ -11,21 +14,25 @@ namespace GymDB.API.Controllers
     [Route("exercises")]
     public class ExerciseController : ControllerBase
     {
+        private readonly AzureSettings azureSettings;
         private readonly IUserService userService;
         private readonly IRoleService roleService;
         private readonly IExerciseService exerciseService;
+        private readonly IAzureBlobService azureBlobService;
 
-        public ExerciseController(IUserService userService, IRoleService roleService, IExerciseService exerciseService)
+        public ExerciseController(IConfiguration config, IUserService userService, IRoleService roleService, IExerciseService exerciseService, IAzureBlobService azureBlobService)
         {
+            azureSettings = new AzureSettings(config);
             this.userService = userService;
             this.roleService = roleService;
             this.exerciseService = exerciseService;
+            this.azureBlobService = azureBlobService;
         }
 
         /* POST REQUESTS */
 
         [HttpPost("create"), Authorize]
-        public IActionResult CreateNewExercise(ExerciseCreateModel createAttempt)
+        public IActionResult CreateNewExercise([FromForm] ExerciseCreateModel createAttempt)
         {
             User? currUser = userService.GetCurrUser(HttpContext);
 
@@ -43,6 +50,25 @@ namespace GymDB.API.Controllers
             Exercise exercise = createAttempt.ToEntity(currUser);
 
             exerciseService.AddExercise(exercise);
+
+            if (!createAttempt.Images.IsNullOrEmpty())
+            {
+                IFormFile[] notAllowedFiles = azureBlobService.GetNotAllowedFilesInContainer(createAttempt.Images!, azureSettings.ImageContainer);
+                
+                createAttempt.Images!.RemoveAll(file => notAllowedFiles.Contains(file));
+
+                exerciseService.AddImagesToExercise(exercise, createAttempt.Images!);
+
+                if (notAllowedFiles.Length != 0)
+                {
+                    string files = string.Join(", ", notAllowedFiles.Select(f => $"'{f.FileName}'"));
+                    string validTypes = string.Join(", ", azureSettings.ImageTypesAccepted.Select(t => $"'.{t}'"));
+
+                    string errorMsg = notAllowedFiles.Length == 1 ? "it has invalid type" : "they have invalid types";
+
+                    return Ok($"The exercise was created successfully and its images are saved, except {files} - {errorMsg}! Accepted file types are: {validTypes}");
+                }
+            }
 
             return Ok();
         }
@@ -68,10 +94,12 @@ namespace GymDB.API.Controllers
             if (exercise.IsPrivate && !isCurrUserExerciseOwner && !isCurrUserAdmin)
                 return StatusCode(403, "You cannot access custom exercises that are owned by another user!");
 
-            if (isCurrUserAdmin)
-                return Ok(exercise.ToAdvancedInfoModel(isCurrUserExerciseOwner ? null : exercise.User));
+            List<Uri>? exerciseImageUris = exerciseService.GetExerciseImageUris(exercise);
 
-            return Ok(exercise.ToNormalInfoModel(isCurrUserExerciseOwner ? null : exercise.User));
+            if (isCurrUserAdmin)
+                return Ok(exercise.ToAdvancedInfoModel(isCurrUserExerciseOwner ? null : exercise.User, exerciseImageUris));
+
+            return Ok(exercise.ToNormalInfoModel(isCurrUserExerciseOwner ? null : exercise.User, exerciseImageUris));
         }
 
         [HttpGet, Authorize]

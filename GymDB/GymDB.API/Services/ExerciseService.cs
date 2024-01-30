@@ -5,16 +5,19 @@ using GymDB.API.Models.Exercise;
 using GymDB.API.Services.Interfaces;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace GymDB.API.Services
 {
     public class ExerciseService : IExerciseService
     {
         private readonly ApplicationContext context;
+        private readonly IAzureBlobService azureBlobService;
 
-        public ExerciseService(ApplicationContext context)
+        public ExerciseService(ApplicationContext context, IAzureBlobService azureBlobService)
         {
             this.context = context;
+            this.azureBlobService = azureBlobService;
         }
 
         public List<Exercise> GetAllPublicExercises()
@@ -70,6 +73,18 @@ namespace GymDB.API.Services
             => context.Exercises.Include(exercise => exercise.User)
                                 .FirstOrDefault(exercise => exercise.Id == id);
 
+        public List<Uri>? GetExerciseImageUris(Exercise exercise)
+        {
+            if (exercise.ImageCount == 0)
+                return null;
+
+            List<Uri> imageUris = context.ExerciseImages.Include(ei => ei.Exercise)
+                                                        .Where(ei => ei.ExerciseId == exercise.Id)
+                                                        .OrderBy(ei => ei.Position)
+                                                        .Select(ei => azureBlobService.GetBlobUri(ei)).ToList();
+            return imageUris;
+        }
+
         public bool IsExerciseOwnedByUser(Exercise exercise, User user)
             => exercise.UserId == user.Id;
 
@@ -79,6 +94,41 @@ namespace GymDB.API.Services
             exercise.Difficulty = exercise.Difficulty.ToLower();
 
             context.Exercises.Add(exercise);
+            context.SaveChanges();
+        }
+
+        public void AddImagesToExercise(Exercise exercise, List<IFormFile> images)
+        {
+            int lastPosition = exercise.ImageCount;
+
+            List<ExerciseImage> exerciseImages = images.Select(image => exercise.ToExerciseImageEntity(Path.GetExtension(image.FileName), lastPosition++))
+                                                       .ToList();
+
+            List<Guid> notSaved = new List<Guid>();
+
+            for (int i = 0; i < images.Count; i++)
+            {
+                bool isSaved = azureBlobService.UploadExerciseImage(exercise, images[i], exerciseImages[i].Id);
+
+                if (!isSaved)
+                    notSaved.Add(exerciseImages[i].Id);
+            }
+
+            if (notSaved.Count > 0)
+            {
+                exerciseImages.RemoveAll(ei => notSaved.Contains(ei.Id));
+
+                lastPosition = exercise.ImageCount;
+
+                foreach (var ei in exerciseImages)
+                    ei.Position = lastPosition++;
+            }
+
+            exercise.ImageCount = lastPosition;
+
+            context.Exercises.Update(exercise);
+            context.ExerciseImages.AddRange(exerciseImages);
+
             context.SaveChanges();
         }
 
@@ -116,9 +166,9 @@ namespace GymDB.API.Services
 
         public void RemoveExercise(Exercise exercise)
         {
-            // TODO: Remove exercise from every workout & Update workouts exercise count
-
             BackgroundJob.Enqueue<IWorkoutService>(workoutService => workoutService.RemoveExerciseFromAllWorkouts(exercise, false));
+
+            RemoveAllExerciseImages(exercise);
 
             context.Exercises.Remove(exercise);
             context.SaveChanges();
@@ -127,6 +177,9 @@ namespace GymDB.API.Services
         public void RemoveAllUserPrivateExercises(User user)
         {
             List<Exercise> toBeRemoved = GetAllUserPrivateExercises(user);
+
+            toBeRemoved.ForEach(exercise => RemoveAllExerciseImages(exercise));
+
             context.Exercises.RemoveRange(toBeRemoved);
             context.SaveChanges();
         }
@@ -142,6 +195,21 @@ namespace GymDB.API.Services
             }
 
             context.Exercises.UpdateRange(publicExercises);
+            context.SaveChanges();
+        }
+
+        public void RemoveAllExerciseImages(Exercise exercise)
+        {
+            List<ExerciseImage> toBeRemoved = context.ExerciseImages.Include(ei => ei.Exercise)
+                                                                    .Where(ei => ei.ExerciseId == exercise.Id).ToList();
+
+            toBeRemoved.ForEach(ei => azureBlobService.DeleteExerciseImage(ei));
+
+            context.ExerciseImages.RemoveRange(toBeRemoved);
+
+            exercise.ImageCount = 0;
+            context.Exercises.Update(exercise);
+
             context.SaveChanges();
         }
     }

@@ -15,6 +15,8 @@ namespace GymDB.API.Data
 
         public DbSet<Exercise> Exercises { get; set; }
 
+        public DbSet<ExerciseImage> ExerciseImages { get; set; }
+
         public DbSet<Workout> Workouts { get; set; }
 
         public DbSet<WorkoutExercise> WorkoutsExercises { get; set; }

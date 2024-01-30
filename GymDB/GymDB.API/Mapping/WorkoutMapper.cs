@@ -36,7 +36,7 @@ namespace GymDB.API.Mapping
             };
         }
 
-        public static WorkoutWithExercisesModel ToWorkoutWithExercisesModel(this Workout workout, List<ExercisePreviewModel> exercises)
+        public static WorkoutWithExercisesModel ToWorkoutWithExercisesModel(this Workout workout, List<ExercisePreviewModel>? exercises)
         {
             return new WorkoutWithExercisesModel
             {

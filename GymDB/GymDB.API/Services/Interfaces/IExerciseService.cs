@@ -23,9 +23,13 @@ namespace GymDB.API.Services.Interfaces
 
         Exercise? GetExerciseById(Guid id);
 
+        List<Uri>? GetExerciseImageUris(Exercise exercise);
+
         bool IsExerciseOwnedByUser(Exercise exercise, User user);
 
         void AddExercise(Exercise exercise);
+
+        void AddImagesToExercise(Exercise exercise, List<IFormFile> images);
 
         void UpdateExerciseVisibility(Exercise exercise, bool isPrivate);
 
@@ -38,5 +42,7 @@ namespace GymDB.API.Services.Interfaces
         void RemoveAllUserPrivateExercises(User user);
 
         void RemoveUserOwnershipOfPublicExercises(User user);
+
+        void RemoveAllExerciseImages(Exercise exercise);
     }
 }

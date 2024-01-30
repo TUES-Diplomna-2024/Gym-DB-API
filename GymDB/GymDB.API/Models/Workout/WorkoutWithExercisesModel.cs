@@ -12,6 +12,6 @@ namespace GymDB.API.Models.Workout
 
         public int ExerciseCount { get; set; }
 
-        public List<ExercisePreviewModel> Exercises { get; set; }
+        public List<ExercisePreviewModel>? Exercises { get; set; }
     }
 }

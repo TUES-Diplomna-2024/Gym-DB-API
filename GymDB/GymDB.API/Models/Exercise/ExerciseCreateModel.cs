@@ -22,5 +22,7 @@ namespace GymDB.API.Models.Exercise
         public string? Equipment { get; set; }
 
         public bool IsPrivate { get; set; }
+
+        public List<IFormFile>? Images { get; set; }
     }
 }

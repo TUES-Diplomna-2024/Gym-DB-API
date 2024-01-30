@@ -8,16 +8,24 @@ namespace GymDB.API.Services.Interfaces
 
         string GetExerciseFileBlobName(Exercise exercise, Guid fileId, string fileExtension);
 
-        Uri? UploadUserProfileImage(User user, IFormFile profileImage);
+        Uri GetBlobUri(ExerciseImage exerciseImage);
 
-        Uri? UploadExerciseImage(Exercise exercise, IFormFile image, Guid imageId);
-
-        Uri? UploadExerciseVideo(Exercise exercise, IFormFile video, Guid videoId);
-
-        Uri UploadFile(IFormFile file, string blobName, string container);
-
-        bool DeleteFile(string blobName, string container);
+        Uri GetBlobUri(string container, string blobName);
 
         bool IsFileAllowedInContainer(string filename, string container);
+
+        IFormFile[] GetNotAllowedFilesInContainer(List<IFormFile> files, string container);
+
+        bool UploadUserProfileImage(User user, IFormFile profileImage);
+
+        bool UploadExerciseImage(Exercise exercise, IFormFile image, Guid imageId);
+
+        bool UploadExerciseVideo(Exercise exercise, IFormFile video, Guid videoId);
+
+        bool UploadFile(IFormFile file, string blobName, string container);
+
+        void DeleteExerciseImage(ExerciseImage exerciseImage);
+
+        void DeleteFile(string blobName, string container);
     }
 }

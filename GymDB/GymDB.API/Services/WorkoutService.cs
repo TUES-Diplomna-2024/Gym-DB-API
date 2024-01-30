@@ -35,16 +35,20 @@ namespace GymDB.API.Services
 
         public List<Exercise> GetWorkoutExercises(Workout workout)
             => context.WorkoutsExercises.Include(workoutExercise => workoutExercise.Exercise.User)
-                                        .Where(workoutExercise => workoutExercise.WorkoutId == workout.Id)
-                                        .OrderBy(workoutExercise => workoutExercise.Position)
-                                        .Select(workoutExercise => workoutExercise.Exercise).ToList();
-
+                                            .Where(workoutExercise => workoutExercise.WorkoutId == workout.Id)
+                                            .OrderBy(workoutExercise => workoutExercise.Position)
+                                            .Select(workoutExercise => workoutExercise.Exercise).ToList();
 
         public WorkoutWithExercisesModel GetWorkoutWithExercises(Workout workout)
         {
             List<Exercise> exercises = GetWorkoutExercises(workout);
 
-            List<ExercisePreviewModel> exercisePreviews = exerciseService.GetExercisesPreviews(exercises);
+            List<ExercisePreviewModel>? exercisePreviews = null;
+
+            if (exercises.Count != 0)
+            {
+                exercisePreviews = exerciseService.GetExercisesPreviews(exercises);
+            }
 
             return workout.ToWorkoutWithExercisesModel(exercisePreviews);
         }
@@ -136,6 +140,7 @@ namespace GymDB.API.Services
             foreach (var workout in workouts)
             {
                 List<Exercise> workoutExercises = GetWorkoutExercises(workout);
+
 
                 workoutExercises.RemoveAll(e => e.Id == exercise.Id);
 

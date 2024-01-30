@@ -45,7 +45,7 @@ namespace GymDB.API.Controllers
             User user = signUpAttempt.ToEntity();
 
             if (!roleService.AssignUserRole(user, settings.DBSeed.DefaultRole))
-                return StatusCode(500, $"Role '{settings.DBSeed.DefaultRole}' could not be found!");
+                return StatusCode(500, $"Something went wrong when creating your account!");
 
             userService.AddUser(user);
 
