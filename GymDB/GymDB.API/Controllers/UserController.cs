@@ -2,9 +2,9 @@
 using GymDB.API.Services.Interfaces;
 using GymDB.API.Models.User;
 using GymDB.API.Data.Entities;
-using Microsoft.AspNetCore.Authorization;
 using GymDB.API.Mapping;
 using GymDB.API.Data;
+using GymDB.API.Attributes;
 
 namespace GymDB.API.Controllers
 {
@@ -17,17 +17,15 @@ namespace GymDB.API.Controllers
         private readonly IUserService userService;
         private readonly IRoleService roleService;
         private readonly IJwtService jwtService;
-        private readonly ISessionService sessionService;
         private readonly IExerciseService exerciseService;
 
-        public UserController(IConfiguration config, IUserService userService, IRoleService roleService, IJwtService jwtService, ISessionService sessionService, IExerciseService exerciseService)
+        public UserController(IConfiguration config, IUserService userService, IRoleService roleService, IJwtService jwtService, IExerciseService exerciseService)
         {
             settings = new ApplicationSettings(config);
 
             this.userService = userService;
             this.roleService = roleService;
             this.jwtService = jwtService;
-            this.sessionService = sessionService;
             this.exerciseService = exerciseService;
         }
 
@@ -49,9 +47,10 @@ namespace GymDB.API.Controllers
 
             userService.AddUser(user);
 
-            string refreshToken = sessionService.CreateNewSession(user);
+            string accessToken = jwtService.GenerateNewAccessToken(user.Id, user.Role.NormalizedName);
+            string refreshToken = jwtService.GenerateNewRefreshToken(user.Id);
 
-            return Ok(new UserAuthModel(jwtService.GenerateNewJwtToken(user), refreshToken));
+            return Ok(new UserAuthModel(accessToken, refreshToken));
         }
 
         [HttpPost("signin")]
@@ -65,58 +64,42 @@ namespace GymDB.API.Controllers
             if (user == null)
                 return Unauthorized("Invalid sign in attempt!");
 
-            string refreshToken = sessionService.CreateNewSession(user);
+            string accessToken = jwtService.GenerateNewAccessToken(user.Id, user.Role.NormalizedName);
+            string refreshToken = jwtService.GenerateNewRefreshToken(user.Id);
 
-            return Ok(new UserAuthModel(jwtService.GenerateNewJwtToken(user), refreshToken));
+            return Ok(new UserAuthModel(accessToken, refreshToken));
         }
 
-        [HttpPost("signout"), Authorize]
-        public IActionResult SignOut(UserSessionRetrievalModel signOutAttempt)
+        [HttpGet("refresh"), RefreshTokenRequired]
+        public IActionResult Refresh()
         {
-            if (userService.GetCurrUser(HttpContext) == null)
-                return NotFound("The current user no longer exists!");
+            // Since the RefreshTokenRequired attribute is applied to this endpoint, the RefreshTokenMiddleware has already validated the refresh token,
+            // ensuring that the current user is not null. Therefore, we can safely generate a new access token for the current user.
 
-            Session? userSession = sessionService.GetSessionByRefreshToken(signOutAttempt.RefreshToken);
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
-            if (userSession == null)
-                return Unauthorized();
+            string accessToken = jwtService.GenerateNewAccessToken(currUser.Id, currUser.Role.NormalizedName);
 
-            sessionService.RemoveSession(userSession);
-
-            return Ok();
-        }
-
-        [HttpPost("refresh")]
-        public IActionResult Refresh(UserSessionRetrievalModel refreshAttempt)
-        {
-            Session? userSession = sessionService.GetSessionByRefreshToken(refreshAttempt.RefreshToken);
-
-            if (userSession == null)
-                return Unauthorized("You must sign in again!");
-
-            return Ok(jwtService.GenerateNewJwtToken(userSession.User));
+            return Ok(accessToken);
         }
 
         /* GET REQUESTS */
 
-        [HttpGet("current"), Authorize]
+        [HttpGet("current"), CustomAuthorize]
         public IActionResult GetCurrUser()
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
+            // Since the CustomAuthorize attribute is applied to this endpoint, the AccessTokenMiddleware has already validated the access token,
+            // ensuring that the current user is not null.
 
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             return Ok(currUser.ToProfileModel());
         }
 
-        [HttpGet("{id}"), Authorize]
+        [HttpGet("{id}"), CustomAuthorize]
         public IActionResult GetUserById(Guid id)
         {
-           if (userService.GetCurrUser(HttpContext) == null)
-                return NotFound("The current user no longer exists!");
-
-            User? user = userService.GetUserById(id);
+           User? user = userService.GetUserById(id);
 
             if (user == null)
                 return NotFound($"User with id '{id}' could not be found!");
@@ -124,24 +107,18 @@ namespace GymDB.API.Controllers
             return Ok(user.ToProfileModel());
         }
 
-        [HttpGet, Authorize(Roles = "SUPER_ADMIN,ADMIN")]
+        [HttpGet, CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
         public IActionResult GetAllUserPreviews()
         {
-            if (userService.GetCurrUser(HttpContext) == null)
-                return NotFound("The current user no longer exists!");
-
             List<UserPreviewModel> userPreviews = userService.GetAllUserPreviews();
 
             return Ok(userPreviews);
         }
 
-        [HttpGet("current/custom-exercises"), Authorize]
+        [HttpGet("current/custom-exercises"), CustomAuthorize]
         public IActionResult GetCurrUserCustomExercisesPreviews()
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             List<Exercise> customExercises = exerciseService.GetAllUserCustomExercises(currUser);
 
@@ -150,13 +127,10 @@ namespace GymDB.API.Controllers
 
         /* PUT REQUESTS */
 
-        [HttpPut("current"), Authorize]
+        [HttpPut("current"), CustomAuthorize]
         public IActionResult UpdateCurrUser(UserUpdateModel updateAttempt)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -166,13 +140,10 @@ namespace GymDB.API.Controllers
             return Ok();
         }
 
-        [HttpPut("{id}/role"), Authorize(Roles = "SUPER_ADMIN,ADMIN")]
+        [HttpPut("{id}/role"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
         public IActionResult AssignUserRole(Guid id, UserAssignRoleModel assignRoleAttempt)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             User? user = userService.GetUserById(id);
 
@@ -201,13 +172,10 @@ namespace GymDB.API.Controllers
 
         /* DELETE REQUESTS */
 
-        [HttpDelete("current"), Authorize]
+        [HttpDelete("current"), CustomAuthorize]
         public IActionResult DeleteCurrUser(UserDeleteModel deleteAttempt)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             if (roleService.HasUserRole(currUser, "SUPER_ADMIN"))
                 return StatusCode(403, "The root admin cannot be deleted!");
@@ -218,19 +186,15 @@ namespace GymDB.API.Controllers
             if (!userService.IsUserPasswordCorrect(currUser, deleteAttempt.Password))
                 return Unauthorized("Incorrect password!");
 
-            userService.RemoveUserRelatedData(currUser);
             userService.RemoveUser(currUser);
 
             return Ok();
         }
 
-        [HttpDelete("{id}"), Authorize(Roles = "SUPER_ADMIN,ADMIN")]
+        [HttpDelete("{id}"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
         public IActionResult DeleteUserById(Guid id)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             User? user = userService.GetUserById(id);
 
@@ -243,7 +207,6 @@ namespace GymDB.API.Controllers
             if (roleService.HasUserRole(user, "ADMIN") && !roleService.HasUserRole(currUser, "SUPER_ADMIN"))
                 return StatusCode(403, "You cannot delete another admin user! This can be done only by the root admin!");
             
-            userService.RemoveUserRelatedData(user);
             userService.RemoveUser(user);
 
             return Ok();

@@ -1,10 +1,9 @@
-﻿using GymDB.API.Data;
+﻿using GymDB.API.Attributes;
 using GymDB.API.Data.Entities;
 using GymDB.API.Data.Settings;
 using GymDB.API.Mapping;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
@@ -31,13 +30,10 @@ namespace GymDB.API.Controllers
 
         /* POST REQUESTS */
 
-        [HttpPost("create"), Authorize]
+        [HttpPost("create"), CustomAuthorize]
         public IActionResult CreateNewExercise([FromForm] ExerciseCreateModel createAttempt)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -75,13 +71,10 @@ namespace GymDB.API.Controllers
 
         /* GET REQUESTS */
 
-        [HttpGet("{id}"), Authorize]
+        [HttpGet("{id}"), CustomAuthorize]
         public IActionResult GetExerciseById(Guid id)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             Exercise? exercise = exerciseService.GetExerciseById(id);
 
@@ -102,35 +95,26 @@ namespace GymDB.API.Controllers
             return Ok(exercise.ToNormalInfoModel(isCurrUserExerciseOwner ? null : exercise.User, exerciseImageUris));
         }
 
-        [HttpGet, Authorize]
+        [HttpGet, CustomAuthorize]
         public IActionResult GetAllPublicExercisesPreviews()
         {
-            if (userService.GetCurrUser(HttpContext) == null)
-                return NotFound("The current user no longer exists!");
-
             List<Exercise> publicExercises = exerciseService.GetAllPublicExercises();
 
             return Ok(exerciseService.GetExercisesPreviews(publicExercises));
         }
 
-        [HttpGet("private"), Authorize(Roles = "SUPER_ADMIN,ADMIN")]
+        [HttpGet("private"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
         public IActionResult GetAllPrivateAppExercisesPreviews()
         {
-            if (userService.GetCurrUser(HttpContext) == null)
-                return NotFound("The current user no longer exists!");
-
             List<Exercise> privateExercises = exerciseService.GetAllPrivateAppExercises();
 
             return Ok(exerciseService.GetExercisesPreviews(privateExercises));
         }
 
-        [HttpGet("search"), Authorize]
+        [HttpGet("search"), CustomAuthorize]
         public IActionResult GetExerciseSearchResults([FromQuery] ExerciseSearchModel search)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             List<Exercise> results = exerciseService.GetExercisesBySearch(search, currUser);
 
@@ -139,13 +123,10 @@ namespace GymDB.API.Controllers
 
         /* PUT REQUESTS */
 
-        [HttpPut("{id}"), Authorize]
+        [HttpPut("{id}"), CustomAuthorize]
         public IActionResult UpdateExerciseById(Guid id, ExerciseUpdateModel updateAttempt)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -170,12 +151,9 @@ namespace GymDB.API.Controllers
             return Ok();
         }
 
-        [HttpPut("{id}/visibility"), Authorize(Roles = "SUPER_ADMIN,ADMIN")]
+        [HttpPut("{id}/visibility"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
         public IActionResult ChangeExerciseVisibility(Guid id, ExerciseChangeVisModel updateVisAttempt)
         {
-            if (userService.GetCurrUser(HttpContext) == null)
-                return NotFound("The current user no longer exists!");
-
             Exercise? exercise = exerciseService.GetExerciseById(id);
 
             if (exercise == null)
@@ -194,13 +172,10 @@ namespace GymDB.API.Controllers
 
         /* DELETE REQUESTS */
 
-        [HttpDelete("{id}"), Authorize]
+        [HttpDelete("{id}"), CustomAuthorize]
         public IActionResult DeleteExerciseById(Guid id)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             Exercise? exercise = exerciseService.GetExerciseById(id);
 

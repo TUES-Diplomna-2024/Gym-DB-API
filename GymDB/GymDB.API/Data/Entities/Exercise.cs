@@ -1,5 +1,4 @@
 ﻿using GymDB.API.Data.ValidationAttributes;
-using GymDB.API.Models.Exercise;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 

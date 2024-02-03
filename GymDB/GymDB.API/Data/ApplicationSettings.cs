@@ -12,8 +12,6 @@ namespace GymDB.API.Data
 
             JwtSettings = new JwtSettings(config);
 
-            SessionSettings = new SessionSettings(config);
-
             DBSeed = new DBSeed(config);
         }
 
@@ -22,8 +20,6 @@ namespace GymDB.API.Data
         public AzureSettings AzureSettings { get; private set; }
 
         public JwtSettings JwtSettings { get; private set; }
-
-        public SessionSettings SessionSettings { get; private set; }
 
         public DBSeed DBSeed { get; private set; }
     }

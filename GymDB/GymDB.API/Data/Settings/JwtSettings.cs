@@ -21,12 +21,19 @@ namespace GymDB.API.Data.Settings
 
             ServerSecretKey = jwtSettings["ServerSecretKey"]!;
 
-            TimeSpan result;
+            TimeSpan accessTokenLifetime;
 
-            if (!TimeSpan.TryParse(jwtSettings["TokenLifetime"], out result))
-                throw new InvalidOperationException("'JwtSettings:TokenLifetime' could not be found, is empty or is in invalid format!");
+            if (!TimeSpan.TryParse(jwtSettings["AccessTokenLifetime"], out accessTokenLifetime))
+                throw new InvalidOperationException("'JwtSettings:AccessTokenLifetime' could not be found, is empty or is in invalid format!");
 
-            TokenLifetime = result;
+            AccessTokenLifetime = accessTokenLifetime;
+
+            TimeSpan refreshTokenLifetime;
+
+            if (!TimeSpan.TryParse(jwtSettings["RefreshTokenLifetime"], out refreshTokenLifetime))
+                throw new InvalidOperationException("'JwtSettings:RefreshTokenLifetime' could not be found, is empty or is in invalid format!");
+
+            RefreshTokenLifetime = refreshTokenLifetime;
         }
 
         public string Issuer {
@@ -59,6 +66,8 @@ namespace GymDB.API.Data.Settings
             }
         }
 
-        public TimeSpan TokenLifetime { get; private set; }
+        public TimeSpan AccessTokenLifetime { get; private set; }
+
+        public TimeSpan RefreshTokenLifetime { get; private set; }
     }
 }

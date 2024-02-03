@@ -1,5 +1,4 @@
 ﻿using GymDB.API.Data;
-using GymDB.API.Data.Entities;
 using GymDB.API.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -17,14 +16,35 @@ namespace GymDB.API.Services
             settings = new ApplicationSettings(config);
         }
 
-        public string GenerateNewJwtToken(User user)
+        public string GenerateNewAccessToken(Guid userId, string roleNormalizedName)
         {
-            var expiration = DateTime.UtcNow.Add(settings.JwtSettings.TokenLifetime);
+            var expiration = DateTime.UtcNow.Add(settings.JwtSettings.AccessTokenLifetime);
 
+            Claim[] claims = new Claim[] {
+                new Claim("userId", userId.ToString()),
+                new Claim("userRole", roleNormalizedName)
+            };
+
+            return GenerateNewJwtToken(expiration, claims);
+        }
+
+        public string GenerateNewRefreshToken(Guid userId)
+        {
+            var expiration = DateTime.UtcNow.Add(settings.JwtSettings.RefreshTokenLifetime);
+
+            Claim[] claims = new Claim[] {
+                new Claim("userId", userId.ToString())
+            };
+
+            return GenerateNewJwtToken(expiration, claims);
+        }
+
+        public string GenerateNewJwtToken(DateTime expiration, Claim[] claims)
+        {
             var token = new JwtSecurityToken(
                 issuer: settings.JwtSettings.Issuer,
                 audience: settings.JwtSettings.Audience,
-                claims: CreateClaims(user),
+                claims: claims,
                 expires: expiration,
                 signingCredentials: CreateSigningCredentials()
             );
@@ -32,18 +52,6 @@ namespace GymDB.API.Services
             var tokenHandler = new JwtSecurityTokenHandler();
 
             return tokenHandler.WriteToken(token);
-        }
-
-        public List<Claim> CreateClaims(User user)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("userId", user.Id.ToString()),
-                new Claim("role", user.Role.NormalizedName)
-            };
-
-            return claims;
         }
 
         public SigningCredentials CreateSigningCredentials()

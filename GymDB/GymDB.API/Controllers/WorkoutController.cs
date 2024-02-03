@@ -2,9 +2,9 @@
 using GymDB.API.Mapping;
 using GymDB.API.Models.Workout;
 using GymDB.API.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using GymDB.API.Attributes;
 
 namespace GymDB.API.Controllers
 {
@@ -23,13 +23,10 @@ namespace GymDB.API.Controllers
 
         /* POST REQUESTS */
 
-        [HttpPost("create"), Authorize]
+        [HttpPost("create"), CustomAuthorize]
         public IActionResult CreateNewWorkout(WorkoutCreateUpdateModel createAttempt)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -54,26 +51,20 @@ namespace GymDB.API.Controllers
 
         /* GET REQUESTS */
 
-        [HttpGet, Authorize]
+        [HttpGet, CustomAuthorize]
         public IActionResult GetCurrUserWorkoutsPreviews()
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             List<Workout> workouts = workoutService.GetUserWorkouts(currUser);
 
             return Ok(workoutService.GetWorkoutsPreviews(workouts));
         }
 
-        [HttpGet("{id}"), Authorize]
+        [HttpGet("{id}"), CustomAuthorize]
         public IActionResult GetWorkoutById(Guid id)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             Workout? workout = workoutService.GetWorkoutById(id);
 
@@ -88,13 +79,10 @@ namespace GymDB.API.Controllers
 
         /* PUT REQUESTS */
 
-        [HttpPut("{id}"), Authorize]
+        [HttpPut("{id}"), CustomAuthorize]
         public IActionResult UpdateWorkoutById(Guid id, WorkoutCreateUpdateModel updateAttempt)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -120,13 +108,10 @@ namespace GymDB.API.Controllers
 
         /* DELETE REQUESTS */
 
-        [HttpDelete("{id}"), Authorize]
+        [HttpDelete("{id}"), CustomAuthorize]
         public IActionResult DeleteWorkoutById(Guid id)
         {
-            User? currUser = userService.GetCurrUser(HttpContext);
-
-            if (currUser == null)
-                return NotFound("The current user no longer exists!");
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
             Workout? workout = workoutService.GetWorkoutById(id);
 
