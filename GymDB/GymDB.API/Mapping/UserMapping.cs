@@ -41,8 +41,8 @@ namespace GymDB.API.Mapping
                 Password = BCrypt.Net.BCrypt.EnhancedHashPassword(rootAdmin.Password, 13),
                 BirthDate = DateOnly.FromDateTime(DateTime.UtcNow),
                 Gender = "other",
-                Height = 60,
-                Weight = 60
+                Height = 80,
+                Weight = 80
             };
         }
 

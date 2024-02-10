@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using GymDB.API.Models.Workout;
 
 namespace GymDB.API.Data.Entities
 {
@@ -10,10 +9,10 @@ namespace GymDB.API.Data.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
 
-        [StringLength(130, MinimumLength = 3, ErrorMessage = "Name must be between 3 and 130 characters long!")]
+        [StringLength(70, MinimumLength = 3, ErrorMessage = "Name must be between 3 and 70 characters long!")]
         public string Name { get; set; }
 
-        [StringLength(500, ErrorMessage = "Description must be up to 500 characters long!")]
+        [StringLength(250, ErrorMessage = "Description must be up to 250 characters long!")]
         public string? Description { get; set; }
 
         [ForeignKey(nameof(User))]

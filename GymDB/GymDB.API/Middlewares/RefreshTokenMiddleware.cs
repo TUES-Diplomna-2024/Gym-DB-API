@@ -91,7 +91,7 @@ namespace GymDB.API.Middlewares
 
                 if (isRefreshTokenRequired && DateTime.UtcNow > expDateTime)
                 {
-                    Error(context, HttpStatusCode.Unauthorized, "Refresh token is required, but is expired!");
+                    Error(context, HttpStatusCode.Unauthorized, "Refresh token is provided, but is expired!");
                     return;
                 }
 
