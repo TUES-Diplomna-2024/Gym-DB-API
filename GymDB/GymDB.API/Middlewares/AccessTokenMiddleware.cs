@@ -53,6 +53,8 @@ namespace GymDB.API.Middlewares
 
             string token = auth.Substring("Bearer ".Length).Trim();
 
+            Console.WriteLine($"TOKEN: {token}");
+
             try
             {
                 var handler = new JwtSecurityTokenHandler();

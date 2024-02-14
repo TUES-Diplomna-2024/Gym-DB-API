@@ -66,6 +66,16 @@ namespace GymDB.API.Services
             context.SaveChanges();
         }
 
+        public void PushBackExerciseInWorkout(Workout workout, Exercise exercise)
+        {
+            WorkoutExercise workoutExercise = workout.ToWorkoutExerciseEntity(exercise, workout.ExerciseCount++);
+
+            context.Workouts.Update(workout);
+            context.WorkoutsExercises.Add(workoutExercise);
+
+            context.SaveChanges();
+        }
+
         public void AddExercisesToWorkout(Workout workout, List<Exercise> exercises)
         {
             int lastPosition = workout.ExerciseCount;

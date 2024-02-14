@@ -2,6 +2,7 @@
 using GymDB.API.Data;
 using GymDB.API.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Text;
@@ -47,6 +48,8 @@ namespace GymDB.API.Middlewares
                 Error(context, HttpStatusCode.Unauthorized, "A refresh token is required!");
                 return;
             }
+
+            Console.WriteLine($"REFRESH TOKEN: {refreshToken}");
 
             try
             {

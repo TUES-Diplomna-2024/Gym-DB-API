@@ -17,14 +17,16 @@ namespace GymDB.API.Controllers
         private readonly IUserService userService;
         private readonly IRoleService roleService;
         private readonly IExerciseService exerciseService;
+        private readonly IWorkoutService workoutService;
         private readonly IAzureBlobService azureBlobService;
 
-        public ExerciseController(IConfiguration config, IUserService userService, IRoleService roleService, IExerciseService exerciseService, IAzureBlobService azureBlobService)
+        public ExerciseController(IConfiguration config, IUserService userService, IRoleService roleService, IExerciseService exerciseService, IWorkoutService workoutService, IAzureBlobService azureBlobService)
         {
             azureSettings = new AzureSettings(config);
             this.userService = userService;
             this.roleService = roleService;
             this.exerciseService = exerciseService;
+            this.workoutService = workoutService;
             this.azureBlobService = azureBlobService;
         }
 
@@ -64,6 +66,48 @@ namespace GymDB.API.Controllers
 
                     return Ok($"The exercise was created successfully and its images are saved, except {files} - {errorMsg}! Accepted file types are: {validTypes}");
                 }
+            }
+
+            return Ok();
+        }
+
+        [HttpPost("{exerciseId}/add-in-workouts"), CustomAuthorize]
+        public IActionResult AddInWorkouts(Guid exerciseId, List<Guid> workoutIds)
+        {
+            User currUser = userService.GetCurrUser(HttpContext)!;
+
+            Exercise? exercise = exerciseService.GetExerciseById(exerciseId);
+
+            if (exercise == null)
+                return NotFound($"Exercise with id '{exerciseId}' could not be found!");
+
+            bool isCurrUserExerciseOwner = exerciseService.IsExerciseOwnedByUser(exercise, currUser);
+
+            if (exercise.IsPrivate && !isCurrUserExerciseOwner)
+                return StatusCode(403, "You cannot access custom exercise that is owned by another user!");
+
+            List<Guid> invalidWorkoutIds = new List<Guid>();
+
+            foreach(var workoutId in workoutIds)
+            {
+                Workout? workout = workoutService.GetWorkoutById(workoutId);
+
+                if (workout == null || !workoutService.IsWorkoutOwnedByUser(workout, currUser))
+                {
+                    invalidWorkoutIds.Add(workoutId); 
+                    continue;
+                }
+
+                workoutService.PushBackExerciseInWorkout(workout, exercise);
+            }
+
+            if (invalidWorkoutIds.Count == workoutIds.Count)
+                return BadRequest("Exercise was not added in any workout because all provided workout ids are invalid!");
+
+            if (invalidWorkoutIds.Count != 0)
+            {
+                string invalidWorkoutIdsText = string.Join(", ", invalidWorkoutIds.Select(w => $"'{w}'"));
+                return Ok($"The exercise was added successfully in all workouts, except {invalidWorkoutIdsText}!");
             }
 
             return Ok();
