@@ -23,7 +23,8 @@ namespace GymDB.API.Services
 
         public List<Workout> GetUserWorkouts(User user)
             => context.Workouts.Include(workout => workout.User)
-                               .Where(workout => workout.UserId == user.Id).ToList();
+                               .Where(workout => workout.UserId == user.Id)
+                               .OrderByDescending(workout => workout.OnModified).ToList();
 
         public List<WorkoutPreviewModel> GetWorkoutsPreviews(List<Workout> workouts)
             => workouts.Select(workout => workout.ToPreviewModel()).ToList();
@@ -35,9 +36,9 @@ namespace GymDB.API.Services
 
         public List<Exercise> GetWorkoutExercises(Workout workout)
             => context.WorkoutsExercises.Include(workoutExercise => workoutExercise.Exercise.User)
-                                            .Where(workoutExercise => workoutExercise.WorkoutId == workout.Id)
-                                            .OrderBy(workoutExercise => workoutExercise.Position)
-                                            .Select(workoutExercise => workoutExercise.Exercise).ToList();
+                                        .Where(workoutExercise => workoutExercise.WorkoutId == workout.Id)
+                                        .OrderBy(workoutExercise => workoutExercise.Position)
+                                        .Select(workoutExercise => workoutExercise.Exercise).ToList();
 
         public WorkoutWithExercisesModel GetWorkoutWithExercises(Workout workout)
         {
@@ -69,6 +70,8 @@ namespace GymDB.API.Services
         public void PushBackExerciseInWorkout(Workout workout, Exercise exercise)
         {
             WorkoutExercise workoutExercise = workout.ToWorkoutExerciseEntity(exercise, workout.ExerciseCount++);
+            
+            workout.OnModified = DateTime.UtcNow;
 
             context.Workouts.Update(workout);
             context.WorkoutsExercises.Add(workoutExercise);
@@ -84,6 +87,7 @@ namespace GymDB.API.Services
                                                               .ToList();
 
             workout.ExerciseCount = lastPosition;
+            workout.OnModified = DateTime.UtcNow;
 
             context.Workouts.Update(workout);
             context.WorkoutsExercises.AddRange(workoutExercises);

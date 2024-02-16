@@ -33,6 +33,7 @@ namespace GymDB.API.Services
         public List<Exercise> GetAllUserCustomExercises(User user)
             => context.Exercises.Include(exercise => exercise.User)
                                 .Where(exercise => exercise.UserId == user.Id)
+                                .OrderByDescending(exercise => exercise.OnModified)
                                 .ToList();
 
         public List<Exercise> GetAllUserPublicExercises(User user)
