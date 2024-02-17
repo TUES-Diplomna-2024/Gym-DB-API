@@ -30,9 +30,13 @@ namespace GymDB.API.Services
             => workouts.Select(workout => workout.ToPreviewModel()).ToList();
 
         public List<Workout> GetWorkoutsContainingExercise(Exercise exercise)
-            => context.WorkoutsExercises.Include(workoutExercise => workoutExercise.Workout.User)
+        {
+            List<Workout> workouts = context.WorkoutsExercises.Include(workoutExercise => workoutExercise.Workout.User)
                                         .Where(workoutExercise => workoutExercise.ExerciseId == exercise.Id)
                                         .Select(workoutExercise => workoutExercise.Workout).ToList();
+
+            return workouts.DistinctBy(workout => workout.Id).ToList();
+        } 
 
         public List<Exercise> GetWorkoutExercises(Workout workout)
             => context.WorkoutsExercises.Include(workoutExercise => workoutExercise.Exercise.User)
@@ -149,19 +153,18 @@ namespace GymDB.API.Services
             List<Workout> workouts = GetWorkoutsContainingExercise(exercise);
 
             if (excludeOwnerWorkouts)
-                workouts = workouts.Where(workout => workout.UserId != exercise.UserId).ToList();
+                workouts.RemoveAll(workout => workout.UserId == exercise.UserId);
 
             foreach (var workout in workouts)
             {
-                List<Exercise> workoutExercises = GetWorkoutExercises(workout);
+                List<Exercise> exercises = GetWorkoutExercises(workout);
 
-
-                workoutExercises.RemoveAll(e => e.Id == exercise.Id);
+                exercises.RemoveAll(e => e.Id == exercise.Id);
 
                 RemoveAllWorkoutExercises(workout);
 
-                if (workoutExercises.Count != 0)
-                    AddExercisesToWorkout(workout, workoutExercises);
+                if (exercises.Count != 0)
+                    AddExercisesToWorkout(workout, exercises);
             }
         }
 

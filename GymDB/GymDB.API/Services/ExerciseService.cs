@@ -4,6 +4,8 @@ using GymDB.API.Mapping;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Services.Interfaces;
 using Hangfire;
+using Hangfire.States;
+using Hangfire.Storage;
 using Microsoft.EntityFrameworkCore;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -137,8 +139,19 @@ namespace GymDB.API.Services
         {
             // TODO: Finish removing the exercise from all workouts not owned by the owner of the exercise
 
-            if (isPrivate)
-                BackgroundJob.Enqueue<IWorkoutService>(workoutService => workoutService.RemoveExerciseFromAllWorkouts(exercise, true));
+            if (isPrivate) {
+                string jobId = BackgroundJob.Enqueue<IWorkoutService>(workoutService => workoutService.RemoveExerciseFromAllWorkouts(exercise, true));
+
+                using (var connection = JobStorage.Current.GetConnection())
+                {
+                    JobData jobData;
+                    do
+                    {
+                        jobData = connection.GetJobData(jobId);
+                        Thread.Sleep(2);
+                    } while (jobData.State != SucceededState.StateName && jobData.State != DeletedState.StateName);
+                }
+            }
 
             exercise.IsPrivate = isPrivate;
 
@@ -167,7 +180,17 @@ namespace GymDB.API.Services
 
         public void RemoveExercise(Exercise exercise)
         {
-            BackgroundJob.Enqueue<IWorkoutService>(workoutService => workoutService.RemoveExerciseFromAllWorkouts(exercise, false));
+            string jobId = BackgroundJob.Enqueue<IWorkoutService>(workoutService => workoutService.RemoveExerciseFromAllWorkouts(exercise, false));
+
+            using (var connection = JobStorage.Current.GetConnection())
+            {
+                JobData jobData;
+                do
+                {
+                    jobData = connection.GetJobData(jobId);
+                    Thread.Sleep(2);
+                } while (jobData.State != SucceededState.StateName && jobData.State != DeletedState.StateName);
+            }
 
             RemoveAllExerciseImages(exercise);
 
