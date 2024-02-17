@@ -67,6 +67,7 @@ namespace GymDB.API.Services
             => context.Exercises.Include(exercise => exercise.User)
                                 .Where(exercise => (!exercise.IsPrivate || exercise.UserId == user.Id) && 
                                                     exercise.Name.ToLower().Contains(search.Name.ToLower()))
+                                .OrderByDescending(exercise => exercise.UserId == user.Id)
                                 .ToList();
 
         public List<ExercisePreviewModel> GetExercisesPreviews(List<Exercise> exercises)
