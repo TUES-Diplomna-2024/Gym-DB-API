@@ -3,7 +3,7 @@
 namespace GymDB.API.Data.ValidationAttributes
 {
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public class BirthDate : ValidationAttribute
+    public class BirthDateAttribute : ValidationAttribute
     {
         private readonly int allowableYearsRange = 122;
 

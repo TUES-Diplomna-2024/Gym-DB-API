@@ -46,7 +46,6 @@ namespace GymDB.API.Controllers
                 return StatusCode(403, "Only admin users can create public еxercises!");
 
             Exercise exercise = createAttempt.ToEntity(currUser);
-
             exerciseService.AddExercise(exercise);
 
             if (!createAttempt.Images.IsNullOrEmpty())

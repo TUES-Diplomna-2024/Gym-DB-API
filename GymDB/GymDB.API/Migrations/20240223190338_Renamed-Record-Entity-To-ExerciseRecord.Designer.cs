@@ -3,6 +3,7 @@ using System;
 using GymDB.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GymDB.API.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20240223190338_Renamed-Record-Entity-To-ExerciseRecord")]
+    partial class RenamedRecordEntityToExerciseRecord
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -116,12 +119,6 @@ namespace GymDB.API.Migrations
                     b.Property<Guid>("ExerciseId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly>("OnCreated")
-                        .HasColumnType("date");
-
-                    b.Property<DateTime>("OnModified")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<long>("Reps")
                         .HasColumnType("bigint");
 
@@ -143,7 +140,7 @@ namespace GymDB.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ExerciseRecords");
+                    b.ToTable("Records");
                 });
 
             modelBuilder.Entity("GymDB.API.Data.Entities.Role", b =>

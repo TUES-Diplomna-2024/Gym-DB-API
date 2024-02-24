@@ -131,6 +131,9 @@ namespace GymDB.API.Services
                 return notFoundExerciseIds;
             }
 
+            context.Workouts.Update(workout);
+            context.SaveChanges();
+
             return null;
         }
 

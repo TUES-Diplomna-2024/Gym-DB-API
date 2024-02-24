@@ -3,7 +3,7 @@
 namespace GymDB.API.Data.ValidationAttributes
 {
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public class ExerciseDifficulty : ValidationAttribute
+    public class ExerciseDifficultyAttribute : ValidationAttribute
     {
         private readonly string[] validDifficulties = { "beginner", "intermediate", "expert" };
 

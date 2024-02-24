@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 namespace GymDB.API.Data.ValidationAttributes
 {
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public class Gender : ValidationAttribute
+    public class GenderAttribute : ValidationAttribute
     {
         private readonly string[] validGenders = { "male", "female", "other" };
 

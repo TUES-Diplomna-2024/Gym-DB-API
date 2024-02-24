@@ -3,7 +3,7 @@
 namespace GymDB.API.Data.ValidationAttributes
 {
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public class ExerciseType : ValidationAttribute
+    public class ExerciseTypeAttribute : ValidationAttribute
     {
         private readonly string[] validTypes = { "cardio", "weightlifting", "plyometrics", "powerlifting",
                                                  "strength", "stretching", "strongman", "other" };

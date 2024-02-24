@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GymDB.API.Data.ValidationAttributes;
-using GymDB.API.Models.User;
 
 namespace GymDB.API.Data.Entities
 {

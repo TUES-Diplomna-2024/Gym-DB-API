@@ -1,8 +1,6 @@
 ﻿using GymDB.API.Data.Entities;
 using GymDB.API.Data.Settings.DBSeedModels;
-using GymDB.API.Data.ValidationAttributes;
 using GymDB.API.Models.User;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace GymDB.API.Mapping
 {

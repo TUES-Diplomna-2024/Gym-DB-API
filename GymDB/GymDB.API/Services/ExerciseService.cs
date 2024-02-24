@@ -7,7 +7,6 @@ using Hangfire;
 using Hangfire.States;
 using Hangfire.Storage;
 using Microsoft.EntityFrameworkCore;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace GymDB.API.Services
 {

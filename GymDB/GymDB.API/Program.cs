@@ -44,6 +44,7 @@ namespace GymDB.API
             builder.Services.AddScoped<IRoleService, RoleService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IExerciseService, ExerciseService>();
+            builder.Services.AddScoped<IExerciseRecordService, ExerciseRecordService>();
             builder.Services.AddScoped<IWorkoutService, WorkoutService>();
             builder.Services.AddScoped<IAzureBlobService, AzureBlobService>();
         }

@@ -23,14 +23,14 @@ namespace GymDB.API.Data.Settings
 
             TimeSpan accessTokenLifetime;
 
-            if (!TimeSpan.TryParse(jwtSettings["AccessTokenLifetime"], out accessTokenLifetime))
+            if (!TimeSpan.TryParseExact(jwtSettings["AccessTokenLifetime"], "c", null, out accessTokenLifetime))
                 throw new InvalidOperationException("'JwtSettings:AccessTokenLifetime' could not be found, is empty or is in invalid format!");
 
             AccessTokenLifetime = accessTokenLifetime;
 
             TimeSpan refreshTokenLifetime;
 
-            if (!TimeSpan.TryParse(jwtSettings["RefreshTokenLifetime"], out refreshTokenLifetime))
+            if (!TimeSpan.TryParseExact(jwtSettings["RefreshTokenLifetime"], "c", null, out refreshTokenLifetime))
                 throw new InvalidOperationException("'JwtSettings:RefreshTokenLifetime' could not be found, is empty or is in invalid format!");
 
             RefreshTokenLifetime = refreshTokenLifetime;
