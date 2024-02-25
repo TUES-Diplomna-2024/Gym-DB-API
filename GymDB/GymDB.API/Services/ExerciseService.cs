@@ -13,11 +13,13 @@ namespace GymDB.API.Services
     public class ExerciseService : IExerciseService
     {
         private readonly ApplicationContext context;
+        private readonly IExerciseRecordService exerciseRecordService;
         private readonly IAzureBlobService azureBlobService;
 
-        public ExerciseService(ApplicationContext context, IAzureBlobService azureBlobService)
+        public ExerciseService(ApplicationContext context, IExerciseRecordService exerciseRecordService, IAzureBlobService azureBlobService)
         {
             this.context = context;
+            this.exerciseRecordService = exerciseRecordService;
             this.azureBlobService = azureBlobService;
         }
 
@@ -192,6 +194,7 @@ namespace GymDB.API.Services
                 } while (jobData.State != SucceededState.StateName && jobData.State != DeletedState.StateName);
             }
 
+            exerciseRecordService.RemoveAllExerciseRecords(exercise);
             RemoveAllExerciseImages(exercise);
 
             context.Exercises.Remove(exercise);
@@ -202,7 +205,11 @@ namespace GymDB.API.Services
         {
             List<Exercise> toBeRemoved = GetAllUserPrivateExercises(user);
 
-            toBeRemoved.ForEach(exercise => RemoveAllExerciseImages(exercise));
+            foreach(var exercise in toBeRemoved)
+            {
+                exerciseRecordService.RemoveAllExerciseRecords(exercise);
+                RemoveAllExerciseImages(exercise);
+            }
 
             context.Exercises.RemoveRange(toBeRemoved);
             context.SaveChanges();

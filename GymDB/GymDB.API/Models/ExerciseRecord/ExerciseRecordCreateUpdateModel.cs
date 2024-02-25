@@ -2,7 +2,7 @@
 
 namespace GymDB.API.Models.ExerciseRecord
 {
-    public class ExerciseRecordCreateModel
+    public class ExerciseRecordCreateUpdateModel
     {
         public uint Sets { get; set; }
 

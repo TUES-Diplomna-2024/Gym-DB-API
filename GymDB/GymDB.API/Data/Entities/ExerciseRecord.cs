@@ -14,13 +14,11 @@ namespace GymDB.API.Data.Entities
         public uint Reps { get; set; }
 
         [Range(minimum: 0, maximum: 300, ErrorMessage = "Weight must be between 0 and 300 kg!")]
-        public double? Weight { get; set; }
+        public double Weight { get; set; }
 
         public double Volume { get; set; }
 
         public uint Duration { get; set; }
-
-        public DateTime Date { get; set; }
 
         [ForeignKey(nameof(User))]
         public Guid UserId { get; set; }
@@ -32,7 +30,7 @@ namespace GymDB.API.Data.Entities
 
         public Exercise Exercise { get; set; }
 
-        public DateOnly OnCreated { get; set; }
+        public DateTime OnCreated { get; set; }
 
         public DateTime OnModified { get; set; }
     }
