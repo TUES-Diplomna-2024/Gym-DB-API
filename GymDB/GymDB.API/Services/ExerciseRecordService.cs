@@ -23,7 +23,9 @@ namespace GymDB.API.Services
 
             return context.ExerciseRecords.Where(er => er.ExerciseId == exercise.Id &&
                                                        er.UserId == user.Id &&
-                                                       er.OnCreated >= startDate).ToList();
+                                                       er.OnCreated >= startDate)
+                                          .OrderByDescending(er => er.OnCreated)
+                                          .ToList();
         }
 
         public List<ExerciseRecordViewModel> GetRecordsViews(List<ExerciseRecord> records)
@@ -54,7 +56,7 @@ namespace GymDB.API.Services
                 if (record.Weight > maxWeight) maxWeight = record.Weight;
             }
 
-            double avgRepsPerSet = totalReps != 0 ? totalReps / totalReps : 0;
+            double avgRepsPerSet = totalSets != 0 ? totalReps / totalSets : 0;
             double avgTrainingDuration = totalDuration / records.Count;
             double avgVolume = totalVolume / records.Count;
             double avgWeight = totalWeight / records.Count;

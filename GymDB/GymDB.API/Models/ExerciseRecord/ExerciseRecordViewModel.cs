@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace GymDB.API.Models.ExerciseRecord
+﻿namespace GymDB.API.Models.ExerciseRecord
 {
     public class ExerciseRecordViewModel
     {
