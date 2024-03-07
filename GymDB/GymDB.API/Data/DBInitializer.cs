@@ -1,5 +1,6 @@
 ﻿using GymDB.API.Data.Entities;
 using GymDB.API.Mapping;
+using System.Data;
 
 namespace GymDB.API.Data
 {
@@ -24,11 +25,17 @@ namespace GymDB.API.Data
                                                          .ToList();
 
                         context.Roles.AddRange(roles);
+                        context.SaveChanges();
+                    }
 
-                        Role superAdminRole = roles.First(role => role.NormalizedName == "SUPER_ADMIN");
+                    if (!context.Users.Any())
+                    {
+                        Role? superAdminRole = context.Roles.FirstOrDefault(role => role.NormalizedName == "SUPER_ADMIN");
+
+                        if (superAdminRole == null)
+                            throw new Exception("Role with normalized name 'SUPER_ADMIN' could not be found!");
 
                         context.Users.Add(settings.DBSeed.RootAdmin.ToEntity(superAdminRole));
-
                         context.SaveChanges();
                     }
                 }
