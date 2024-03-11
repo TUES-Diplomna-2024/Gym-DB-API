@@ -2,9 +2,9 @@
 using GymDB.API.Data.Settings.DBSeedModels;
 using GymDB.API.Models.User;
 
-namespace GymDB.API.Mapping
+namespace GymDB.API.Mappers
 {
-    public static class UserMapping
+    public static class UserMapper
     {
         public static User ToEntity(this UserSignUpModel signUpModel)
         {

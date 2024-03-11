@@ -1,7 +1,7 @@
 ﻿using GymDB.API.Attributes;
 using GymDB.API.Data.Entities;
 using GymDB.API.Data.Enums;
-using GymDB.API.Mapping;
+using GymDB.API.Mappers;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Models.ExerciseRecord;
 using GymDB.API.Services.Interfaces;

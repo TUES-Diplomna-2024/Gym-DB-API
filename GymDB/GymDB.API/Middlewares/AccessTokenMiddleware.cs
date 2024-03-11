@@ -33,8 +33,6 @@ namespace GymDB.API.Middlewares
 
         public async Task InvokeAsync(HttpContext context, IUserService userService)
         {
-            Console.WriteLine("AccessToken Middleware");
-
             var endpointAuth = GetEndpointAuthorization(context);
 
             if (endpointAuth == null)
@@ -52,8 +50,6 @@ namespace GymDB.API.Middlewares
             }
 
             string token = auth.Substring("Bearer ".Length).Trim();
-
-            Console.WriteLine($"ACCESS TOKEN: {token}");
 
             try
             {

@@ -2,7 +2,7 @@
 using GymDB.API.Services.Interfaces;
 using GymDB.API.Models.User;
 using GymDB.API.Data.Entities;
-using GymDB.API.Mapping;
+using GymDB.API.Mappers;
 using GymDB.API.Data;
 using GymDB.API.Attributes;
 
@@ -70,6 +70,8 @@ namespace GymDB.API.Controllers
             return Ok(new UserAuthModel(accessToken, refreshToken));
         }
 
+        /* GET REQUESTS */
+
         [HttpGet("refresh"), RefreshTokenRequired]
         public IActionResult Refresh()
         {
@@ -82,8 +84,6 @@ namespace GymDB.API.Controllers
 
             return Ok(accessToken);
         }
-
-        /* GET REQUESTS */
 
         [HttpGet("current"), CustomAuthorize]
         public IActionResult GetCurrUser()

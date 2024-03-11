@@ -34,8 +34,6 @@ namespace GymDB.API.Middlewares
 
         public async Task InvokeAsync(HttpContext context, IUserService userService, IJwtService jwtService)
         {
-            Console.WriteLine("RefreshToken Middleware");
-
             string? refreshToken = context.Request.Headers["X-Refresh-Token"];
             bool isRefreshTokenRequired = IsRefreshTokenRequiredForEndpoint(context);
 
@@ -48,8 +46,6 @@ namespace GymDB.API.Middlewares
                 Error(context, HttpStatusCode.Unauthorized, "A refresh token is required!");
                 return;
             }
-
-            Console.WriteLine($"REFRESH TOKEN: {refreshToken}");
 
             try
             {

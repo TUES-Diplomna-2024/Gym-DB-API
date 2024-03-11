@@ -1,9 +1,8 @@
 ﻿using GymDB.API.Data.Entities;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Models.Workout;
-using System.Xml.Linq;
 
-namespace GymDB.API.Mapping
+namespace GymDB.API.Mappers
 {
     public static class WorkoutMapper
     {

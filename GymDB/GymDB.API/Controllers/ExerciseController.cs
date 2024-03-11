@@ -1,7 +1,7 @@
 ﻿using GymDB.API.Attributes;
 using GymDB.API.Data.Entities;
 using GymDB.API.Data.Settings;
-using GymDB.API.Mapping;
+using GymDB.API.Mappers;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;

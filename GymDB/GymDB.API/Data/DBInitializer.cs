@@ -1,5 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
-using GymDB.API.Mapping;
+using GymDB.API.Mappers;
 using System.Data;
 
 namespace GymDB.API.Data

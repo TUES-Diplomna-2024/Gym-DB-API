@@ -1,9 +1,9 @@
 ﻿using GymDB.API.Data.Entities;
 using GymDB.API.Models.Exercise;
 
-namespace GymDB.API.Mapping
+namespace GymDB.API.Mappers
 {
-    public static class ExerciseMapping
+    public static class ExerciseMapper
     {
         public static Exercise ToEntity(this ExerciseCreateModel createModel, User owner)
         {

@@ -2,9 +2,9 @@
 using GymDB.API.Models.Exercise;
 using GymDB.API.Models.ExerciseRecord;
 
-namespace GymDB.API.Mapping
+namespace GymDB.API.Mappers
 {
-    public static class ExerciseRecordMapping
+    public static class ExerciseRecordMapper
     {
         public static ExerciseRecord ToEntity(this ExerciseRecordCreateUpdateModel createModel, Exercise exercise, User owner)
         {

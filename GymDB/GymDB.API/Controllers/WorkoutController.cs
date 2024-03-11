@@ -1,5 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
-using GymDB.API.Mapping;
+using GymDB.API.Mappers;
 using GymDB.API.Models.Workout;
 using GymDB.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
