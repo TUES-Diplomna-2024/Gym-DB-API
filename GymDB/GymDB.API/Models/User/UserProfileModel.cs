@@ -4,20 +4,6 @@ namespace GymDB.API.Models.User
 {
     public class UserProfileModel
     {
-        public UserProfileModel(UserClass user)
-        {
-            Id        = user.Id;
-            Username  = user.Username;
-            Email     = user.Email;
-            RoleName  = user.Role.Name;
-            RoleColor = user.Role.Color;
-            Gender    = user.Gender;
-            Height    = user.Height;
-            Weight    = user.Weight;
-            BirthDate = user.BirthDate;
-            OnCreated = user.OnCreated;
-        }
-
         public Guid Id { get; set; }
 
         public string Username { get; set; }

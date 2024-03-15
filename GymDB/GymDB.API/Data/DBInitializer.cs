@@ -1,5 +1,6 @@
 ﻿using GymDB.API.Data.Entities;
-using GymDB.API.Data.Settings;
+using GymDB.API.Mappers;
+using System.Data;
 
 namespace GymDB.API.Data
 {
@@ -19,31 +20,22 @@ namespace GymDB.API.Data
                     {
                         var roles = settings.DBSeed.Roles.Select(pair => new Role { Id = Guid.NewGuid(),
                                                                                     Name = pair.Key,
-                                                                                    NormalizedName = pair.Value.NormalizedName,
-                                                                                    Color = pair.Value.Color }
-                                                        ).ToList();
+                                                                                    NormalizedName = pair.Key.ToUpper().Replace(" ", "_"),
+                                                                                    Color = pair.Value })
+                                                         .ToList();
 
                         context.Roles.AddRange(roles);
+                        context.SaveChanges();
+                    }
 
-                        Role rootUserRole = roles.First(role => role.NormalizedName == settings.DBSeed.RootUser.Role);
+                    if (!context.Users.Any())
+                    {
+                        Role? superAdminRole = context.Roles.FirstOrDefault(role => role.NormalizedName == "SUPER_ADMIN");
 
-                        context.Users.Add(
-                            new User {
-                                Id = Guid.NewGuid(),
-                                Username = settings.DBSeed.RootUser.Username,
-                                Email = settings.DBSeed.RootUser.Email,
-                                Password = BCrypt.Net.BCrypt.EnhancedHashPassword(settings.DBSeed.RootUser.Password, 13),
-                                RoleId = rootUserRole.Id,
-                                Role = rootUserRole,
-                                BirthDate = DateOnly.FromDateTime(DateTime.UtcNow),
-                                Gender = "other",
-                                Height = 60,
-                                Weight = 60,
-                                OnCreated = DateOnly.FromDateTime(DateTime.UtcNow),
-                                OnModified = DateTime.UtcNow
-                            }
-                        );
+                        if (superAdminRole == null)
+                            throw new Exception("Role with normalized name 'SUPER_ADMIN' could not be found!");
 
+                        context.Users.Add(settings.DBSeed.RootAdmin.ToEntity(superAdminRole));
                         context.SaveChanges();
                     }
                 }

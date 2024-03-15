@@ -1,38 +1,67 @@
 ﻿using GymDB.API.Data.Settings.DBSeedModels;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GymDB.API.Data.Settings
 {
     public class DBSeed
     {
+        private string defaultRole = "";
+
         public DBSeed(IConfiguration config)
         {
-            config.GetSection("DBSeed:Roles").Bind(Roles);
+            if (!config.GetSection("DBSeed").Exists())
+                throw new InvalidOperationException("'DBSeed' section could not be found or is empty!");
 
-            foreach(KeyValuePair<string, Role> pair in Roles)
+            IConfigurationSection roleSection = config.GetSection("DBSeed:Roles");
+            IConfigurationSection rootAdminSection = config.GetSection("DBSeed:RootAdmin");
+
+            if (!roleSection.Exists())
+                throw new InvalidOperationException("'DBSeed:Roles' section could not be found or is empty!");
+
+            if (!rootAdminSection.Exists())
+                throw new InvalidOperationException("'DBSeed:RootAdmin' section could not be found or is empty!");
+
+            roleSection.Bind(Roles);
+
+            foreach(KeyValuePair<string, string> pair in Roles)
             {
-                if (pair.Key == null || pair.Value.NormalizedName == null || pair.Value.Color == null)
+                if (pair.Key.IsNullOrEmpty() || pair.Value.IsNullOrEmpty())
                     throw new InvalidOperationException("There is an invalid role in 'DBSeed:Roles'!");
             }
+            
+            if (!Roles.ContainsKey("Super Admin"))
+                throw new InvalidOperationException("Role 'Super Admin' could not be found in 'DBSeed:Roles'!");
 
-            DefaultRole = config.GetSection("DBSeed")["DefaultRole"] ??
-                          throw new InvalidOperationException("'DBSeed:DefaultRole' could not be found!");
+            DefaultRole = config.GetSection("DBSeed")["DefaultRole"]!;
 
-            if (Roles.Values.FirstOrDefault(role => role.NormalizedName == DefaultRole) == null)
-                throw new InvalidOperationException($"Invalid 'DBSeed:DefaultRole'! Role '{DefaultRole}' wasn't defined in 'DBSeed:Roles' or wasn't written in normalized form!'");
+            rootAdminSection.Bind(RootAdmin);
 
-            config.GetSection("DBSeed:RootUser").Bind(RootUser);
-
-            if (RootUser.Username == null || RootUser.Email == null || RootUser.Password == null || RootUser.Role == null)
-                throw new InvalidOperationException("Some required settings such as 'Username', 'Email', 'Password' and 'RoleNormalizedName' weren't defined in 'DBSeed:RootUser'!");
-
-            if (Roles.Values.FirstOrDefault(role => role.NormalizedName == RootUser.Role) == null)
-                throw new InvalidOperationException($"Invalid 'DBSeed:RootUser:RoleNormalizedName'! Role '{RootUser.Role}' wasn't defined in 'DBSeed:Roles' or wasn't written in normalized form!");
+            if (RootAdmin.Username.IsNullOrEmpty() || RootAdmin.Email.IsNullOrEmpty() || RootAdmin.Password.IsNullOrEmpty())
+                throw new InvalidOperationException("'DBSeed:RootAdmin' doesn't have all the necessary settings - 'Username', 'Email', and 'Password'!");
         }
 
-        public Dictionary<string, Role> Roles { get; private set; } = new Dictionary<string, Role>();
+        public Dictionary<string, string> Roles { get; private set; } = new Dictionary<string, string>();
 
-        public string DefaultRole { get; private set; }
+        public string DefaultRole
+        {
+            get { return defaultRole; }
+            private set
+            {
+                if (value.IsNullOrEmpty())
+                    throw new InvalidOperationException("'DBSeed:DefaultRole' could not be found or is empty!");
 
-        public RootUser RootUser { get; private set; } = new RootUser();
+                if (!Roles.ContainsKey(value))
+                    throw new InvalidOperationException($"Invalid 'DBSeed:DefaultRole'! Role '{value}' could not be found in 'DBSeed:Roles'!");
+
+                value = value.ToUpper().Replace(" ", "_");
+
+                if (value == "SUPER_ADMIN")
+                    throw new InvalidOperationException("Invalid 'DBSeed:DefaultRole'! The default role cannot be set to 'Super Admin'! This role can be assigned only to the root admin!");
+
+                defaultRole = value;
+            }
+        }
+
+        public RootAdmin RootAdmin { get; private set; } = new RootAdmin();
     }
 }

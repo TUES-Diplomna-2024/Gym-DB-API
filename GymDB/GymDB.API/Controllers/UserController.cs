@@ -2,8 +2,9 @@
 using GymDB.API.Services.Interfaces;
 using GymDB.API.Models.User;
 using GymDB.API.Data.Entities;
-using Microsoft.AspNetCore.Authorization;
-using GymDB.API.Data.Settings;
+using GymDB.API.Mappers;
+using GymDB.API.Data;
+using GymDB.API.Attributes;
 
 namespace GymDB.API.Controllers
 {
@@ -16,47 +17,40 @@ namespace GymDB.API.Controllers
         private readonly IUserService userService;
         private readonly IRoleService roleService;
         private readonly IJwtService jwtService;
-        private readonly ISessionService sessionService;
+        private readonly IExerciseService exerciseService;
 
-        public UserController(IConfiguration config, IUserService userService, IRoleService roleService, IJwtService jwtService, ISessionService sessionService)
+        public UserController(IConfiguration config, IUserService userService, IRoleService roleService, IJwtService jwtService, IExerciseService exerciseService)
         {
             settings = new ApplicationSettings(config);
 
             this.userService = userService;
             this.roleService = roleService;
             this.jwtService = jwtService;
-            this.sessionService = sessionService;
+            this.exerciseService = exerciseService;
         }
 
-        [HttpGet, Authorize]
-        public IActionResult GetAllUsers()
-        {
-            List<UserProfileModel> users = userService.GetAll()
-                                                      .Select(user => new UserProfileModel(user))
-                                                      .ToList();
-
-            return Ok(users);
-        }
+        /* POST REQUESTS */
 
         [HttpPost("signup")]
         public IActionResult SignUp(UserSignUpModel signUpAttempt)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
-            
-            if (userService.IsUserAlreadyRegisteredWithEmail(signUpAttempt.Email))
-                return Conflict();
 
-            User user = new User(signUpAttempt);
+            if (userService.IsUserAlreadyRegisteredWithEmail(signUpAttempt.Email))
+                return Conflict($"Email {signUpAttempt.Email} is already in use by another user!");
+
+            User user = signUpAttempt.ToEntity();
 
             if (!roleService.AssignUserRole(user, settings.DBSeed.DefaultRole))
-                return StatusCode(500, $"Role '{settings.DBSeed.DefaultRole}' could not be found!");
+                return StatusCode(500, $"Something went wrong when creating your account!");
 
-            userService.Add(user);
+            userService.AddUser(user);
 
-            string refreshToken = sessionService.CreateNewSession(user);
+            string accessToken = jwtService.GenerateNewAccessToken(user.Id, user.Role.NormalizedName);
+            string refreshToken = jwtService.GenerateNewRefreshToken(user.Id);
 
-            return Ok(new UserAuthModel(jwtService.GenerateNewJwtToken(user), refreshToken));
+            return Ok(new UserAuthModel(accessToken, refreshToken));
         }
 
         [HttpPost("signin")]
@@ -65,43 +59,157 @@ namespace GymDB.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            User? user = userService.GetByEmailAndPassword(signInAttempt.Email, signInAttempt.Password);
+            User? user = userService.GetUserByEmailAndPassword(signInAttempt.Email, signInAttempt.Password);
 
             if (user == null)
-                return Unauthorized();
+                return Unauthorized("Invalid sign in attempt!");
 
-            string refreshToken = sessionService.CreateNewSession(user);
+            string accessToken = jwtService.GenerateNewAccessToken(user.Id, user.Role.NormalizedName);
+            string refreshToken = jwtService.GenerateNewRefreshToken(user.Id);
 
-            return Ok(new UserAuthModel(jwtService.GenerateNewJwtToken(user), refreshToken));
+            return Ok(new UserAuthModel(accessToken, refreshToken));
         }
 
-        [HttpPost("signout")]
-        public IActionResult SignOut(UserSessionRetrievalModel signOutAttempt)
+        /* GET REQUESTS */
+
+        [HttpGet("refresh"), RefreshTokenRequired]
+        public IActionResult Refresh()
         {
-            Session? userSession = sessionService.GetUserSessionByRefreshToken(signOutAttempt.UserId, signOutAttempt.RefreshToken);
+            // Since the RefreshTokenRequired attribute is applied to this endpoint, the RefreshTokenMiddleware has already validated the refresh token,
+            // ensuring that the current user is not null. Therefore, we can safely generate a new access token for the current user.
 
-            if (userSession == null)
-                return Unauthorized();
+            User currUser = userService.GetCurrUser(HttpContext)!;
 
-            sessionService.Remove(userSession);
+            string accessToken = jwtService.GenerateNewAccessToken(currUser.Id, currUser.Role.NormalizedName);
+
+            return Ok(accessToken);
+        }
+
+        [HttpGet("current"), CustomAuthorize]
+        public IActionResult GetCurrUser()
+        {
+            // Since the CustomAuthorize attribute is applied to this endpoint, the AccessTokenMiddleware has already validated the access token,
+            // ensuring that the current user is not null.
+
+            User currUser = userService.GetCurrUser(HttpContext)!;
+
+            return Ok(currUser.ToProfileModel());
+        }
+
+        [HttpGet("{id}"), CustomAuthorize]
+        public IActionResult GetUserById(Guid id)
+        {
+           User? user = userService.GetUserById(id);
+
+            if (user == null)
+                return NotFound($"User with id '{id}' could not be found!");
+            
+            return Ok(user.ToProfileModel());
+        }
+
+        [HttpGet, CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
+        public IActionResult GetAllUserPreviews()
+        {
+            List<UserPreviewModel> userPreviews = userService.GetAllUserPreviews();
+
+            return Ok(userPreviews);
+        }
+
+        [HttpGet("current/custom-exercises"), CustomAuthorize]
+        public IActionResult GetCurrUserCustomExercisesPreviews()
+        {
+            User currUser = userService.GetCurrUser(HttpContext)!;
+
+            List<Exercise> customExercises = exerciseService.GetAllUserCustomExercises(currUser);
+
+            return Ok(exerciseService.GetExercisesPreviews(customExercises));
+        }
+
+        /* PUT REQUESTS */
+
+        [HttpPut("current"), CustomAuthorize]
+        public IActionResult UpdateCurrUser(UserUpdateModel updateAttempt)
+        {
+            User currUser = userService.GetCurrUser(HttpContext)!;
+
+            if (!ModelState.IsValid)
+                return BadRequest();
+
+            userService.UpdateUser(currUser, updateAttempt);
 
             return Ok();
         }
 
-        [HttpPost("refresh")]
-        public IActionResult Refresh(UserSessionRetrievalModel refreshAttempt)
+        [HttpPut("{id}/role"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
+        public IActionResult AssignUserRole(Guid id, UserAssignRoleModel assignRoleAttempt)
         {
-            User? user = userService.GetById(refreshAttempt.UserId);
+            User currUser = userService.GetCurrUser(HttpContext)!;
+
+            User? user = userService.GetUserById(id);
 
             if (user == null)
-                return NotFound($"User with id {refreshAttempt.UserId} could not be found!");
+                return NotFound($"User with id '{id}' could not be found!");
 
-            Session? userSession = sessionService.GetUserSessionByRefreshToken(refreshAttempt.UserId, refreshAttempt.RefreshToken);
+            if (roleService.HasUserRole(user, assignRoleAttempt.RoleNormalizedName))
+                return StatusCode(403, $"User has already role '{assignRoleAttempt.RoleNormalizedName}'!");
 
-            if (userSession == null)
-                return Unauthorized("You must sign in again!");
+            if (assignRoleAttempt.RoleNormalizedName == "SUPER_ADMIN")
+                return StatusCode(403, "Role 'SUPER_ADMIN' is reserved for the root admin only! You cannot assign it to another user!");
 
-            return Ok(jwtService.GenerateNewJwtToken(user));
+            if (roleService.HasUserRole(user, "SUPER_ADMIN"))
+                return StatusCode(403, "The role of the root admin cannot be changed!");
+
+            if (roleService.HasUserRole(user, "ADMIN") && !roleService.HasUserRole(currUser, "SUPER_ADMIN"))
+                return StatusCode(403, "You cannot re-assign new role to another admin user! This can be done only by the root admin!");
+
+            if (!roleService.AssignUserRole(user, assignRoleAttempt.RoleNormalizedName))
+                return NotFound($"Role with normalized name '{assignRoleAttempt.RoleNormalizedName}' could not be found!");
+
+            userService.UpdateUser(user);
+
+            return Ok();
+        }
+
+        /* DELETE REQUESTS */
+
+        [HttpDelete("current"), CustomAuthorize]
+        public IActionResult DeleteCurrUser(UserDeleteModel deleteAttempt)
+        {
+            User currUser = userService.GetCurrUser(HttpContext)!;
+
+            if (roleService.HasUserRole(currUser, "SUPER_ADMIN"))
+                return StatusCode(403, "The root admin cannot be deleted!");
+
+            if (!ModelState.IsValid)
+                return BadRequest();
+
+            if (!userService.IsUserPasswordCorrect(currUser, deleteAttempt.Password))
+                return Unauthorized("Incorrect password!");
+
+            userService.RemoveUser(currUser);
+
+            return Ok();
+        }
+
+        [HttpDelete("{id}"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
+        public IActionResult DeleteUserById(Guid id)
+        {
+            User currUser = userService.GetCurrUser(HttpContext)!;
+
+            User? user = userService.GetUserById(id);
+
+            if (user == null)
+                return NotFound($"User with id '{id}' could not be found!");
+
+            if (roleService.HasUserRole(user, "SUPER_ADMIN"))
+                return StatusCode(403, "The root admin cannot be deleted!");
+
+            if (roleService.HasUserRole(user, "ADMIN") && !roleService.HasUserRole(currUser, "SUPER_ADMIN"))
+                return StatusCode(403, "You cannot delete another admin user! This can be done only by the root admin!");
+            
+            userService.RemoveUser(user);
+
+            return Ok();
         }
     }
 }

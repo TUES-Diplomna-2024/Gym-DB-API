@@ -2,13 +2,13 @@
 {
     public class UserAuthModel
     {
-        public UserAuthModel(string jwt, string refreshToken)
+        public UserAuthModel(string accessToken, string refreshToken)
         {
-            Jwt = jwt;
+            AccessToken = accessToken;
             RefreshToken = refreshToken;
         }
 
-        public string Jwt { get; set; }
+        public string AccessToken { get; set; }
 
         public string RefreshToken { get; set; }
     }

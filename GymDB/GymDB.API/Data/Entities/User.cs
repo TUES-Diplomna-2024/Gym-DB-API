@@ -1,47 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GymDB.API.Data.ValidationAttributes;
-using GymDB.API.Models;
-using GymDB.API.Models.User;
-using Microsoft.EntityFrameworkCore;
 
 namespace GymDB.API.Data.Entities
 {
     public class User
     {
-        public User() { }
-
-        public User(UserSignUpModel input)
-        {
-            Id                  = Guid.NewGuid();
-            OnCreated           = DateOnly.FromDateTime(DateTime.UtcNow);
-            OnModified          = DateTime.UtcNow;
-            
-            Username            = input.Username;
-            Email               = input.Email;
-            Password            = input.Password;
-            BirthDate           = input.BirthDate;
-            Gender              = input.Gender;
-            Height              = input.Height;
-            Weight              = input.Weight;
-        }
-
-        public User(Guid id, string username, string email, string password, Guid roleId, Role role, DateOnly birthDate, string gender, double height, double weight, DateOnly onCreated, DateTime onModified)
-        {
-            Id = id;
-            Username = username;
-            Email = email;
-            Password = password;
-            RoleId = roleId;
-            Role = role;
-            BirthDate = birthDate;
-            Gender = gender;
-            Height = height;
-            Weight = weight;
-            OnCreated = onCreated;
-            OnModified = onModified;
-        }
-
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
@@ -60,11 +24,11 @@ namespace GymDB.API.Data.Entities
 
         public Role Role { get; set; }
 
-        [BirthDate(ErrorMessage = "Invalid birth date!")]
+        [BirthDate]
         public DateOnly BirthDate { get; set; }
 
-        [Gender(ErrorMessage = "Invalid gender!")]
-        [StringLength(10, ErrorMessage = "Gender must be up to 10 characters long!")]
+        [Gender]
+        [StringLength(10)]
         public string Gender { get; set; }
 
         [Range(minimum: 63, maximum: 251, ErrorMessage = "Height must be between 63 and 251 cm!")]

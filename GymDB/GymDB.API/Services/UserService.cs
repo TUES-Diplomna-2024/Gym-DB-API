@@ -1,7 +1,10 @@
 ﻿using GymDB.API.Data;
 using GymDB.API.Data.Entities;
+using GymDB.API.Mappers;
+using GymDB.API.Models.User;
 using GymDB.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace GymDB.API.Services
 {
@@ -9,50 +12,107 @@ namespace GymDB.API.Services
     {
         private readonly ApplicationContext context;
 
-        public UserService(ApplicationContext context)
-        {
+        private readonly IExerciseService exerciseService;
+        private readonly IExerciseRecordService exerciseRecordService;
+        private readonly IWorkoutService workoutService;
+
+        public UserService(ApplicationContext context, IExerciseService exerciseService, IExerciseRecordService exerciseRecordService, IWorkoutService workoutService)
+        {                                              
             this.context = context;
+            this.exerciseService = exerciseService;
+            this.exerciseRecordService = exerciseRecordService;
+            this.workoutService = workoutService;
         }
 
-        public List<User> GetAll()
+        public List<User> GetAllUsers()
             => context.Users.Include(user => user.Role).ToList();
 
-        public User? GetById(Guid id)
+        public List<UserPreviewModel> GetAllUserPreviews()
+            => GetAllUsers().Select(user => user.ToPreviewModel())
+                            .OrderBy(user => user.RoleName)
+                            .ThenBy(user => user.Username)
+                            .ToList(); 
+
+        public User? GetUserById(Guid id)
             => context.Users.Include(user => user.Role)
                             .FirstOrDefault(user => user.Id == id);
 
-        public User? GetByEmail(string email)
+        public User? GetCurrUser(HttpContext context)
+        {
+            Guid id;
+
+            if (Guid.TryParse(context.User.FindFirstValue("userId"), out id))
+                return GetUserById(id);
+
+            return null;
+        }
+
+        public User? GetUserByEmail(string email)
             => context.Users.Include(user => user.Role)
                             .FirstOrDefault(user => user.Email == email);
 
-        public User? GetByEmailAndPassword(string email, string password)
+        public User? GetUserByEmailAndPassword(string email, string password)
         {
-            User? user = GetByEmail(email);
+            User? user = GetUserByEmail(email);
 
-            if (user != null && BCrypt.Net.BCrypt.EnhancedVerify(password, user.Password))
+            if (user != null && IsUserPasswordCorrect(user, password))
                 return user;
 
             return null;
         }
 
         public bool IsUserAlreadyRegisteredWithEmail(string email)
-            => GetByEmail(email) != null;
+            => GetUserByEmail(email) != null;
+
+        public bool IsUserPasswordCorrect(User user, string password)
+            => BCrypt.Net.BCrypt.EnhancedVerify(password, user.Password);
 
         public string GetHashedPassword(string password)
             => BCrypt.Net.BCrypt.EnhancedHashPassword(password, 13);
 
-        public void Add(User user)
+        public void AddUser(User user)
         {
             user.Password = GetHashedPassword(user.Password);
             user.Gender = user.Gender.ToLower();
 
-            context.Add(user);
+            context.Users.Add(user);
             context.SaveChanges();
         }
 
-        public void Update(User user)
+        public void UpdateUser(User user, UserUpdateModel update)
         {
-            context.Update(user);
+            user.Username = update.Username;
+            user.BirthDate = update.BirthDate;
+            user.Gender = update.Gender;
+            user.Height = update.Height;
+            user.Weight = update.Weight;
+
+            UpdateUser(user);
+        }
+
+        public void UpdateUser(User user)
+        {
+            user.OnModified = DateTime.UtcNow;
+
+            context.Users.Update(user);
+            context.SaveChanges();
+        }
+
+        public void RemoveUserRelatedData(User user)
+        {
+            workoutService.RemoveAllUserWorkouts(user);
+
+            exerciseRecordService.RemoveAllUserRecords(user);
+
+            exerciseService.RemoveAllUserPrivateExercises(user);
+            exerciseService.RemoveUserOwnershipOfPublicExercises(user);
+        }
+
+        public void RemoveUser(User user)
+        {
+            RemoveUserRelatedData(user);
+
+            context.Users.Remove(user);
             context.SaveChanges();
         }
     }
