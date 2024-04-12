@@ -1,6 +1,6 @@
 using GymDB.API.Data;
-using GymDB.API.Services.Interfaces;
-using GymDB.API.Services;
+/*using GymDB.API.Services.Interfaces;
+using GymDB.API.Services;*/
 using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -40,16 +40,9 @@ namespace GymDB.API
             builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql(settings.ConnectionStrings.PostgresConnection));
 
             // Custom services
-            builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<IRoleService, RoleService>();
-            builder.Services.AddScoped<IJwtService, JwtService>();
-            builder.Services.AddScoped<IExerciseService, ExerciseService>();
-            builder.Services.AddScoped<IExerciseRecordService, ExerciseRecordService>();
-            builder.Services.AddScoped<IWorkoutService, WorkoutService>();
-            builder.Services.AddScoped<IAzureBlobService, AzureBlobService>();
         }
 
-        public static void ConfigureApplication(WebApplication app)
+        public static void ConfigureApplication(WebApplication app, ApplicationSettings settings)
         {
             if (app.Environment.IsDevelopment())
             {
@@ -59,18 +52,17 @@ namespace GymDB.API
             }
 
             app.UseCors();
-
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
-
             app.UseAuthorization();
 
             app.MapControllers();
 
             app.UseAccessToken();
-
             app.UseRefreshToken();
+
+            app.SeedDB(settings);
         }
 
         public static void Main(string[] args)
@@ -82,9 +74,7 @@ namespace GymDB.API
 
             var app = builder.Build();
 
-            ConfigureApplication(app);
-
-            app.SeedDB(settings);
+            ConfigureApplication(app, settings);
 
             app.Run();
         }
