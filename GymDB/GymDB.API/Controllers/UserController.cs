@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-/*using GymDB.API.Services.Interfaces;*/
+using GymDB.API.Services.Interfaces;
 using GymDB.API.Models.User;
 using GymDB.API.Data.Entities;
 using GymDB.API.Mappers;
@@ -12,9 +12,11 @@ namespace GymDB.API.Controllers
     [Route("users")]
     public class UserController : ControllerBase
     {
-        public UserController()
+        private readonly IUserService userService;
+
+        public UserController(IUserService userService)
         {
-           
+           this.userService = userService;
         }
 
         /* POST REQUESTS */
@@ -22,7 +24,12 @@ namespace GymDB.API.Controllers
         [HttpPost("signup")]
         public async Task<IActionResult> SignUpAsync(UserSignUpModel signUpAttempt)
         {
-            
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            var result = await userService.SignUpAsync(signUpAttempt);
         }
 
         [HttpPost("signin")]

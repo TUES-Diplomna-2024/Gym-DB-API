@@ -5,6 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using Hangfire.PostgreSql;
 using GymDB.API.Middlewares;
+using GymDB.API.Repositories.Interfaces;
+using GymDB.API.Repositories;
+using GymDB.API.Services.Interfaces;
+using GymDB.API.Services;
 
 namespace GymDB.API
 {
@@ -39,7 +43,11 @@ namespace GymDB.API
             // DB Context
             builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql(settings.ConnectionStrings.PostgresConnection));
 
+            // Repositories
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+
             // Custom services
+            builder.Services.AddScoped<IJwtService, JwtService>();
         }
 
         public static void ConfigureApplication(WebApplication app, ApplicationSettings settings)
