@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using GymDB.API.Exceptions;
+
 
 namespace GymDB.API.Middlewares
 {
@@ -17,19 +18,24 @@ namespace GymDB.API.Middlewares
             {
                 await next(context);
             }
-            catch (Exception ex)
+            catch (HttpException e)
             {
                 context.Response.OnStarting((state) =>
                 {
                     var context2 = (HttpContext)state;
 
                     context2.Response.ContentType = "application/json";
-                    context2.Response.StatusCode = 500;
+                    context2.Response.StatusCode = e.StatusCode;
 
-                    context2.Response.WriteAsync($"ZDR, BEBCE: {ex.Message}");
+                    context2.Response.WriteAsync(e.Message);
 
                     return Task.CompletedTask;
                 }, context);
+            }
+            catch (Exception e)
+            {
+                // TODO - Add Logger
+                Console.WriteLine($"!!! Exception: {e.Message} !!!");
             }
         }
     }

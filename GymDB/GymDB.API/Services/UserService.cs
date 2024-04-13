@@ -1,11 +1,9 @@
 ﻿using GymDB.API.Data.Entities;
-using GymDB.API.Models.Other;
 using GymDB.API.Models.User;
 using GymDB.API.Repositories.Interfaces;
 using GymDB.API.Services.Interfaces;
 using System.Net;
 using GymDB.API.Mappers;
-using Azure.Core;
 
 
 namespace GymDB.API.Services
@@ -21,17 +19,19 @@ namespace GymDB.API.Services
             this.jwtService = jwtService;
         }
 
-        public async Task<ServiceResultModel> SignInAsync(UserSignInModel signInModel)
+        public async Task<UserAuthModel> SignInAsync(UserSignInModel signInModel)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<ServiceResultModel> SignUpAsync(UserSignUpModel signUpModel)
+        public async Task<UserAuthModel> SignUpAsync(UserSignUpModel signUpModel)
         {
+            throw new NotImplementedException();
+
             if (await IsUserAlreadyRegisteredWithEmail(signUpModel.Email))
             {
-                return new ServiceResultModel(null, HttpStatusCode.Conflict,
-                                              $"Email {signUpModel.Email} is already in use by another user!");
+                /*return new ServiceResultModel(null, HttpStatusCode.Conflict,
+                                              $"Email {signUpModel.Email} is already in use by another user!");*/
             }
 
             User user = signUpModel.ToEntity();
@@ -46,31 +46,31 @@ namespace GymDB.API.Services
             string refreshToken = jwtService.GenerateNewRefreshToken(user.Id);
             var auth = new UserAuthModel(accessToken, refreshToken);
 
-            return new ServiceResultModel(auth, HttpStatusCode.OK);
+            /*return new ServiceResultModel(auth, HttpStatusCode.OK);*/
         }
 
-        public async Task<ServiceResultModel> RefreshAsync(HttpContext context)
+        public async Task<string> RefreshAsync(HttpContext context)
         { throw new NotImplementedException(); }
 
-        public async Task<ServiceResultModel> GetCurrUserProfileAsync(HttpContext context)
+        public async Task<UserProfileModel> GetCurrUserProfileAsync(HttpContext context)
             { throw new NotImplementedException();}
 
-        public async Task<ServiceResultModel> GetUserProfileByIdAsync(Guid userId)
+        public async Task<UserProfileModel> GetUserProfileByIdAsync(Guid userId)
             { throw new NotImplementedException();}
 
-        public async Task<ServiceResultModel> GetAllUsersPreviewsAsync()
+        public async Task<List<UserPreviewModel>> GetAllUsersPreviewsAsync()
             { throw new NotImplementedException();}
 
-        public async Task<ServiceResultModel> UpdateCurrUserAsync(HttpContext context, UserUpdateModel updateModel)
+        public async Task UpdateCurrUserAsync(HttpContext context, UserUpdateModel updateModel)
             { throw new NotImplementedException();}
 
-        public async Task<ServiceResultModel> AssignUserRoleAsync(HttpContext context, Guid userId, UserAssignRoleModel assignRoleModel)
+        public async Task AssignUserRoleAsync(HttpContext context, Guid userId, UserAssignRoleModel assignRoleModel)
             { throw new NotImplementedException();}
 
-        public async Task<ServiceResultModel> DeleteCurrUserAsync(HttpContext context, UserDeleteModel deleteModel)
+        public async Task DeleteCurrUserAsync(HttpContext context, UserDeleteModel deleteModel)
             { throw new NotImplementedException();}
 
-        public async Task<ServiceResultModel> DeleteUserByIdAsync(HttpContext context, Guid userId)
+        public async Task DeleteUserByIdAsync(HttpContext context, Guid userId)
             { throw new NotImplementedException();}
 
         private async Task<bool> IsUserAlreadyRegisteredWithEmail(string email)

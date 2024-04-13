@@ -5,6 +5,7 @@ using GymDB.API.Data.Entities;
 using GymDB.API.Mappers;
 using GymDB.API.Data;
 using GymDB.API.Attributes;
+using GymDB.API.Exceptions;
 
 namespace GymDB.API.Controllers
 {
@@ -24,8 +25,6 @@ namespace GymDB.API.Controllers
         [HttpPost("signup")]
         public async Task<IActionResult> SignUpAsync(UserSignUpModel signUpAttempt)
         {
-            throw new Exception("Hello, Exception World!");
-            
             if (!ModelState.IsValid)
             {
                 return BadRequest();
