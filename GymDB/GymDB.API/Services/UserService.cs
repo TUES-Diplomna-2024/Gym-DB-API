@@ -23,7 +23,7 @@ namespace GymDB.API.Services
 
         public async Task<ServiceResultModel> SignInAsync(UserSignInModel signInModel)
         {
-            
+            throw new NotImplementedException();
         }
 
         public async Task<ServiceResultModel> SignUpAsync(UserSignUpModel signUpModel)
@@ -49,21 +49,29 @@ namespace GymDB.API.Services
             return new ServiceResultModel(auth, HttpStatusCode.OK);
         }
 
-        public async Task<ServiceResultModel> RefreshAsync(HttpContext context);
+        public async Task<ServiceResultModel> RefreshAsync(HttpContext context)
+        { throw new NotImplementedException(); }
 
-        public async Task<ServiceResultModel> GetCurrUserProfileAsync(HttpContext context);
+        public async Task<ServiceResultModel> GetCurrUserProfileAsync(HttpContext context)
+            { throw new NotImplementedException();}
 
-        public async Task<ServiceResultModel> GetUserProfileByIdAsync(Guid userId);
+        public async Task<ServiceResultModel> GetUserProfileByIdAsync(Guid userId)
+            { throw new NotImplementedException();}
 
-        public async Task<ServiceResultModel> GetAllUsersPreviewsAsync();
+        public async Task<ServiceResultModel> GetAllUsersPreviewsAsync()
+            { throw new NotImplementedException();}
 
-        public async Task<ServiceResultModel> UpdateCurrUserAsync(HttpContext context, UserUpdateModel updateModel);
+        public async Task<ServiceResultModel> UpdateCurrUserAsync(HttpContext context, UserUpdateModel updateModel)
+            { throw new NotImplementedException();}
 
-        public async Task<ServiceResultModel> AssignUserRoleAsync(HttpContext context, Guid userId, UserAssignRoleModel assignRoleModel);
+        public async Task<ServiceResultModel> AssignUserRoleAsync(HttpContext context, Guid userId, UserAssignRoleModel assignRoleModel)
+            { throw new NotImplementedException();}
 
-        public async Task<ServiceResultModel> DeleteCurrUserAsync(HttpContext context, UserDeleteModel deleteModel);
+        public async Task<ServiceResultModel> DeleteCurrUserAsync(HttpContext context, UserDeleteModel deleteModel)
+            { throw new NotImplementedException();}
 
-        public async Task<ServiceResultModel> DeleteUserByIdAsync(HttpContext context, Guid userId);
+        public async Task<ServiceResultModel> DeleteUserByIdAsync(HttpContext context, Guid userId)
+            { throw new NotImplementedException();}
 
         private async Task<bool> IsUserAlreadyRegisteredWithEmail(string email)
         {

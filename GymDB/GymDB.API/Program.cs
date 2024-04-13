@@ -48,6 +48,7 @@ namespace GymDB.API
 
             // Custom services
             builder.Services.AddScoped<IJwtService, JwtService>();
+            builder.Services.AddScoped<IUserService, UserService>();
         }
 
         public static void ConfigureApplication(WebApplication app, ApplicationSettings settings)
@@ -61,6 +62,8 @@ namespace GymDB.API
 
             app.UseCors();
             app.UseHttpsRedirection();
+
+            app.UseGlobalExceptionHandler();
 
             app.UseAuthentication();
             app.UseAuthorization();

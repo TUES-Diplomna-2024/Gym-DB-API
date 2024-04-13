@@ -24,21 +24,25 @@ namespace GymDB.API.Controllers
         [HttpPost("signup")]
         public async Task<IActionResult> SignUpAsync(UserSignUpModel signUpAttempt)
         {
+            throw new Exception("Hello, Exception World!");
+            
             if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
 
             var result = await userService.SignUpAsync(signUpAttempt);
+
+            return Ok(result);
         }
 
-        [HttpPost("signin")]
+        /*[HttpPost("signin")]
         public async Task<IActionResult> SignInAsync(UserSignInModel signInAttempt)
         {
             
         }
 
-        /* GET REQUESTS */
+        *//* GET REQUESTS *//*
 
         [HttpGet("refresh"), RefreshTokenRequired]
         public async Task<IActionResult> RefreshAsync()
@@ -70,7 +74,7 @@ namespace GymDB.API.Controllers
             
         }
 
-        /* PUT REQUESTS */
+        *//* PUT REQUESTS *//*
 
         [HttpPut("current"), CustomAuthorize]
         public async Task<IActionResult> UpdateCurrUserAsync(UserUpdateModel updateAttempt)
@@ -84,7 +88,7 @@ namespace GymDB.API.Controllers
             
         }
 
-        /* DELETE REQUESTS */
+        *//* DELETE REQUESTS *//*
 
         [HttpDelete("current"), CustomAuthorize]
         public async Task<IActionResult> DeleteCurrUserAsync(UserDeleteModel deleteAttempt)
@@ -96,6 +100,6 @@ namespace GymDB.API.Controllers
         public async Task<IActionResult> DeleteUserByIdAsync(Guid id)
         {
             
-        }
+        }*/
     }
 }

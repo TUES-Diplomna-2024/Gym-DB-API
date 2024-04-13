@@ -64,11 +64,12 @@ namespace GymDB.API.Middlewares
                     return;
                 }
 
-                if (userService.GetUserById(userId) == null)
+                // TODO: Implement
+                /*if (userService.GetUserById(userId) == null)
                 {
                     Error(context, HttpStatusCode.Unauthorized, "The current user doesn't exists!");
                     return;
-                }
+                }*/
 
                 // If Authorization is found in the request headers, it has passed the AccessTokenMiddleware, which has validated it.
                 // This means that context.User contains a valid 'userId' claim.

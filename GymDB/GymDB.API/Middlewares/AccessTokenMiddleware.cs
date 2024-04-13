@@ -67,11 +67,12 @@ namespace GymDB.API.Middlewares
                     return;
                 }
 
-                if (userService.GetUserById(userId) == null)
+                // TODO: Implement
+                /*if (userService.GetUserById(userId) == null)
                 {
                     Error(context, HttpStatusCode.Unauthorized, "The current user doesn't exists!");
                     return;
-                }
+                }*/
 
                 if (endpointAuth.Roles != null && !endpointAuth.Roles.Contains(roleValue!))
                 {
