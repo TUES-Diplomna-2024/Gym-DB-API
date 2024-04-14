@@ -1,5 +1,4 @@
 ﻿using GymDB.API.Data.Entities;
-using GymDB.API.Models.Exercise;
 using GymDB.API.Models.ExerciseRecord;
 
 namespace GymDB.API.Mappers

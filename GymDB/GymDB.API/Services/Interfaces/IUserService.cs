@@ -20,8 +20,8 @@ namespace GymDB.API.Services.Interfaces
 
         Task AssignUserRoleAsync(HttpContext context, Guid userId, UserAssignRoleModel assignRoleModel);
 
-        Task DeleteCurrUserAsync(HttpContext context, UserDeleteModel deleteModel);
+        Task RemoveCurrUserAsync(HttpContext context, UserDeleteModel deleteModel);
 
-        Task DeleteUserByIdAsync(HttpContext context, Guid userId);
+        Task RemoveUserByIdAsync(HttpContext context, Guid userId);
     }
 }
