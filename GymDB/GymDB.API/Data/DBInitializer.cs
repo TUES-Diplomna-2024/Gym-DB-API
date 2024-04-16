@@ -1,51 +1,35 @@
 ﻿using GymDB.API.Data.Entities;
 using GymDB.API.Mappers;
+using GymDB.API.Services;
+using GymDB.API.Services.Interfaces;
 using System.Data;
+using System.Runtime.InteropServices;
 
 namespace GymDB.API.Data
 {
     public static class DBInitializer
     {
-        public static WebApplication SeedDB(this WebApplication app, ApplicationSettings settings)
+        public static async Task<WebApplication> SeedDBAsync(this WebApplication app)
         {
-            using (var scope = app.Services.CreateScope())
+            using var scope = app.Services.CreateScope();
+
+            using var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+            var roleService = scope.ServiceProvider.GetRequiredService<RoleService>();
+
+            try
             {
-                using var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+                await context.Database.EnsureCreatedAsync();
 
-                try
-                {
-                    context.Database.EnsureCreated();
+                await roleService.EnsureRolesCreatedAsync();
 
-                    if (!context.Roles.Any())
-                    {
-                        var roles = settings.DBSeed.Roles.Select(pair => new Role { Id = Guid.NewGuid(),
-                                                                                    Name = pair.Key,
-                                                                                    NormalizedName = pair.Key.ToUpper().Replace(" ", "_"),
-                                                                                    Color = pair.Value })
-                                                         .ToList();
-
-                        context.Roles.AddRange(roles);
-                        context.SaveChanges();
-                    }
-
-                    if (!context.Users.Any())
-                    {
-                        Role? superAdminRole = context.Roles.FirstOrDefault(role => role.NormalizedName == "SUPER_ADMIN");
-
-                        if (superAdminRole == null)
-                            throw new Exception("Role with normalized name 'SUPER_ADMIN' could not be found!");
-
-                        context.Users.Add(settings.DBSeed.RootAdmin.ToEntity(superAdminRole));
-                        context.SaveChanges();
-                    }
-                }
-                catch (Exception)
-                {
-                    throw;
-                }
-
-                return app;
+                await roleService.EnsureRootAdminCreatedAsync();
             }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return app;
         }
     }
 }

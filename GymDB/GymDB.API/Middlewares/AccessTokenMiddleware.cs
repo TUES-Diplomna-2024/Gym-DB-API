@@ -67,12 +67,11 @@ namespace GymDB.API.Middlewares
                     return;
                 }
 
-                // TODO: Implement
-                /*if (userService.GetUserById(userId) == null)
+                if (await userService.IsUserWithIdExistAsync(userId))
                 {
                     Error(context, HttpStatusCode.Unauthorized, "The current user doesn't exists!");
                     return;
-                }*/
+                }
 
                 if (endpointAuth.Roles != null && !endpointAuth.Roles.Contains(roleValue!))
                 {
@@ -118,7 +117,7 @@ namespace GymDB.API.Middlewares
 
     public static class AccessTokenMiddlewareExtensions
     {
-        public static IApplicationBuilder UseAccessToken(this IApplicationBuilder app)
+        public static IApplicationBuilder UseAccessTokens(this IApplicationBuilder app)
         {
             return app.UseMiddleware<AccessTokenMiddleware>();
         }

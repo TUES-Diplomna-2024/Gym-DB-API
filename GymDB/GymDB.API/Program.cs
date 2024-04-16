@@ -14,8 +14,10 @@ namespace GymDB.API
 {
     public class Program
     {
-        public static void ConfigureServices(WebApplicationBuilder builder, ApplicationSettings settings)
+        public static void ConfigureServices(WebApplicationBuilder builder)
         {
+            var settings = new ApplicationSettings(builder.Configuration);
+
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -45,13 +47,15 @@ namespace GymDB.API
 
             // Repositories
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
             // Custom services
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IRoleService, RoleService>();
         }
 
-        public static void ConfigureApplication(WebApplication app, ApplicationSettings settings)
+        public static async Task ConfigureApplicationAsync(WebApplication app)
         {
             if (app.Environment.IsDevelopment())
             {
@@ -70,22 +74,19 @@ namespace GymDB.API
 
             app.MapControllers();
 
-            app.UseAccessToken();
-            app.UseRefreshToken();
+            app.UseAccessTokens();
+            app.UseRefreshTokens();
 
-            app.SeedDB(settings);
+            await app.SeedDBAsync();
         }
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            var settings = new ApplicationSettings(builder.Configuration);
-
-            ConfigureServices(builder, settings);
+            ConfigureServices(builder);
 
             var app = builder.Build();
-
-            ConfigureApplication(app, settings);
+            await ConfigureApplicationAsync(app);
 
             app.Run();
         }

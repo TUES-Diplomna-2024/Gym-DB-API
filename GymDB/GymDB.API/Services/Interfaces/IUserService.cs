@@ -16,9 +16,9 @@ namespace GymDB.API.Services.Interfaces
 
         Task<List<UserPreviewModel>> GetAllUsersPreviewsAsync();
 
-        Task UpdateCurrUserAsync(HttpContext context, UserUpdateModel updateModel);
+        Task<bool> IsUserWithIdExistAsync(Guid userId);
 
-        Task AssignUserRoleAsync(HttpContext context, Guid userId, UserAssignRoleModel assignRoleModel);
+        Task UpdateCurrUserAsync(HttpContext context, UserUpdateModel updateModel);
 
         Task RemoveCurrUserAsync(HttpContext context, UserDeleteModel deleteModel);
 

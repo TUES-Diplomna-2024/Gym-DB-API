@@ -1,11 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using GymDB.API.Services.Interfaces;
 using GymDB.API.Models.User;
-using GymDB.API.Data.Entities;
-using GymDB.API.Mappers;
-using GymDB.API.Data;
 using GymDB.API.Attributes;
-using GymDB.API.Exceptions;
 
 namespace GymDB.API.Controllers
 {
@@ -14,10 +10,12 @@ namespace GymDB.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService userService;
+        private readonly IRoleService roleService;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, IRoleService roleService)
         {
-           this.userService = userService;
+            this.userService = userService;
+            this.roleService = roleService;
         }
 
         /* POST REQUESTS */
@@ -106,12 +104,14 @@ namespace GymDB.API.Controllers
             return NoContent();
         }
 
-        
-        /*[HttpPut("{id}/role"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
-        public async Task<IActionResult> AssignUserRoleAsync(Guid id, UserAssignRoleModel assignRoleAttempt)
+
+        [HttpPut("{userId}/role"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
+        public async Task<IActionResult> AssignUserRoleAsync(Guid userId, UserAssignRoleModel assignRoleAttempt)
         {
-            
-        }*/
+            await roleService.AssignUserRoleAsync(HttpContext, userId, assignRoleAttempt);
+
+            return NoContent();
+        }
 
         /* DELETE REQUESTS */
 
@@ -128,9 +128,11 @@ namespace GymDB.API.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
-        public async Task<IActionResult> RemoveUserByIdAsync(Guid id)
+        [HttpDelete("{userId}"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
+        public async Task<IActionResult> RemoveUserByIdAsync(Guid userId)
         {
+            await userService.RemoveUserByIdAsync(HttpContext, userId);
+
             return NoContent();
         }
     }

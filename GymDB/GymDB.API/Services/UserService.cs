@@ -2,7 +2,6 @@
 using GymDB.API.Models.User;
 using GymDB.API.Repositories.Interfaces;
 using GymDB.API.Services.Interfaces;
-using System.Net;
 using GymDB.API.Mappers;
 using GymDB.API.Exceptions;
 
@@ -13,11 +12,13 @@ namespace GymDB.API.Services
     {
         private readonly IUserRepository userRepository;
         private readonly IJwtService jwtService;
+        private readonly IRoleService roleService;
 
-        public UserService(IUserRepository userRepository, IJwtService jwtService)
+        public UserService(IUserRepository userRepository, IJwtService jwtService, IRoleService roleService)
         {
             this.userRepository = userRepository;
             this.jwtService = jwtService;
+            this.roleService = roleService;
         }
 
         public async Task<UserAuthModel> SignInAsync(UserSignInModel signInModel)
@@ -25,9 +26,7 @@ namespace GymDB.API.Services
             User? user = await userRepository.GetUserByEmailAsync(signInModel.Email);
 
             if (user == null || IsPasswordCorrect(signInModel.Password, user.Password))
-            {
                 throw new UnauthorizedException("Invalid sign in attempt!");
-            }
 
             string accessToken = jwtService.GenerateNewAccessToken(user.Id, user.Role.NormalizedName);
             string refreshToken = jwtService.GenerateNewRefreshToken(user.Id);
@@ -37,18 +36,13 @@ namespace GymDB.API.Services
 
         public async Task<UserAuthModel> SignUpAsync(UserSignUpModel signUpModel)
         {
-            if (await IsUserAlreadyRegisteredWithEmail(signUpModel.Email))
-            {
-                throw new ConflictException($"Email {signUpModel.Email} is already in use by another user!");
-            }
+            if (await IsUserAlreadyRegisteredWithEmailAsync(signUpModel.Email))
+                throw new ConflictException($"Email '{signUpModel.Email}' is already in use by another user!");
 
             User user = signUpModel.ToEntity();
 
-            // TODO - Assign a role to the new user
-            /*if (!roleService.AssignUserRole(user, settings.DBSeed.DefaultRole))
-                return StatusCode(500, $"Something went wrong when creating your account!");*/
-
             await userRepository.AddUserAsync(user);
+            await roleService.AssignUserDefaultRoleAsync(user);
 
             string accessToken = jwtService.GenerateNewAccessToken(user.Id, user.Role.NormalizedName);
             string refreshToken = jwtService.GenerateNewRefreshToken(user.Id);
@@ -79,9 +73,7 @@ namespace GymDB.API.Services
             User? user = await userRepository.GetUserByIdAsync(userId);
 
             if (user == null)
-            {
-                throw new NotFoundException($"User with id '{userId}' could not be found!");
-            }
+                throw new NotFoundException("The specified user could not be found!");
 
             return user.ToProfileModel();
         }
@@ -92,6 +84,15 @@ namespace GymDB.API.Services
 
             return usersPreviews.Select(user => user.ToPreviewModel()).ToList();
         }
+
+        public async Task<bool> IsUserWithIdExistAsync(Guid userId)
+            => (await userRepository.GetUserByIdAsync(userId)) != null;
+
+        private async Task<bool> IsUserAlreadyRegisteredWithEmailAsync(string email)
+            => (await userRepository.GetUserByEmailAsync(email)) != null;
+
+        private bool IsPasswordCorrect(string plainPassword, string hashedPassword)
+            => BCrypt.Net.BCrypt.EnhancedVerify(plainPassword, hashedPassword);
 
         public async Task UpdateCurrUserAsync(HttpContext context, UserUpdateModel updateModel)
         {
@@ -107,25 +108,37 @@ namespace GymDB.API.Services
             await userRepository.UpdateUserAsync(currUser);
         }
 
-        public async Task AssignUserRoleAsync(HttpContext context, Guid userId, UserAssignRoleModel assignRoleModel)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task RemoveCurrUserAsync(HttpContext context, UserDeleteModel deleteModel)
         {
-            throw new NotImplementedException();
+            // TODO: GetCurrUserAsync returns nullable value
+            User currUser = (await userRepository.GetCurrUserAsync(context))!;
+
+            if (roleService.HasUserRole(currUser, "SUPER_ADMIN"))
+                throw new ForbiddenException("The root admin cannot be deleted!");
+
+            if (!IsPasswordCorrect(currUser.Password, deleteModel.Password))
+                throw new UnauthorizedException("Incorrect password!");
+
+            await userRepository.RemoveUserAsync(currUser);
         }
 
         public async Task RemoveUserByIdAsync(HttpContext context, Guid userId)
         {
-            throw new NotImplementedException();
+            // TODO: GetCurrUserAsync returns nullable value
+            User currUser = (await userRepository.GetCurrUserAsync(context))!;
+
+            User? user = await userRepository.GetUserByIdAsync(userId);
+
+            if (user == null)
+                throw new NotFoundException("The specified user could not be found!");
+
+            if (roleService.HasUserRole(user, "SUPER_ADMIN"))
+                throw new ForbiddenException("The root admin cannot be deleted!");
+
+            if (roleService.HasUserRole(user, "ADMIN") && !roleService.HasUserRole(currUser, "SUPER_ADMIN"))
+                throw new ForbiddenException("You cannot delete another admin user! This can be done only by the root admin!");
+
+            await userRepository.RemoveUserAsync(user);
         }
-
-        private async Task<bool> IsUserAlreadyRegisteredWithEmail(string email)
-            => (await userRepository.GetUserByEmailAsync(email)) != null;
-
-        private bool IsPasswordCorrect(string plainPassword, string hashedPassword)
-            => BCrypt.Net.BCrypt.EnhancedVerify(plainPassword, hashedPassword);
     }
 }

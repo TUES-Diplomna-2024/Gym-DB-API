@@ -4,12 +4,14 @@ namespace GymDB.API.Repositories.Interfaces
 {
     public interface IRoleRepository
     {
-        Task<Role?> GetRoleByNormalizedName(string normalizedName);
+        Task<Role?> GetRoleByNormalizedNameAsync(string normalizedName);
 
-        Task<bool> IsRoleAssignedToAnyUser(Role role);
+        Task<bool> AddUserToRoleAsync(User user, string roleNormalizedName);
 
-        // TODO: Add HasAnyRoles method
+        Task AddUserToRoleAsync(User user, Role role);
 
-        Task AddRoles(List<Role> roles);
+        Task AddRoleAsync(Role role);
+
+        Task AddRolesAsync(List<Role> roles);
     }
 }

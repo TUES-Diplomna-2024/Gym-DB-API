@@ -24,15 +24,13 @@ namespace GymDB.API.Mappers
             };
         }
 
-        public static User ToEntity(this RootAdmin rootAdmin, Role role)
+        public static User ToEntity(this RootAdmin rootAdmin)
         {
             return new User
             {
                 Id = Guid.NewGuid(),
                 OnCreated = DateOnly.FromDateTime(DateTime.UtcNow),
                 OnModified = DateTime.UtcNow,
-                RoleId = role.Id,
-                Role = role,
 
                 Username = rootAdmin.Username,
                 Email = rootAdmin.Email,

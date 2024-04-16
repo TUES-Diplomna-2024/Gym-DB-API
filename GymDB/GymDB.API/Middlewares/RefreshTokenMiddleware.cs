@@ -64,12 +64,11 @@ namespace GymDB.API.Middlewares
                     return;
                 }
 
-                // TODO: Implement
-                /*if (userService.GetUserById(userId) == null)
+                if (await userService.IsUserWithIdExistAsync(userId))
                 {
                     Error(context, HttpStatusCode.Unauthorized, "The current user doesn't exists!");
                     return;
-                }*/
+                }
 
                 // If Authorization is found in the request headers, it has passed the AccessTokenMiddleware, which has validated it.
                 // This means that context.User contains a valid 'userId' claim.
@@ -142,7 +141,7 @@ namespace GymDB.API.Middlewares
 
     public static class RefreshTokenMiddlewareExtentions
     {
-        public static IApplicationBuilder UseRefreshToken(this IApplicationBuilder app)
+        public static IApplicationBuilder UseRefreshTokens(this IApplicationBuilder app)
         {
             return app.UseMiddleware<RefreshTokenMiddleware>();
         }
