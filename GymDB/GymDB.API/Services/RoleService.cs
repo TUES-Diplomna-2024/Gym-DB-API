@@ -81,8 +81,7 @@ namespace GymDB.API.Services
 
         public async Task AssignUserRoleAsync(HttpContext context, Guid userId, UserAssignRoleModel assignRoleModel)
         {
-            // TODO: GetCurrUserAsync returns nullable value
-            User currUser = (await userRepository.GetCurrUserAsync(context))!;
+            User currUser = await userRepository.GetCurrUserAsync(context);
 
             User? user = await userRepository.GetUserByIdAsync(userId);
 

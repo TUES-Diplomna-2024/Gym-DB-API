@@ -6,9 +6,9 @@ namespace GymDB.API.Exceptions
     {
         public HttpException(HttpStatusCode statusCode, string message) : base(message)
         {
-            StatusCode = (int)statusCode;
+            StatusCode = statusCode;
         }
 
-        public int StatusCode { get; private set; }
+        public HttpStatusCode StatusCode { get; private set; }
     }
 }

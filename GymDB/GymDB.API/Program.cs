@@ -55,7 +55,7 @@ namespace GymDB.API
             builder.Services.AddScoped<IRoleService, RoleService>();
         }
 
-        public static async Task ConfigureApplicationAsync(WebApplication app)
+        public static void ConfigureApplication(WebApplication app)
         {
             if (app.Environment.IsDevelopment())
             {
@@ -77,16 +77,16 @@ namespace GymDB.API
             app.UseAccessTokens();
             app.UseRefreshTokens();
 
-            await app.SeedDBAsync();
+            app.SeedDBAsync().GetAwaiter().GetResult();
         }
 
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
             ConfigureServices(builder);
 
             var app = builder.Build();
-            await ConfigureApplicationAsync(app);
+            ConfigureApplication(app);
 
             app.Run();
         }

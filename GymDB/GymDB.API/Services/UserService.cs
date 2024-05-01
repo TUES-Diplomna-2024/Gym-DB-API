@@ -52,8 +52,7 @@ namespace GymDB.API.Services
 
         public async Task<string> RefreshAsync(HttpContext context)
         {
-            // TODO: GetCurrUserAsync returns nullable value
-            User currUser = (await userRepository.GetCurrUserAsync(context))!;
+            User currUser = await userRepository.GetCurrUserAsync(context);
 
             string accessToken = jwtService.GenerateNewAccessToken(currUser.Id, currUser.Role.NormalizedName);
 
@@ -62,8 +61,7 @@ namespace GymDB.API.Services
 
         public async Task<UserProfileModel> GetCurrUserProfileAsync(HttpContext context)
         {
-            // TODO: GetCurrUserAsync returns nullable value
-            User currUser = (await userRepository.GetCurrUserAsync(context))!;
+            User currUser = await userRepository.GetCurrUserAsync(context);
 
             return currUser.ToProfileModel();
         }
@@ -96,22 +94,16 @@ namespace GymDB.API.Services
 
         public async Task UpdateCurrUserAsync(HttpContext context, UserUpdateModel updateModel)
         {
-            // TODO: GetCurrUserAsync returns nullable value
-            User currUser = (await userRepository.GetCurrUserAsync(context))!;
+            User currUser = await userRepository.GetCurrUserAsync(context);
 
-            currUser.Username = updateModel.Username;
-            currUser.BirthDate = updateModel.BirthDate;
-            currUser.Gender = updateModel.Gender;
-            currUser.Height = updateModel.Height;
-            currUser.Weight = updateModel.Weight;
+            currUser.ApplyUpdateModel(updateModel);
 
             await userRepository.UpdateUserAsync(currUser);
         }
 
         public async Task RemoveCurrUserAsync(HttpContext context, UserDeleteModel deleteModel)
         {
-            // TODO: GetCurrUserAsync returns nullable value
-            User currUser = (await userRepository.GetCurrUserAsync(context))!;
+            User currUser = await userRepository.GetCurrUserAsync(context);
 
             if (roleService.HasUserRole(currUser, "SUPER_ADMIN"))
                 throw new ForbiddenException("The root admin cannot be deleted!");
@@ -124,8 +116,7 @@ namespace GymDB.API.Services
 
         public async Task RemoveUserByIdAsync(HttpContext context, Guid userId)
         {
-            // TODO: GetCurrUserAsync returns nullable value
-            User currUser = (await userRepository.GetCurrUserAsync(context))!;
+            User currUser = await userRepository.GetCurrUserAsync(context);
 
             User? user = await userRepository.GetUserByIdAsync(userId);
 

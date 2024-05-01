@@ -1,5 +1,5 @@
 ﻿using GymDB.API.Exceptions;
-
+using System.Net;
 
 namespace GymDB.API.Middlewares
 {
@@ -20,23 +20,31 @@ namespace GymDB.API.Middlewares
             }
             catch (HttpException e)
             {
-                context.Response.OnStarting((state) =>
-                {
-                    var context2 = (HttpContext)state;
-
-                    context2.Response.ContentType = "application/json";
-                    context2.Response.StatusCode = e.StatusCode;
-
-                    context2.Response.WriteAsync(e.Message);
-
-                    return Task.CompletedTask;
-                }, context);
+                SetResponse(context, e.StatusCode, e.Message);
             }
             catch (Exception e)
             {
                 // TODO - Add Logger
+
                 Console.WriteLine($"!!! Exception: {e.Message} !!!");
+
+                SetResponse(context, HttpStatusCode.InternalServerError, "Something went wrong!");
             }
+        }
+
+        private void SetResponse(HttpContext context, HttpStatusCode statusCode, string message)
+        {
+            context.Response.OnStarting((state) =>
+            {
+                var context2 = (HttpContext)state;
+
+                context2.Response.ContentType = "application/json";
+                context2.Response.StatusCode = (int)statusCode;
+
+                context2.Response.WriteAsync(message);
+
+                return Task.CompletedTask;
+            }, context);
         }
     }
 

@@ -1,9 +1,4 @@
-﻿using GymDB.API.Data.Entities;
-using GymDB.API.Mappers;
-using GymDB.API.Services;
-using GymDB.API.Services.Interfaces;
-using System.Data;
-using System.Runtime.InteropServices;
+﻿using GymDB.API.Services;
 
 namespace GymDB.API.Data
 {

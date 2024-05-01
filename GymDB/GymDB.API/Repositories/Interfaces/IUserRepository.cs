@@ -6,7 +6,7 @@ namespace GymDB.API.Repositories.Interfaces
     {
         Task<User?> GetUserByIdAsync(Guid id);
 
-        Task<User?> GetCurrUserAsync(HttpContext context);
+        Task<User> GetCurrUserAsync(HttpContext context);
 
         Task<User?> GetUserByEmailAsync(string email);
 

@@ -42,6 +42,15 @@ namespace GymDB.API.Mappers
             };
         }
 
+        public static void ApplyUpdateModel(this User user, UserUpdateModel update)
+        {
+            user.Username = update.Username;
+            user.BirthDate = update.BirthDate;
+            user.Gender = update.Gender;
+            user.Height = update.Height;
+            user.Weight = update.Weight;
+        }
+
         public static UserProfileModel ToProfileModel(this User user)
         {
             return new UserProfileModel

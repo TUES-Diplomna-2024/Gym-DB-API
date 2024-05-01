@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace GymDB.API.Data.ValidationAttributes

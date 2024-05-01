@@ -1,8 +1,9 @@
-﻿using GymDB.API.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using GymDB.API.Data;
 using GymDB.API.Data.Entities;
 using GymDB.API.Repositories.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using GymDB.API.Exceptions;
 
 namespace GymDB.API.Repositories
 {
@@ -22,16 +23,19 @@ namespace GymDB.API.Repositories
                                 .FirstOrDefaultAsync(user => user.Id == id);
         }
 
-        public async Task<User?> GetCurrUserAsync(HttpContext context)
+        public async Task<User> GetCurrUserAsync(HttpContext context)
         {
-            Guid id;
-
-            if (Guid.TryParse(context.User.FindFirstValue("userId"), out id))
+            if (Guid.TryParse(context.User.FindFirstValue("userId"), out Guid id))
             {
-                return await GetUserByIdAsync(id);
+                User? currUser = await GetUserByIdAsync(id);
+
+                if (currUser != null)
+                {
+                    return currUser;
+                }
             }
 
-            return null;
+            throw new UnauthorizedException("User is not currently signed in!");
         }
 
         public async Task<User?> GetUserByEmailAsync(string email)
