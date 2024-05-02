@@ -2,6 +2,8 @@
 using GymDB.API.Services.Interfaces;
 using GymDB.API.Models.User;
 using GymDB.API.Attributes;
+using GymDB.API.Data.Enums;
+using GymDB.API.Data.ValidationAttributes;
 
 namespace GymDB.API.Controllers
 {
@@ -107,9 +109,9 @@ namespace GymDB.API.Controllers
 
 
         [HttpPut("{userId}/role"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
-        public async Task<IActionResult> AssignUserRoleAsync(Guid userId, UserAssignRoleModel assignRoleAttempt)
+        public async Task<IActionResult> AssignUserNewRoleAsync(Guid userId, AssignableRole role)
         {
-            await roleService.AssignUserRoleAsync(HttpContext, userId, assignRoleAttempt);
+            await roleService.AssignUserNewRoleAsync(HttpContext, userId, role);
 
             return NoContent();
         }
@@ -118,12 +120,12 @@ namespace GymDB.API.Controllers
         /* ======================================================================== DELETE REQUESTS */
 
         [HttpDelete("current"), CustomAuthorize]
-        public async Task<IActionResult> RemoveCurrUserAsync(UserDeleteModel deleteModel)
+        public async Task<IActionResult> RemoveCurrUserAsync([Password] string password)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            await userService.RemoveCurrUserAsync(HttpContext, deleteModel);
+            await userService.RemoveCurrUserAsync(HttpContext, password);
 
             return NoContent();
         }

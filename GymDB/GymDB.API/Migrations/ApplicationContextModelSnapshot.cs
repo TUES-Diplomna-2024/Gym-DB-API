@@ -183,10 +183,8 @@ namespace GymDB.API.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                    b.Property<int>("Gender")
+                        .HasColumnType("integer");
 
                     b.Property<double>("Height")
                         .HasColumnType("double precision");

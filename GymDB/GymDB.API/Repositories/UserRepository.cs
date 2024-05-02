@@ -55,7 +55,6 @@ namespace GymDB.API.Repositories
         public async Task AddUserAsync(User user)
         {
             user.Password = GetHashedPassword(user.Password);
-            user.Gender = user.Gender.ToLower();
 
             context.Users.Add(user);
             await context.SaveChangesAsync();

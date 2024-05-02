@@ -5,7 +5,6 @@ using GymDB.API.Services.Interfaces;
 using GymDB.API.Mappers;
 using GymDB.API.Exceptions;
 
-
 namespace GymDB.API.Services
 {
     public class UserService : IUserService
@@ -41,8 +40,8 @@ namespace GymDB.API.Services
 
             User user = signUpModel.ToEntity();
 
-            await userRepository.AddUserAsync(user);
             await roleService.AssignUserDefaultRoleAsync(user);
+            await userRepository.AddUserAsync(user);
 
             string accessToken = jwtService.GenerateNewAccessToken(user.Id, user.Role.NormalizedName);
             string refreshToken = jwtService.GenerateNewRefreshToken(user.Id);
@@ -101,14 +100,14 @@ namespace GymDB.API.Services
             await userRepository.UpdateUserAsync(currUser);
         }
 
-        public async Task RemoveCurrUserAsync(HttpContext context, UserDeleteModel deleteModel)
+        public async Task RemoveCurrUserAsync(HttpContext context, string password)
         {
             User currUser = await userRepository.GetCurrUserAsync(context);
 
             if (roleService.HasUserRole(currUser, "SUPER_ADMIN"))
                 throw new ForbiddenException("The root admin cannot be deleted!");
 
-            if (!IsPasswordCorrect(currUser.Password, deleteModel.Password))
+            if (!IsPasswordCorrect(currUser.Password, password))
                 throw new UnauthorizedException("Incorrect password!");
 
             await userRepository.RemoveUserAsync(currUser);

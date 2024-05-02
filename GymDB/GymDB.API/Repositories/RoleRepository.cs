@@ -1,5 +1,7 @@
 ﻿using GymDB.API.Data;
 using GymDB.API.Data.Entities;
+using GymDB.API.Exceptions;
+using GymDB.API.Mappers;
 using GymDB.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,10 +11,12 @@ namespace GymDB.API.Repositories
     public class RoleRepository : IRoleRepository
     {
         private readonly ApplicationContext context;
+        private readonly IUserRepository userRepository;
 
-        public RoleRepository(ApplicationContext context)
+        public RoleRepository(ApplicationContext context, IUserRepository userRepository)
         {
             this.context = context;
+            this.userRepository = userRepository;
         }
 
         public async Task<Role?> GetRoleByNormalizedNameAsync(string normalizedName)
@@ -21,28 +25,15 @@ namespace GymDB.API.Repositories
                                 .FirstOrDefaultAsync(role => role.NormalizedName == normalizedName);
         }
 
-        public async Task<bool> AddUserToRoleAsync(User user, string roleNormalizedName)
+        public async Task UpdateUserRoleAsync(User user, string roleNormalizedName)
         {
             Role? role = await GetRoleByNormalizedNameAsync(roleNormalizedName);
 
             if (role == null)
-            {
-                return false;
-            }
+                throw new NotFoundException("The specified role could not be found!");
 
-            await AddUserToRoleAsync(user, role);
-
-            return true;
-        }
-
-        public async Task AddUserToRoleAsync(User user, Role role)
-        {
-            user.RoleId = role.Id;
-            user.Role = role;
-            user.OnModified = DateTime.UtcNow;
-
-            context.Users.Update(user);
-            await context.SaveChangesAsync();
+            user.SetRole(role);
+            await userRepository.UpdateUserAsync(user);
         }
 
         public async Task AddRoleAsync(Role role)

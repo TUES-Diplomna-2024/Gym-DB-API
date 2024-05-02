@@ -1,4 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
+using GymDB.API.Data.Enums;
 using GymDB.API.Data.Settings;
 using GymDB.API.Models.User;
 
@@ -36,7 +37,7 @@ namespace GymDB.API.Mappers
                 Email = rootAdmin.Email,
                 Password = BCrypt.Net.BCrypt.EnhancedHashPassword(rootAdmin.Password, 13),
                 BirthDate = DateOnly.FromDateTime(DateTime.UtcNow),
-                Gender = "other",
+                Gender = Gender.Other,
                 Height = 80,
                 Weight = 80
             };
@@ -49,6 +50,13 @@ namespace GymDB.API.Mappers
             user.Gender = update.Gender;
             user.Height = update.Height;
             user.Weight = update.Weight;
+        }
+
+        public static void SetRole(this User user, Role role)
+        {
+            user.RoleId = role.Id;
+            user.Role = role;
+            user.OnModified = DateTime.UtcNow;
         }
 
         public static UserProfileModel ToProfileModel(this User user)

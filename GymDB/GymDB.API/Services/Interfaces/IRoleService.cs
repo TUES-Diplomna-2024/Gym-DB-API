@@ -1,5 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
-using GymDB.API.Models.User;
+using GymDB.API.Data.Enums;
 
 namespace GymDB.API.Services.Interfaces
 {
@@ -9,9 +9,9 @@ namespace GymDB.API.Services.Interfaces
 
         Task EnsureRootAdminCreatedAsync();
 
-        Task AssignUserRoleAsync(HttpContext context, Guid userId, UserAssignRoleModel assignRoleModel);
-
         Task AssignUserDefaultRoleAsync(User user);
+
+        Task AssignUserNewRoleAsync(HttpContext context, Guid userId, AssignableRole role);
 
         bool HasUserRole(User user, string role);
 

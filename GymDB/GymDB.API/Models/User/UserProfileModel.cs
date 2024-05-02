@@ -1,4 +1,4 @@
-﻿using UserClass = GymDB.API.Data.Entities.User;
+﻿using GymDB.API.Data.Enums;
 
 namespace GymDB.API.Models.User
 {
@@ -14,7 +14,7 @@ namespace GymDB.API.Models.User
 
         public string RoleColor { get; set; }
 
-        public string Gender { get; set; }
+        public Gender Gender { get; set; }
 
         public double Height { get; set; }
 

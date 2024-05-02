@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GymDB.API.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20240224153301_Removed-Date-Property-From-ExerciseRecord-Entity-And-OnCreated-Type-Is-Changed-To-DateTime")]
-    partial class RemovedDatePropertyFromExerciseRecordEntityAndOnCreatedTypeIsChangedToDateTime
+    [Migration("20240502145704_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -134,7 +134,7 @@ namespace GymDB.API.Migrations
                     b.Property<double>("Volume")
                         .HasColumnType("double precision");
 
-                    b.Property<double?>("Weight")
+                    b.Property<double>("Weight")
                         .HasColumnType("double precision");
 
                     b.HasKey("Id");
@@ -186,10 +186,8 @@ namespace GymDB.API.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                    b.Property<int>("Gender")
+                        .HasColumnType("integer");
 
                     b.Property<double>("Height")
                         .HasColumnType("double precision");

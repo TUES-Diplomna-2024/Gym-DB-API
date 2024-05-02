@@ -20,7 +20,7 @@ namespace GymDB.API.Services.Interfaces
 
         Task UpdateCurrUserAsync(HttpContext context, UserUpdateModel updateModel);
 
-        Task RemoveCurrUserAsync(HttpContext context, UserDeleteModel deleteModel);
+        Task RemoveCurrUserAsync(HttpContext context, string password);
 
         Task RemoveUserByIdAsync(HttpContext context, Guid userId);
     }

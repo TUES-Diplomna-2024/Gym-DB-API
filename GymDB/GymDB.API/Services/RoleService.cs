@@ -1,9 +1,9 @@
 ﻿using GymDB.API.Data.Entities;
+using GymDB.API.Data.Enums;
 using GymDB.API.Data.Settings;
 using GymDB.API.Data.Settings.HelperClasses;
 using GymDB.API.Exceptions;
 using GymDB.API.Mappers;
-using GymDB.API.Models.User;
 using GymDB.API.Repositories.Interfaces;
 using GymDB.API.Services.Interfaces;
 using Microsoft.Extensions.Options;
@@ -51,7 +51,6 @@ namespace GymDB.API.Services
                 return;
 
             rootAdmin = rootAdminSettings.ToEntity();
-            await userRepository.AddUserAsync(rootAdmin);
 
             Role? superAdminRole = await roleRepository.GetRoleByNormalizedNameAsync(roleSettings.SuperAdmin.NormalizedName);
 
@@ -61,32 +60,8 @@ namespace GymDB.API.Services
                 await roleRepository.AddRoleAsync(superAdminRole);
             }
 
-            await roleRepository.AddUserToRoleAsync(rootAdmin, superAdminRole);
-        }
-
-        public async Task AssignUserRoleAsync(HttpContext context, Guid userId, UserAssignRoleModel assignRoleModel)
-        {
-            User currUser = await userRepository.GetCurrUserAsync(context);
-
-            User? user = await userRepository.GetUserByIdAsync(userId);
-
-            if (user == null)
-                throw new NotFoundException($"The specified user could not be found!");
-
-            if (HasUserRole(user, assignRoleModel.RoleNormalizedName))
-                throw new ForbiddenException("The specified user already has this role assigned!");
-
-            if (assignRoleModel.RoleNormalizedName == "SUPER_ADMIN")
-                throw new ForbiddenException("The specified role is reserved for the root admin only!");
-
-            if (HasUserRole(user, "SUPER_ADMIN"))
-                throw new ForbiddenException("The role of the root admin cannot be changed!");
-
-            if (HasUserRole(user, "ADMIN") && !HasUserRole(currUser, "SUPER_ADMIN"))
-                throw new ForbiddenException("You cannot re-assign new role to another admin user! This can be done only by the root admin!");
-
-            if (!await roleRepository.AddUserToRoleAsync(user, assignRoleModel.RoleNormalizedName))
-                throw new NotFoundException($"The specified role could not be found!");
+            rootAdmin.SetRole(superAdminRole);
+            await userRepository.AddUserAsync(rootAdmin);
         }
 
         public async Task AssignUserDefaultRoleAsync(User user)
@@ -99,12 +74,34 @@ namespace GymDB.API.Services
                 await roleRepository.AddRoleAsync(defaultRole);
             }
 
-            await roleRepository.AddUserToRoleAsync(user, defaultRole);
+            user.SetRole(defaultRole);
+        }
+
+        public async Task AssignUserNewRoleAsync(HttpContext context, Guid userId, AssignableRole role)
+        {
+            User currUser = await userRepository.GetCurrUserAsync(context);
+
+            User? user = await userRepository.GetUserByIdAsync(userId);
+
+            if (user == null)
+                throw new NotFoundException($"The specified user could not be found!");
+
+            if (HasUserRole(user, role.ToString().ToUpper()))
+                throw new ForbiddenException("The specified user already has this role assigned!");
+
+            if (HasUserRole(user, "SUPER_ADMIN"))
+                throw new ForbiddenException("The role of the root admin cannot be changed!");
+
+            if (HasUserRole(user, "ADMIN") && !HasUserRole(currUser, "SUPER_ADMIN"))
+                throw new ForbiddenException("You cannot re-assign new role to another admin user! This can be done only by the root admin!");
+
+            await roleRepository.UpdateUserRoleAsync(user, role.ToString().ToUpper());
         }
 
         public bool HasUserRole(User user, string role)
             => user.Role.NormalizedName == role;
 
+        // TODO: Should be removed if not used
         public bool HasUserAnyRole(User user, string[] roles)
             => roles.Contains(user.Role.NormalizedName);
 
