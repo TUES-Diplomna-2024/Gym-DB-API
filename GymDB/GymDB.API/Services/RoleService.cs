@@ -1,82 +1,67 @@
-﻿using GymDB.API.Data;
-using GymDB.API.Data.Entities;
-using GymDB.API.Data.Settings.DBSeedModels;
+﻿using GymDB.API.Data.Entities;
+using GymDB.API.Data.Settings;
+using GymDB.API.Data.Settings.HelperClasses;
 using GymDB.API.Exceptions;
 using GymDB.API.Mappers;
 using GymDB.API.Models.User;
 using GymDB.API.Repositories.Interfaces;
 using GymDB.API.Services.Interfaces;
+using Microsoft.Extensions.Options;
 
 namespace GymDB.API.Services
 {
     public class RoleService : IRoleService
     {
-        private readonly ApplicationSettings settings;
+        private readonly RoleSettings roleSettings;
+        private readonly RootAdmin rootAdminSettings;
         private readonly IRoleRepository roleRepository;
         private readonly IUserRepository userRepository;
 
-        public RoleService(IConfiguration config, IRoleRepository roleRepository, IUserRepository userRepository)
+        public RoleService(IOptions<RoleSettings> roleSettings, IOptions<RootAdmin> rootAdminSettings, IRoleRepository roleRepository, IUserRepository userRepository)
         {
-            settings = new ApplicationSettings(config);
+            this.roleSettings = roleSettings.Value;
+            this.rootAdminSettings = rootAdminSettings.Value;
             this.roleRepository = roleRepository;
             this.userRepository = userRepository;
         }
 
         public async Task EnsureRolesCreatedAsync()
         {
-            Dictionary<string, string> rolesToBeAdded = new Dictionary<string, string>();
+            List<RoleDefinition> rolesToBeAdded = new List<RoleDefinition>();
 
-            foreach(KeyValuePair<string, string> pair in settings.DBSeed.Roles)
+            foreach(var roleDef in roleSettings)
             {
-                Role? role = await roleRepository.GetRoleByNormalizedNameAsync(GetRoleNameNormalized(pair.Key));
+                Role? role = await roleRepository.GetRoleByNormalizedNameAsync(roleDef.NormalizedName);
 
                 if (role == null)
-                {
-                    rolesToBeAdded[pair.Key] = pair.Value;
-                }
+                    rolesToBeAdded.Add(roleDef);
             }
 
-            var roles = rolesToBeAdded.Select(pair => new Role
-            {
-                Id = Guid.NewGuid(),
-                Name = pair.Key,
-                NormalizedName = GetRoleNameNormalized(pair.Key),
-                Color = pair.Value
-            }).ToList();
+            var roles = rolesToBeAdded.Select(roleDef => roleDef.ToEntity()).ToList();
 
             if (roles.Count != 0)
-            {
                 await roleRepository.AddRolesAsync(roles);
-            }
         }
 
         public async Task EnsureRootAdminCreatedAsync()
         {
-            User? rootAdmin = await userRepository.GetUserByEmailAsync(settings.DBSeed.RootAdmin.Email);
+            User? rootAdmin = await userRepository.GetUserByEmailAsync(rootAdminSettings.Email);
 
-            if (rootAdmin == null)
-            {
-                rootAdmin = settings.DBSeed.RootAdmin.ToEntity();
-                await userRepository.AddUserAsync(rootAdmin);
-            }
+            if (rootAdmin != null)
+                return;
 
-            Role? superAdminRole = await roleRepository.GetRoleByNormalizedNameAsync("SUPER_ADMIN");
+            rootAdmin = rootAdminSettings.ToEntity();
+            await userRepository.AddUserAsync(rootAdmin);
+
+            Role? superAdminRole = await roleRepository.GetRoleByNormalizedNameAsync(roleSettings.SuperAdmin.NormalizedName);
 
             if (superAdminRole == null)
             {
-                superAdminRole = new Role
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Super Admin",
-                    NormalizedName = "SUPER_ADMIN",
-                    Color = settings.DBSeed.Roles["Super Admin"]
-                };
-
+                superAdminRole = roleSettings.SuperAdmin.ToEntity();
                 await roleRepository.AddRoleAsync(superAdminRole);
             }
 
-            if (rootAdmin.RoleId != superAdminRole.Id)
-                await roleRepository.AddUserToRoleAsync(rootAdmin, superAdminRole);
+            await roleRepository.AddUserToRoleAsync(rootAdmin, superAdminRole);
         }
 
         public async Task AssignUserRoleAsync(HttpContext context, Guid userId, UserAssignRoleModel assignRoleModel)
@@ -106,21 +91,11 @@ namespace GymDB.API.Services
 
         public async Task AssignUserDefaultRoleAsync(User user)
         {
-            string defaultRoleName = settings.DBSeed.DefaultRole;
-            string defaultRoleNormalizedName = GetRoleNameNormalized(defaultRoleName);
-
-            Role? defaultRole = await roleRepository.GetRoleByNormalizedNameAsync(defaultRoleNormalizedName);
+            Role? defaultRole = await roleRepository.GetRoleByNormalizedNameAsync(roleSettings.Normie.NormalizedName);
 
             if (defaultRole == null)
             {
-                defaultRole = new Role
-                {
-                    Id = Guid.NewGuid(),
-                    Name = defaultRoleName,
-                    NormalizedName = defaultRoleNormalizedName,
-                    Color = settings.DBSeed.Roles[defaultRoleName]
-                };
-
+                defaultRole = roleSettings.Normie.ToEntity();
                 await roleRepository.AddRoleAsync(defaultRole);
             }
 
@@ -133,6 +108,7 @@ namespace GymDB.API.Services
         public bool HasUserAnyRole(User user, string[] roles)
             => roles.Contains(user.Role.NormalizedName);
 
+        // TODO: Should be removed if not used
         private string GetRoleNameNormalized(string roleName)
             => roleName.ToUpper().Replace(" ", "_");
     }

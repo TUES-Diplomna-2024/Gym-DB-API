@@ -1,29 +1,29 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
+﻿using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Options;
 using GymDB.API.Attributes;
-using GymDB.API.Data;
 using GymDB.API.Services.Interfaces;
 using GymDB.API.Exceptions;
+using GymDB.API.Data.Settings;
 
 namespace GymDB.API.Middlewares
 {
     public class RefreshTokenMiddleware
     {
         private readonly RequestDelegate next;
-        private readonly ApplicationSettings settings;
+        private readonly JwtSettings jwtSettings;
         private readonly TokenValidationParameters validParams;
 
-        public RefreshTokenMiddleware(RequestDelegate next, IConfiguration config)
+        public RefreshTokenMiddleware(RequestDelegate next, IOptions<JwtSettings> settings)
         {
             this.next = next;
-            settings = new ApplicationSettings(config);
+            jwtSettings = settings.Value;
 
             validParams = new TokenValidationParameters
             {
-                ValidIssuer = settings.JwtSettings.Issuer,
-                ValidAudience = settings.JwtSettings.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtSettings.ServerSecretKey)),
+                ValidIssuer = jwtSettings.Issuer,
+                ValidAudience = jwtSettings.Audience,
+                IssuerSigningKey = jwtSettings.GetSymmetricSecurityKey(),
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 ValidateIssuerSigningKey = true,

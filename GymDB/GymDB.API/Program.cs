@@ -1,23 +1,64 @@
-using GymDB.API.Data;
-/*using GymDB.API.Services.Interfaces;
-using GymDB.API.Services;*/
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Azure.Storage;
 using GymDB.API.Middlewares;
 using GymDB.API.Repositories.Interfaces;
 using GymDB.API.Repositories;
 using GymDB.API.Services.Interfaces;
 using GymDB.API.Services;
+using GymDB.API.Data;
+using GymDB.API.Data.Settings;
+using GymDB.API.Data.Settings.HelperClasses;
 
 namespace GymDB.API
 {
     public class Program
     {
+        public static void ConfigureSettings(WebApplicationBuilder builder)
+        {
+            builder.Services.AddOptions<ConnectionStrings>().BindConfiguration("ConnectionStrings")
+                            .ValidateDataAnnotations().ValidateOnStart();
+
+            builder.Services.AddOptions<AzureSettingsConfig>().BindConfiguration("AzureSettings")
+                            .ValidateDataAnnotations().ValidateOnStart();
+
+            builder.Services.AddOptions<AzureSettings>()
+                            .Configure<IOptions<AzureSettingsConfig>>((settings, config) =>
+                            {
+                                var azureConfig = config.Value;
+
+                                settings.ImageContainer = azureConfig.ImageContainer;
+                                settings.VideoContainer = azureConfig.VideoContainer;
+                                settings.ImageTypesAccepted = azureConfig.ImageTypesAccepted.Split(';').ToList();
+                                settings.VideoTypesAccepted = azureConfig.VideoTypesAccepted.Split(';').ToList();
+                                settings.Credential = new StorageSharedKeyCredential(azureConfig.StorageAccount, azureConfig.AccessKey);
+                                settings.BlobUri = new Uri($"https://{azureConfig.StorageAccount}.blob.core.windows.net/");
+                            });
+
+            builder.Services.AddOptions<JwtSettings>().BindConfiguration("JwtSettings")
+                            .ValidateDataAnnotations().ValidateOnStart();
+
+            builder.Services.AddOptions<RoleColors>().BindConfiguration("DbSeed:RoleColors")
+                            .ValidateDataAnnotations().ValidateOnStart();
+
+            builder.Services.AddOptions<RoleSettings>()
+                            .Configure<IOptions<RoleColors>>((settings, config) =>
+                            {
+                                var roleColors = config.Value;
+
+                                settings.SuperAdmin = new RoleDefinition("Super Admin", "SUPER_ADMIN", roleColors.SuperAdmin);
+                                settings.Admin = new RoleDefinition("Admin", "ADMIN", roleColors.Admin);
+                                settings.Normie = new RoleDefinition("Normie", "NORMIE", roleColors.Normie);
+                            });
+
+            builder.Services.AddOptions<RootAdmin>().BindConfiguration("DbSeed:RootAdmin")
+                            .ValidateDataAnnotations().ValidateOnStart();
+        }
+
         public static void ConfigureServices(WebApplicationBuilder builder)
         {
-            var settings = new ApplicationSettings(builder.Configuration);
-
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -34,16 +75,18 @@ namespace GymDB.API
             });
 
             builder.Services.AddAuthentication();
-
             builder.Services.AddAuthorization();
 
-            builder.Services.AddHangfire(options => 
-                             options.UsePostgreSqlStorage(c => c.UseNpgsqlConnection(settings.ConnectionStrings.PostgresConnection)));
-            
+            var connectionStrings = builder.Services.BuildServiceProvider()
+                                                    .GetService<IOptions<ConnectionStrings>>()!.Value;
+
+            builder.Services.AddHangfire(options =>
+                             options.UsePostgreSqlStorage(c => c.UseNpgsqlConnection(connectionStrings.PostgresConnection)));
+
             builder.Services.AddHangfireServer();
 
             // DB Context
-            builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql(settings.ConnectionStrings.PostgresConnection));
+            builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql(connectionStrings.PostgresConnection));
 
             // Repositories
             builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -83,9 +126,12 @@ namespace GymDB.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            ConfigureSettings(builder);
             ConfigureServices(builder);
 
             var app = builder.Build();
+            
             ConfigureApplication(app);
 
             app.Run();

@@ -1,4 +1,4 @@
-﻿using GymDB.API.Services;
+﻿using GymDB.API.Services.Interfaces;
 
 namespace GymDB.API.Data
 {
@@ -9,7 +9,7 @@ namespace GymDB.API.Data
             using var scope = app.Services.CreateScope();
 
             using var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
-            var roleService = scope.ServiceProvider.GetRequiredService<RoleService>();
+            var roleService = scope.ServiceProvider.GetRequiredService<IRoleService>();
 
             try
             {

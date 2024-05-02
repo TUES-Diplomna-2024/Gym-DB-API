@@ -1,5 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
-using GymDB.API.Data.Settings.DBSeedModels;
+using GymDB.API.Data.Settings;
 using GymDB.API.Models.User;
 
 namespace GymDB.API.Mappers

@@ -1,73 +1,27 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using System.ComponentModel.DataAnnotations;
+using System.Text;
 
 namespace GymDB.API.Data.Settings
 {
     public class JwtSettings
     {
-        private string issuer = "";
-        private string audience = "";
-        private string serverSecretKey = "";
+        [Required]
+        public string Issuer { get; init; }
 
-        public JwtSettings(IConfiguration config)
-        {
-            IConfigurationSection jwtSettings = config.GetSection("JwtSettings");
+        [Required]
+        public string Audience { get; init; }
 
-            if (!jwtSettings.Exists())
-                throw new InvalidOperationException("'JwtSettings' section could not be found or is empty!");
+        [Required]
+        public string ServerSecretKey { get; init; }
 
-            Issuer = jwtSettings["Issuer"]!;
-            
-            Audience = jwtSettings["Audience"]!;
+        [Required]
+        public TimeSpan AccessTokenLifetime { get; init; }
 
-            ServerSecretKey = jwtSettings["ServerSecretKey"]!;
+        [Required]
+        public TimeSpan RefreshTokenLifetime { get; init; }
 
-            TimeSpan accessTokenLifetime;
-
-            if (!TimeSpan.TryParseExact(jwtSettings["AccessTokenLifetime"], "c", null, out accessTokenLifetime))
-                throw new InvalidOperationException("'JwtSettings:AccessTokenLifetime' could not be found, is empty or is in invalid format!");
-
-            AccessTokenLifetime = accessTokenLifetime;
-
-            TimeSpan refreshTokenLifetime;
-
-            if (!TimeSpan.TryParseExact(jwtSettings["RefreshTokenLifetime"], "c", null, out refreshTokenLifetime))
-                throw new InvalidOperationException("'JwtSettings:RefreshTokenLifetime' could not be found, is empty or is in invalid format!");
-
-            RefreshTokenLifetime = refreshTokenLifetime;
-        }
-
-        public string Issuer {
-            get { return issuer; }
-            private set {
-                if (value.IsNullOrEmpty())
-                    throw new InvalidOperationException("'JwtSettings:Issuer' could not be found or is empty!");
-
-                issuer = value;
-            }
-        }
-
-        public string Audience {
-            get { return audience; }
-            private set {
-                if (value.IsNullOrEmpty())
-                    throw new InvalidOperationException("'JwtSettings:Audience' could not be found or is empty!");
-
-                audience = value;
-            }
-        }
-
-        public string ServerSecretKey {
-            get { return serverSecretKey; }
-            private set {
-                if (value.IsNullOrEmpty())
-                    throw new InvalidOperationException("'JwtSettings:ServerSecretKey' could not be found or is empty!");
-
-                serverSecretKey = value;
-            }
-        }
-
-        public TimeSpan AccessTokenLifetime { get; private set; }
-
-        public TimeSpan RefreshTokenLifetime { get; private set; }
+        public SymmetricSecurityKey GetSymmetricSecurityKey()
+            => new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ServerSecretKey));
     }
 }

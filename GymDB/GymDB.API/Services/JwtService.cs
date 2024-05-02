@@ -1,24 +1,24 @@
-﻿using GymDB.API.Data;
-using GymDB.API.Services.Interfaces;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using GymDB.API.Data.Settings;
+using GymDB.API.Services.Interfaces;
 
 namespace GymDB.API.Services
 {
     public class JwtService : IJwtService
     {
-        private readonly ApplicationSettings settings;
+        private readonly JwtSettings jwtSettings;
 
-        public JwtService(IConfiguration config)
+        public JwtService(IOptions<JwtSettings> settings)
         {
-            settings = new ApplicationSettings(config);
+            jwtSettings = settings.Value;
         }
 
         public string GenerateNewAccessToken(Guid userId, string roleNormalizedName)
         {
-            var expiration = DateTime.UtcNow.Add(settings.JwtSettings.AccessTokenLifetime);
+            var expiration = DateTime.UtcNow.Add(jwtSettings.AccessTokenLifetime);
 
             Claim[] claims = new Claim[] {
                 new Claim("userId", userId.ToString()),
@@ -30,7 +30,7 @@ namespace GymDB.API.Services
 
         public string GenerateNewRefreshToken(Guid userId)
         {
-            var expiration = DateTime.UtcNow.Add(settings.JwtSettings.RefreshTokenLifetime);
+            var expiration = DateTime.UtcNow.Add(jwtSettings.RefreshTokenLifetime);
 
             Claim[] claims = new Claim[] {
                 new Claim("userId", userId.ToString())
@@ -42,26 +42,17 @@ namespace GymDB.API.Services
         private string GenerateNewJwtToken(DateTime expiration, Claim[] claims)
         {
             var token = new JwtSecurityToken(
-                issuer: settings.JwtSettings.Issuer,
-                audience: settings.JwtSettings.Audience,
+                issuer: jwtSettings.Issuer,
+                audience: jwtSettings.Audience,
                 claims: claims,
                 expires: expiration,
-                signingCredentials: CreateSigningCredentials()
+                signingCredentials: new SigningCredentials(jwtSettings.GetSymmetricSecurityKey(),
+                                                           SecurityAlgorithms.HmacSha256)
             );
 
             var tokenHandler = new JwtSecurityTokenHandler();
 
             return tokenHandler.WriteToken(token);
-        }
-
-        private SigningCredentials CreateSigningCredentials()
-        {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtSettings.ServerSecretKey));
-
-            return new SigningCredentials(
-                securityKey,
-                SecurityAlgorithms.HmacSha256
-            );
         }
     }
 }
