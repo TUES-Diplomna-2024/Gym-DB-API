@@ -66,10 +66,9 @@ namespace GymDB.API.Middlewares
                     throw new UnauthorizedException("The current user doesn't exists!");
                 }
 
-                // If Authorization is found in the request headers, it has passed the AccessTokenMiddleware, which has validated it.
-                // This means that context.User contains a valid 'userId' claim.
+                // If 'userId' claim of context.User is not null, it has passed the AccessTokenMiddleware, which has validated it.
 
-                if (!string.IsNullOrEmpty(context.Request.Headers["Authorization"]))
+                if (context.User.FindFirst("userId") != null)
                 {
                     Guid accessTokenUserId;
                     Guid.TryParse(context.User.FindFirst("userId")!.Value, out accessTokenUserId);
@@ -103,9 +102,8 @@ namespace GymDB.API.Middlewares
             {
                 throw;
             }
-            catch (Exception e)
+            catch
             {
-                Console.WriteLine(e.Message);
                 throw new UnauthorizedException("Invalid refresh token!");
             }
 
