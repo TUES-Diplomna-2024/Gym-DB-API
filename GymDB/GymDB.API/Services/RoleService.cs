@@ -52,13 +52,7 @@ namespace GymDB.API.Services
 
             rootAdmin = rootAdminSettings.ToEntity();
 
-            Role? superAdminRole = await roleRepository.GetRoleByNormalizedNameAsync(roleSettings.SuperAdmin.NormalizedName);
-
-            if (superAdminRole == null)
-            {
-                superAdminRole = roleSettings.SuperAdmin.ToEntity();
-                await roleRepository.AddRoleAsync(superAdminRole);
-            }
+            Role superAdminRole = await GetOrCreateRoleAsync(roleSettings.SuperAdmin.NormalizedName);
 
             rootAdmin.SetRole(superAdminRole);
             await userRepository.AddUserAsync(rootAdmin);
@@ -66,14 +60,7 @@ namespace GymDB.API.Services
 
         public async Task AssignUserDefaultRoleAsync(User user)
         {
-            Role? defaultRole = await roleRepository.GetRoleByNormalizedNameAsync(roleSettings.Normie.NormalizedName);
-
-            if (defaultRole == null)
-            {
-                defaultRole = roleSettings.Normie.ToEntity();
-                await roleRepository.AddRoleAsync(defaultRole);
-            }
-
+            Role defaultRole = await GetOrCreateRoleAsync(roleSettings.Normie.NormalizedName);
             user.SetRole(defaultRole);
         }
 
@@ -95,7 +82,31 @@ namespace GymDB.API.Services
             if (HasUserRole(user, "ADMIN") && !HasUserRole(currUser, "SUPER_ADMIN"))
                 throw new ForbiddenException("You cannot re-assign new role to another admin user! This can be done only by the root admin!");
 
-            await roleRepository.UpdateUserRoleAsync(user, role.ToString().ToUpper());
+            Role roleToBeAssigned = await GetOrCreateRoleAsync(role.ToString().ToUpper());
+
+            user.SetRole(roleToBeAssigned);
+            await userRepository.UpdateUserAsync(user);
+        }
+
+        private async Task<Role> GetOrCreateRoleAsync(string normalizedRoleName)
+        {
+            Role? role = await roleRepository.GetRoleByNormalizedNameAsync(normalizedRoleName);
+
+            if (role != null)
+                return role;
+
+            foreach (RoleDefinition roleDef in roleSettings)
+            {
+                if (roleDef.NormalizedName == normalizedRoleName)
+                {
+                    Role roleToBeCreated = roleDef.ToEntity();
+                    await roleRepository.AddRoleAsync(roleToBeCreated);
+
+                    return roleToBeCreated;
+                }
+            }
+
+            throw new NotFoundException("The specified role could not be found!");
         }
 
         public bool HasUserRole(User user, string role)
@@ -107,6 +118,6 @@ namespace GymDB.API.Services
 
         // TODO: Should be removed if not used
         private string GetRoleNameNormalized(string roleName)
-            => roleName.ToUpper().Replace(" ", "_");
+            => roleName.ToUpper().Replace(" ", "_");       
     }
 }

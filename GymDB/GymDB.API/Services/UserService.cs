@@ -24,13 +24,15 @@ namespace GymDB.API.Services
         {
             User? user = await userRepository.GetUserByEmailAsync(signInModel.Email);
 
-            if (user == null || IsPasswordCorrect(signInModel.Password, user.Password))
-                throw new UnauthorizedException("Invalid sign in attempt!");
+            if (user != null && IsPasswordCorrect(signInModel.Password, user.Password))
+            {
+                string accessToken = jwtService.GenerateNewAccessToken(user.Id, user.Role.NormalizedName);
+                string refreshToken = jwtService.GenerateNewRefreshToken(user.Id);
 
-            string accessToken = jwtService.GenerateNewAccessToken(user.Id, user.Role.NormalizedName);
-            string refreshToken = jwtService.GenerateNewRefreshToken(user.Id);
+                return new UserAuthModel(accessToken, refreshToken);
+            }
 
-            return new UserAuthModel(accessToken, refreshToken);
+            throw new UnauthorizedException("Invalid sign in attempt!");
         }
 
         public async Task<UserAuthModel> SignUpAsync(UserSignUpModel signUpModel)
@@ -107,7 +109,7 @@ namespace GymDB.API.Services
             if (roleService.HasUserRole(currUser, "SUPER_ADMIN"))
                 throw new ForbiddenException("The root admin cannot be deleted!");
 
-            if (!IsPasswordCorrect(currUser.Password, password))
+            if (!IsPasswordCorrect(password, currUser.Password))
                 throw new UnauthorizedException("Incorrect password!");
 
             await userRepository.RemoveUserAsync(currUser);

@@ -1,7 +1,4 @@
-﻿using GymDB.API.Data.ValidationAttributes;
-using UserClass = GymDB.API.Data.Entities.User;
-
-namespace GymDB.API.Models.User
+﻿namespace GymDB.API.Models.User
 {
     public class UserPreviewModel
     {

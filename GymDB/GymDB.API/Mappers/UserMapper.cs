@@ -35,7 +35,7 @@ namespace GymDB.API.Mappers
 
                 Username = rootAdmin.Username,
                 Email = rootAdmin.Email,
-                Password = BCrypt.Net.BCrypt.EnhancedHashPassword(rootAdmin.Password, 13),
+                Password = rootAdmin.Password,
                 BirthDate = DateOnly.FromDateTime(DateTime.UtcNow),
                 Gender = Gender.Other,
                 Height = 80,
@@ -56,7 +56,6 @@ namespace GymDB.API.Mappers
         {
             user.RoleId = role.Id;
             user.Role = role;
-            user.OnModified = DateTime.UtcNow;
         }
 
         public static UserProfileModel ToProfileModel(this User user)

@@ -6,8 +6,6 @@ namespace GymDB.API.Repositories.Interfaces
     {
         Task<Role?> GetRoleByNormalizedNameAsync(string normalizedName);
 
-        Task UpdateUserRoleAsync(User user, string roleNormalizedName);
-
         Task AddRoleAsync(Role role);
 
         Task AddRolesAsync(List<Role> roles);

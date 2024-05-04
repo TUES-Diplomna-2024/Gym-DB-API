@@ -61,7 +61,7 @@ namespace GymDB.API.Middlewares
                     throw new UnauthorizedException("Invalid or empty 'userId' or 'exp' claims in refresh token!");
                 }
 
-                if (await userService.IsUserWithIdExistAsync(userId))
+                if (!await userService.IsUserWithIdExistAsync(userId))
                 {
                     throw new UnauthorizedException("The current user doesn't exists!");
                 }
@@ -98,8 +98,6 @@ namespace GymDB.API.Middlewares
                 });
 
                 context.User = claimsPrincipal;
-
-                await next(context);
             }
             catch (HttpException)
             {
@@ -110,6 +108,8 @@ namespace GymDB.API.Middlewares
                 Console.WriteLine(e.Message);
                 throw new UnauthorizedException("Invalid refresh token!");
             }
+
+            await next(context);
         }
 
         private bool IsRefreshTokenRequiredForEndpoint(HttpContext context)

@@ -2,7 +2,7 @@
 {
     public enum AssignableRole
     {
-        Admin,
-        Normie
+        Normie,
+        Admin
     }
 }

@@ -65,7 +65,7 @@ namespace GymDB.API.Middlewares
                     throw new UnauthorizedException("Invalid or empty 'userId' or 'role' claims in access token!");
                 }
 
-                if (await userService.IsUserWithIdExistAsync(userId))
+                if (!await userService.IsUserWithIdExistAsync(userId))
                 {
                     throw new UnauthorizedException("The current user doesn't exists!");
                 }
@@ -76,8 +76,6 @@ namespace GymDB.API.Middlewares
                 }
 
                 context.User = claimsPrincipal;
-
-                await next(context);  // Call the next delegate/middleware in the pipeline.
             }
             catch (HttpException)
             {
@@ -87,6 +85,9 @@ namespace GymDB.API.Middlewares
             {
                 throw new UnauthorizedException("Invalid access token!");
             }
+
+            // Call the next delegate/middleware in the pipeline.
+            await next(context);
         }
 
         private CustomAuthorizeAttribute? GetEndpointAuthorization(HttpContext context)

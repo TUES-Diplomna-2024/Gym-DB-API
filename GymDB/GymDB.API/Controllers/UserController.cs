@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using GymDB.API.Services.Interfaces;
 using GymDB.API.Models.User;
 using GymDB.API.Attributes;
@@ -109,7 +110,7 @@ namespace GymDB.API.Controllers
 
 
         [HttpPut("{userId}/role"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
-        public async Task<IActionResult> AssignUserNewRoleAsync(Guid userId, AssignableRole role)
+        public async Task<IActionResult> AssignUserNewRoleAsync(Guid userId, [FromForm, Required] AssignableRole role)
         {
             await roleService.AssignUserNewRoleAsync(HttpContext, userId, role);
 
@@ -120,7 +121,7 @@ namespace GymDB.API.Controllers
         /* ======================================================================== DELETE REQUESTS */
 
         [HttpDelete("current"), CustomAuthorize]
-        public async Task<IActionResult> RemoveCurrUserAsync([Password] string password)
+        public async Task<IActionResult> RemoveCurrUserAsync([FromForm, Password] string password)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
