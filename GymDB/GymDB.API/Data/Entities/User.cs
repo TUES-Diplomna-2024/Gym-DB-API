@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GymDB.API.Data.ValidationAttributes;
+using GymDB.API.Attributes.DataValidation;
 using GymDB.API.Data.Enums;
 
 namespace GymDB.API.Data.Entities

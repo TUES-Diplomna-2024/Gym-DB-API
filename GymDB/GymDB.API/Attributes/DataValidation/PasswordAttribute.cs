@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
-namespace GymDB.API.Data.ValidationAttributes
+namespace GymDB.API.Attributes.DataValidation
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter, AllowMultiple = false)]
     public class PasswordAttribute : ValidationAttribute

@@ -1,5 +1,5 @@
 ﻿using GymDB.API.Data.Enums;
-using GymDB.API.Data.ValidationAttributes;
+using GymDB.API.Attributes.DataValidation;
 using System.ComponentModel.DataAnnotations;
 
 namespace GymDB.API.Models.User

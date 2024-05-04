@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace GymDB.API.Data.ValidationAttributes
+namespace GymDB.API.Attributes.DataValidation
 {
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class ExerciseDifficultyAttribute : ValidationAttribute
