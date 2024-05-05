@@ -87,12 +87,6 @@ namespace GymDB.API.Services
         public async Task<bool> IsUserWithIdExistAsync(Guid userId)
             => (await userRepository.GetUserByIdAsync(userId)) != null;
 
-        private async Task<bool> IsUserAlreadyRegisteredWithEmailAsync(string email)
-            => (await userRepository.GetUserByEmailAsync(email)) != null;
-
-        private bool IsPasswordCorrect(string plainPassword, string hashedPassword)
-            => BCrypt.Net.BCrypt.EnhancedVerify(plainPassword, hashedPassword);
-
         public async Task UpdateCurrUserAsync(HttpContext context, UserUpdateModel updateModel)
         {
             User currUser = await userRepository.GetCurrUserAsync(context);
@@ -132,5 +126,11 @@ namespace GymDB.API.Services
 
             await userRepository.RemoveUserAsync(user);
         }
+
+        private async Task<bool> IsUserAlreadyRegisteredWithEmailAsync(string email)
+            => (await userRepository.GetUserByEmailAsync(email)) != null;
+
+        private bool IsPasswordCorrect(string plainPassword, string hashedPassword)
+            => BCrypt.Net.BCrypt.EnhancedVerify(plainPassword, hashedPassword);
     }
 }

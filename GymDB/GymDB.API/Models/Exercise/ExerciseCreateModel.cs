@@ -1,5 +1,5 @@
-﻿using GymDB.API.Attributes.DataValidation;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using GymDB.API.Data.Enums;
 
 namespace GymDB.API.Models.Exercise
 {
@@ -13,15 +13,13 @@ namespace GymDB.API.Models.Exercise
 
         public string MuscleGroups { get; set; }
 
-        [ExerciseType]
-        public string Type { get; set; }
+        public ExerciseType Type { get; set; }
 
-        [ExerciseDifficulty]
-        public string Difficulty { get; set; }
+        public ExerciseDifficulty Difficulty { get; set; }
 
         public string? Equipment { get; set; }
 
-        public bool IsPrivate { get; set; }
+        public ExerciseVisibility Visibility { get; set; }
 
         public List<IFormFile>? Images { get; set; }
     }

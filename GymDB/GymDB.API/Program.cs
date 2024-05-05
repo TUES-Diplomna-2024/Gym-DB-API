@@ -91,11 +91,13 @@ namespace GymDB.API
             // Repositories
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+            builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
 
             // Custom services
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IRoleService, RoleService>();
+            builder.Services.AddScoped<IExerciseService, ExerciseService>();
         }
 
         public static void ConfigureApplication(WebApplication app)

@@ -1,6 +1,8 @@
-﻿namespace GymDB.API.Models.Exercise
+﻿using GymDB.API.Data.Enums;
+
+namespace GymDB.API.Models.Exercise
 {
-    public class ExerciseNormalInfoModel
+    public class ExerciseViewModel
     {   
         public Guid Id { get; set; }
 
@@ -10,15 +12,13 @@
 
         public string MuscleGroups { get; set; }
 
-        public string Type { get; set; }
+        public ExerciseType Type { get; set; }
 
-        public string Difficulty { get; set; }
+        public ExerciseDifficulty Difficulty { get; set; }
 
         public string? Equipment { get; set; }
 
-        public bool IsPrivate { get; set; }
-
-        public int ImageCount { get; set; }
+        public ExerciseVisibility Visibility { get; set; }
 
         public List<Uri>? ImageUris { get; set; }
 

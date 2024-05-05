@@ -60,12 +60,12 @@ namespace GymDB.API.Migrations
                     Name = table.Column<string>(type: "character varying(70)", maxLength: 70, nullable: false),
                     Instructions = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false),
                     MuscleGroups = table.Column<string>(type: "text", nullable: false),
-                    Type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    Difficulty = table.Column<string>(type: "character varying(12)", maxLength: 12, nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Difficulty = table.Column<int>(type: "integer", nullable: false),
                     Equipment = table.Column<string>(type: "text", nullable: true),
                     ImageCount = table.Column<int>(type: "integer", nullable: false),
-                    IsPrivate = table.Column<bool>(type: "boolean", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Visibility = table.Column<int>(type: "integer", nullable: false),
+                    OwnerId = table.Column<Guid>(type: "uuid", nullable: true),
                     OnCreated = table.Column<DateOnly>(type: "date", nullable: false),
                     OnModified = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -73,8 +73,8 @@ namespace GymDB.API.Migrations
                 {
                     table.PrimaryKey("PK_Exercises", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Exercises_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Exercises_Users_OwnerId",
+                        column: x => x.OwnerId,
                         principalTable: "Users",
                         principalColumn: "Id");
                 });
@@ -196,9 +196,9 @@ namespace GymDB.API.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Exercises_UserId",
+                name: "IX_Exercises_OwnerId",
                 table: "Exercises",
-                column: "UserId");
+                column: "OwnerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_RoleId",
