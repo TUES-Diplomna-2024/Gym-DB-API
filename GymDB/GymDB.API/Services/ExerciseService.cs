@@ -52,6 +52,15 @@ namespace GymDB.API.Services
             return exercise.ToViewModel(null);
         }
 
+        public async Task<List<ExercisePreviewModel>> GetCurrUserCustomExercisesPreviewsAsync(HttpContext context)
+        {
+            User currUser = await userRepository.GetCurrUserAsync(context);
+
+            List<Exercise> customExercises = await exerciseRepository.GetAllUserCustomExercisesAsync(currUser.Id);
+
+            return customExercises.Select(exercise => exercise.ToPreviewModel()).ToList();
+        }
+
         public async Task<List<ExercisePreviewModel>> SearchExercisesPreviewsAsync(HttpContext context, string name)
         {
             User currUser = await userRepository.GetCurrUserAsync(context);
@@ -70,9 +79,8 @@ namespace GymDB.API.Services
         {
             List<Exercise> matchingExercises = await exerciseRepository.FindAllExercisesMatchingNameAsync(searchModel.Name);
 
-            // TODO: Update comment
-            // The root admin and all admin users can search for public exercises and private which were created by them
-            // Exercises that doesn't have Owner were created by user with admin permissions
+            // The root admin and all admin users can search for public and private exercises created by admins.
+            // Exercises that do not have an owner were created by users with admin permissions.
 
             return matchingExercises.Where(exercise => exercise.OwnerId == null &&
                                                        (searchModel.Visibility == ExerciseVisibility.Public && IsExercisePublic(exercise) ||
@@ -136,8 +144,7 @@ namespace GymDB.API.Services
             if (IsExercisePublic(exercise) && roleService.HasUserRole(currUser, "NORMIE"))
                 throw new ForbiddenException("Only admin users can delete public exercises!");
 
-            // TODO: Update comment
-            // User can't remove exercises that are custom and are not their owner
+            // All users can't remove exercises that are custom and are not their own
             if (IsExercisePrivate(exercise) && exercise.OwnerId != null && !IsExerciseOwnedByUser(exercise, currUser))
                 throw new ForbiddenException("You cannot delete custom exercises that are owned by another user!");
 

@@ -1,6 +1,5 @@
 ﻿using GymDB.API.Models.Exercise;
 using GymDB.API.Data.Enums;
-using GymDB.API.Data.Entities;
 
 namespace GymDB.API.Services.Interfaces
 {
@@ -9,6 +8,8 @@ namespace GymDB.API.Services.Interfaces
         Task CreateNewExerciseAsync(HttpContext context, ExerciseCreateModel createModel);
 
         Task<ExerciseViewModel> GetExerciseViewByIdAsync(HttpContext context, Guid exerciseId);
+
+        Task<List<ExercisePreviewModel>> GetCurrUserCustomExercisesPreviewsAsync(HttpContext context);
 
         Task<List<ExercisePreviewModel>> SearchExercisesPreviewsAsync(HttpContext context, string name);
 

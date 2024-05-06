@@ -3,6 +3,7 @@ using GymDB.API.Data.Enums;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace GymDB.API.Controllers
@@ -40,6 +41,15 @@ namespace GymDB.API.Controllers
             ExerciseViewModel exerciseView = await exerciseService.GetExerciseViewByIdAsync(HttpContext, exerciseId);
 
             return Ok(exerciseView);
+        }
+
+
+        [HttpGet("/users/current/custom-exercises"), CustomAuthorize]
+        public async Task<IActionResult> GetCurrUserCustomExercisesPreviewsAsync()
+        {
+            List<ExercisePreviewModel> customExercises = await exerciseService.GetCurrUserCustomExercisesPreviewsAsync(HttpContext);
+
+            return Ok(customExercises);
         }
 
 

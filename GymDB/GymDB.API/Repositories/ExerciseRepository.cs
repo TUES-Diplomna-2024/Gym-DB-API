@@ -21,6 +21,15 @@ namespace GymDB.API.Repositories
                                 .FirstOrDefaultAsync(exercise => exercise.Id == id);
         }
 
+        public async Task<List<Exercise>> GetAllUserCustomExercisesAsync(Guid userId)
+        {
+            return await context.Exercises
+                                .Include(exercise => exercise.Owner)
+                                .Where(exercise => exercise.OwnerId == userId)
+                                .OrderByDescending(exercise => exercise.OnModified)
+                                .ToListAsync();
+        }
+
         public async Task<List<Exercise>> FindAllExercisesMatchingNameAsync(string name)
         {
             return await context.Exercises

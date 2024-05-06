@@ -91,10 +91,6 @@ namespace GymDB.API.Controllers
         }
 
 
-        /* TODO - Move to ExerciseController
-        [HttpGet("current/custom-exercises"), CustomAuthorize]
-        public async Task<IActionResult> GetCurrUserCustomExercisesPreviewsAsync() { } */
-
         /* ======================================================================== PUT REQUESTS */
 
         [HttpPut("current"), CustomAuthorize]

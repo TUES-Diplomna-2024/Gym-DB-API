@@ -6,6 +6,8 @@ namespace GymDB.API.Repositories.Interfaces
     {
         Task<Exercise?> GetExerciseByIdAsync(Guid id);
 
+        Task<List<Exercise>> GetAllUserCustomExercisesAsync(Guid userId);
+
         Task<List<Exercise>> FindAllExercisesMatchingNameAsync(string name);
 
         Task AddExerciseAsync(Exercise exercise);
