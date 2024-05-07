@@ -6,14 +6,10 @@ namespace GymDB.API.Data.Settings
     {
         public string ImageContainer { get; set; }
 
-        public string VideoContainer { get; set; }
-
-        public List<string> ImageTypesAccepted { get; set; }
-
-        public List<string> VideoTypesAccepted { get; set; }
+        public List<string> AcceptedImageTypes { get; set; }
 
         public StorageSharedKeyCredential Credential { get; set; }
 
-        public Uri BlobUri { get; set; }
+        public Uri BaseBlobUri { get; set; }
     }
 }

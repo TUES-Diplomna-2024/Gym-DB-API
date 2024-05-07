@@ -1,5 +1,4 @@
-﻿using GymDB.API.Attributes.DataValidation;
-using GymDB.API.Data.Enums;
+﻿using GymDB.API.Data.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace GymDB.API.Models.Exercise
@@ -19,5 +18,9 @@ namespace GymDB.API.Models.Exercise
         public ExerciseDifficulty Difficulty { get; set; }
 
         public string? Equipment { get; set; }
+
+        public List<Guid>? ImagesToBeRemoved { get; set; }
+
+        public List<IFormFile>? ImagesToBeAdded { get; set; }
     }
 }

@@ -13,8 +13,10 @@ namespace GymDB.API.Services.Interfaces
 
         Task AssignUserNewRoleAsync(HttpContext context, Guid userId, AssignableRole role);
 
-        bool HasUserRole(User user, string role);
+        bool IsUserNormie(User user);
 
-        bool HasUserAnyRole(User user, string[] roles);
+        bool IsUserAdmin(User user);
+
+        bool IsUserSuperAdmin(User user);
     }
 }

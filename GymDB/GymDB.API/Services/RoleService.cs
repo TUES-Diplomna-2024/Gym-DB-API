@@ -76,10 +76,10 @@ namespace GymDB.API.Services
             if (HasUserRole(user, role.ToString().ToUpper()))
                 throw new ForbiddenException("The specified user already has this role assigned!");
 
-            if (HasUserRole(user, "SUPER_ADMIN"))
+            if (IsUserSuperAdmin(user))
                 throw new ForbiddenException("The role of the root admin cannot be changed!");
 
-            if (HasUserRole(user, "ADMIN") && !HasUserRole(currUser, "SUPER_ADMIN"))
+            if (IsUserAdmin(user) && !IsUserSuperAdmin(currUser))
                 throw new ForbiddenException("You cannot re-assign new role to another admin user! This can be done only by the root admin!");
 
             Role roleToBeAssigned = await GetOrCreateRoleAsync(role.ToString().ToUpper());
@@ -87,6 +87,15 @@ namespace GymDB.API.Services
             user.SetRole(roleToBeAssigned);
             await userRepository.UpdateUserAsync(user);
         }
+
+        public bool IsUserNormie(User user)
+            => HasUserRole(user, "NORMIE");
+
+        public bool IsUserAdmin(User user)
+            => HasUserRole(user, "ADMIN");
+
+        public bool IsUserSuperAdmin(User user)
+            => HasUserRole(user, "SUPER_ADMIN");
 
         private async Task<Role> GetOrCreateRoleAsync(string normalizedRoleName)
         {
@@ -109,15 +118,7 @@ namespace GymDB.API.Services
             throw new NotFoundException("The specified role could not be found!");
         }
 
-        public bool HasUserRole(User user, string role)
+        private bool HasUserRole(User user, string role)
             => user.Role.NormalizedName == role;
-
-        // TODO: Should be removed if not used
-        public bool HasUserAnyRole(User user, string[] roles)
-            => roles.Contains(user.Role.NormalizedName);
-
-        // TODO: Should be removed if not used
-        private string GetRoleNameNormalized(string roleName)
-            => roleName.ToUpper().Replace(" ", "_");       
     }
 }

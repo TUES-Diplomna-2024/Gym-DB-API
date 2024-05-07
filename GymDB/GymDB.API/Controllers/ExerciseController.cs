@@ -3,7 +3,6 @@ using GymDB.API.Data.Enums;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace GymDB.API.Controllers
@@ -74,7 +73,7 @@ namespace GymDB.API.Controllers
         /* ======================================================================== PUT REQUESTS */
 
         [HttpPut("{exerciseId}"), CustomAuthorize]
-        public async Task<IActionResult> UpdateExerciseByIdAsync(Guid exerciseId, ExerciseUpdateModel updateModel)
+        public async Task<IActionResult> UpdateExerciseByIdAsync(Guid exerciseId, [FromForm] ExerciseUpdateModel updateModel)
         {
             if (!ModelState.IsValid)
                 return BadRequest();

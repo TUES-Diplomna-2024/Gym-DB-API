@@ -30,11 +30,9 @@ namespace GymDB.API
                                 var azureConfig = config.Value;
 
                                 settings.ImageContainer = azureConfig.ImageContainer;
-                                settings.VideoContainer = azureConfig.VideoContainer;
-                                settings.ImageTypesAccepted = azureConfig.ImageTypesAccepted.Split(';').ToList();
-                                settings.VideoTypesAccepted = azureConfig.VideoTypesAccepted.Split(';').ToList();
+                                settings.AcceptedImageTypes = azureConfig.AcceptedImageTypes.Split(';').ToList();
                                 settings.Credential = new StorageSharedKeyCredential(azureConfig.StorageAccount, azureConfig.AccessKey);
-                                settings.BlobUri = new Uri($"https://{azureConfig.StorageAccount}.blob.core.windows.net/");
+                                settings.BaseBlobUri = new Uri($"https://{azureConfig.StorageAccount}.blob.core.windows.net/");
                             });
 
             builder.Services.AddOptions<JwtSettings>().BindConfiguration("JwtSettings")
@@ -85,19 +83,23 @@ namespace GymDB.API
 
             builder.Services.AddHangfireServer();
 
-            // DB Context
+            // Db Context
             builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql(connectionStrings.PostgresConnection));
 
             // Repositories
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IRoleRepository, RoleRepository>();
             builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
+            builder.Services.AddScoped<IAzureBlobRepository, AzureBlobRepository>();
+            builder.Services.AddScoped<IExerciseImageRepository, ExerciseImageRepository>();
 
             // Custom services
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IRoleService, RoleService>();
             builder.Services.AddScoped<IExerciseService, ExerciseService>();
+            builder.Services.AddScoped<IAzureBlobService, AzureBlobService>();
+            builder.Services.AddScoped<IExerciseImageService, ExerciseImageService>();
         }
 
         public static void ConfigureApplication(WebApplication app)

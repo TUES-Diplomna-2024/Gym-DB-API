@@ -100,7 +100,7 @@ namespace GymDB.API.Services
         {
             User currUser = await userRepository.GetCurrUserAsync(context);
 
-            if (roleService.HasUserRole(currUser, "SUPER_ADMIN"))
+            if (roleService.IsUserSuperAdmin(currUser))
                 throw new ForbiddenException("The root admin cannot be deleted!");
 
             if (!IsPasswordCorrect(password, currUser.Password))
@@ -118,10 +118,10 @@ namespace GymDB.API.Services
             if (user == null)
                 throw new NotFoundException("The specified user could not be found!");
 
-            if (roleService.HasUserRole(user, "SUPER_ADMIN"))
+            if (roleService.IsUserSuperAdmin(user))
                 throw new ForbiddenException("The root admin cannot be deleted!");
 
-            if (roleService.HasUserRole(user, "ADMIN") && !roleService.HasUserRole(currUser, "SUPER_ADMIN"))
+            if (roleService.IsUserAdmin(user) && !roleService.IsUserSuperAdmin(currUser))
                 throw new ForbiddenException("You cannot delete another admin user! This can be done only by the root admin!");
 
             await userRepository.RemoveUserAsync(user);

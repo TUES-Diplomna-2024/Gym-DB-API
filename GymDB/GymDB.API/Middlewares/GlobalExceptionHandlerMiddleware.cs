@@ -28,7 +28,7 @@ namespace GymDB.API.Middlewares
 
                 Console.WriteLine($"!!! Exception: {e.Message} !!!");
 
-                SetResponse(context, HttpStatusCode.InternalServerError, "Something went wrong!");
+                SetResponse(context, HttpStatusCode.InternalServerError, "Something went wrong! Please try again later!");
             }
         }
 

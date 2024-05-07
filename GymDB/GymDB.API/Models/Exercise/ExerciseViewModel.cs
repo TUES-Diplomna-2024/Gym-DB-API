@@ -1,4 +1,5 @@
 ﻿using GymDB.API.Data.Enums;
+using GymDB.API.Models.ExerciseImage;
 
 namespace GymDB.API.Models.Exercise
 {
@@ -20,7 +21,7 @@ namespace GymDB.API.Models.Exercise
 
         public ExerciseVisibility Visibility { get; set; }
 
-        public List<Uri>? ImageUris { get; set; }
+        public List<ExerciseImageViewModel>? Images { get; set; }
 
         public Guid? OwnerId { get; set; }
 

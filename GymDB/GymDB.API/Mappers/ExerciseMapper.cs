@@ -1,6 +1,8 @@
 ﻿using GymDB.API.Data.Entities;
 using GymDB.API.Data.Enums;
 using GymDB.API.Models.Exercise;
+using GymDB.API.Models.ExerciseImage;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GymDB.API.Mappers
 {
@@ -38,7 +40,7 @@ namespace GymDB.API.Mappers
             exercise.Equipment = update.Equipment;
         }
 
-        public static ExerciseViewModel ToViewModel(this Exercise exercise, List<Uri>? imageUris)
+        public static ExerciseViewModel ToViewModel(this Exercise exercise, List<ExerciseImageViewModel>? images)
         {
             return new ExerciseViewModel
             {
@@ -51,7 +53,7 @@ namespace GymDB.API.Mappers
                 Difficulty = exercise.Difficulty,
                 Equipment = exercise.Equipment,
                 Visibility = exercise.Visibility,
-                ImageUris = imageUris,
+                Images = images.IsNullOrEmpty() ? null : images,
 
                 OwnerId = exercise.OwnerId,
                 OwnerUsername = exercise.Owner?.Username
