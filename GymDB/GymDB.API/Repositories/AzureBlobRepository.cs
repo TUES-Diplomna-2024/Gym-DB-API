@@ -1,7 +1,6 @@
 ﻿using Azure;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using GymDB.API.Data.Settings;
 using GymDB.API.Repositories.Interfaces;
 using GymDB.API.Exceptions;

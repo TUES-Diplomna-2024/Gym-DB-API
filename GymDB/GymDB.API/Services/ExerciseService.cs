@@ -70,7 +70,7 @@ namespace GymDB.API.Services
             return customExercises.Select(exercise => exercise.ToPreviewModel()).ToList();
         }
 
-        public async Task<List<ExercisePreviewModel>> SearchExercisesPreviewsAsync(HttpContext context, string name)
+        public async Task<List<ExercisePreviewModel>> FindPublicAndCustomExercisesPreviewsAsync(HttpContext context, string name)
         {
             User currUser = await userRepository.GetCurrUserAsync(context);
 
@@ -79,12 +79,12 @@ namespace GymDB.API.Services
             // Users have access to all public exercises and their custom ones
 
             return matchingExercises.Where(exercise => IsExercisePublic(exercise) || IsExerciseOwnedByUser(exercise, currUser))
-                                    .OrderByDescending(exercise => exercise.OwnerId == currUser.Id)
+                                    .OrderByDescending(exercise => exercise.OwnerId == currUser.Id)  // Place user's own exercises first
                                     .Select(exercise => exercise.ToPreviewModel())
                                     .ToList();
         }
 
-        public async Task<List<ExercisePreviewModel>> SearchExercisesPreviewsAsync(ExerciseSearchModel searchModel)
+        public async Task<List<ExercisePreviewModel>> FindAdminCreatedExercisesPreviewsAsync(ExerciseSearchModel searchModel)
         {
             List<Exercise> matchingExercises = await exerciseRepository.FindAllExercisesMatchingNameAsync(searchModel.Name);
 
@@ -107,6 +107,9 @@ namespace GymDB.API.Services
             // Non-admin users cannot update public exercises
             if (IsExercisePublic(exercise) && roleService.IsUserNormie(currUser))
                 throw new ForbiddenException("Only admin users can update public exercises!");
+
+            if (IsExercisePrivate(exercise) && !IsExerciseCustom(exercise) && roleService.IsUserNormie(currUser))
+                throw new ForbiddenException("You don't have permission to update this exercise!");
 
             // Only owners can update their custom exercises
             if (IsExerciseCustom(exercise) && !IsExerciseOwnedByUser(exercise, currUser))
@@ -153,6 +156,9 @@ namespace GymDB.API.Services
             // Normal user can't remove public exercises
             if (IsExercisePublic(exercise) && roleService.IsUserNormie(currUser))
                 throw new ForbiddenException("Only admin users can delete public exercises!");
+
+            if (IsExercisePrivate(exercise) && !IsExerciseCustom(exercise) && roleService.IsUserNormie(currUser))
+                throw new ForbiddenException("You don't have permission to delete this exercise!");
 
             // All users can't remove exercises that are custom and are not their own
             if (IsExerciseCustom(exercise) && !IsExerciseOwnedByUser(exercise, currUser))

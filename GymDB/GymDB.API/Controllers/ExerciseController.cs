@@ -1,9 +1,9 @@
-﻿using GymDB.API.Attributes;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
+using GymDB.API.Attributes;
 using GymDB.API.Data.Enums;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace GymDB.API.Controllers
 {
@@ -53,18 +53,18 @@ namespace GymDB.API.Controllers
 
 
         [HttpGet("search"), CustomAuthorize]
-        public async Task<IActionResult> SearchExercisesPreviewsByNameAsync([FromQuery] string name)
+        public async Task<IActionResult> FindPublicAndCustomExercisesPreviewsAsync([FromQuery] string name)
         {
-            List<ExercisePreviewModel> searchResults = await exerciseService.SearchExercisesPreviewsAsync(HttpContext, name);
+            List<ExercisePreviewModel> searchResults = await exerciseService.FindPublicAndCustomExercisesPreviewsAsync(HttpContext, name);
 
             return Ok(searchResults);
         }
 
 
         [HttpGet("advanced-search"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
-        public async Task<IActionResult> SearchExercisesPreviewsBySearchModelAsync([FromQuery] ExerciseSearchModel searchModel)
+        public async Task<IActionResult> FindAdminCreatedExercisesPreviewsAsync([FromQuery] ExerciseSearchModel searchModel)
         {
-            List<ExercisePreviewModel> searchResults = await exerciseService.SearchExercisesPreviewsAsync(searchModel);
+            List<ExercisePreviewModel> searchResults = await exerciseService.FindAdminCreatedExercisesPreviewsAsync(searchModel);
 
             return Ok(searchResults);
         }

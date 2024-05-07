@@ -11,9 +11,9 @@ namespace GymDB.API.Services.Interfaces
 
         Task<List<ExercisePreviewModel>> GetCurrUserCustomExercisesPreviewsAsync(HttpContext context);
 
-        Task<List<ExercisePreviewModel>> SearchExercisesPreviewsAsync(HttpContext context, string name);
+        Task<List<ExercisePreviewModel>> FindPublicAndCustomExercisesPreviewsAsync(HttpContext context, string name);
 
-        Task<List<ExercisePreviewModel>> SearchExercisesPreviewsAsync(ExerciseSearchModel searchModel);
+        Task<List<ExercisePreviewModel>> FindAdminCreatedExercisesPreviewsAsync(ExerciseSearchModel searchModel);
 
         Task UpdateExerciseByIdAsync(HttpContext context, Guid exerciseId, ExerciseUpdateModel updateModel);
 
