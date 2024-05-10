@@ -1,5 +1,6 @@
 ﻿using GymDB.API.Models.Exercise;
 using GymDB.API.Data.Enums;
+using GymDB.API.Data.Entities;
 
 namespace GymDB.API.Services.Interfaces
 {
@@ -20,5 +21,7 @@ namespace GymDB.API.Services.Interfaces
         Task UpdateExerciseVisibilityAsync(Guid exerciseId, ExerciseVisibility visibility);
 
         Task RemoveExerciseByIdAsync(HttpContext context, Guid exerciseId);
+
+        void VerifyUserCanAddExerciseToTheirWorkouts(Exercise? exercise, User user);
     }
 }

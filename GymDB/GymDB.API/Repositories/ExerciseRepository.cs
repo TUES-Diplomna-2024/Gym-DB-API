@@ -1,7 +1,8 @@
-﻿using GymDB.API.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using GymDB.API.Data;
 using GymDB.API.Data.Entities;
 using GymDB.API.Repositories.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using GymDB.API.Data.Enums;
 
 namespace GymDB.API.Repositories
 {
@@ -27,6 +28,7 @@ namespace GymDB.API.Repositories
                                 .Include(exercise => exercise.Owner)
                                 .Where(exercise => exercise.OwnerId == userId)
                                 .OrderByDescending(exercise => exercise.OnModified)
+                                .ThenBy(exercise => exercise.Name)
                                 .ToListAsync();
         }
 

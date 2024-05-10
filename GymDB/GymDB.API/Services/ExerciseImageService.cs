@@ -59,6 +59,8 @@ namespace GymDB.API.Services
 
             if (removedCount != 0)
                 throw new OkException($"{removedCount} / {images.Count + removedCount} file(s) were not uploaded because they are either invalid image types or their size is too big!");
+        
+            // TODO: Add message when no image was saved
         }
 
         public async Task RemoveExerciseImagesAsync(Exercise exercise, List<Guid> exerciseImagesIds)

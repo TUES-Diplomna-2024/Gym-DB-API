@@ -1,4 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
+using GymDB.API.Data.Enums;
 
 namespace GymDB.API.Repositories.Interfaces
 {
