@@ -5,14 +5,13 @@ namespace GymDB.API.Mappers
 {
     public static class ExerciseImageMapper
     {
-        public static ExerciseImage ToEntity(this IFormFile image, Exercise exercise, int position)
+        public static ExerciseImage ToExerciseImageEntity(this Exercise exercise, int position)
         {
             return new ExerciseImage
             {
                 Id = Guid.NewGuid(),
                 ExerciseId = exercise.Id,
                 Exercise = exercise,
-                FileExtension = Path.GetExtension(image.FileName),  // TODO: Update the way you are getting the file extension
                 Position = position
             };
         }

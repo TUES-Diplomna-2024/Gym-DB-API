@@ -30,9 +30,10 @@ namespace GymDB.API
                                 var azureConfig = config.Value;
 
                                 settings.ImageContainer = azureConfig.ImageContainer;
-                                settings.AcceptedImageTypes = azureConfig.AcceptedImageTypes.Split(';').ToList();
                                 settings.Credential = new StorageSharedKeyCredential(azureConfig.StorageAccount, azureConfig.AccessKey);
                                 settings.BaseBlobUri = new Uri($"https://{azureConfig.StorageAccount}.blob.core.windows.net/");
+                                settings.AcceptedFileMimeTypes = azureConfig.AcceptedFileMimeTypes.Split(';').ToList();
+                                settings.MaxFileSize = azureConfig.MaxFileSize;
                             });
 
             builder.Services.AddOptions<JwtSettings>().BindConfiguration("JwtSettings")

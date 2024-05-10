@@ -80,6 +80,7 @@ namespace GymDB.API.Services
 
             return matchingExercises.Where(exercise => IsExercisePublic(exercise) || IsExerciseOwnedByUser(exercise, currUser))
                                     .OrderByDescending(exercise => exercise.OwnerId == currUser.Id)  // Place user's own exercises first
+                                    .ThenBy(exercise => exercise.Name)
                                     .Select(exercise => exercise.ToPreviewModel())
                                     .ToList();
         }
@@ -91,7 +92,7 @@ namespace GymDB.API.Services
             // The root admin and all admin users can search for public and private exercises created by admins.
 
             return matchingExercises.Where(exercise => !IsExerciseCustom(exercise) && exercise.Visibility == searchModel.Visibility)
-                                    .OrderByDescending(exercise => exercise.Name)
+                                    .OrderBy(exercise => exercise.Name)
                                     .Select(exercise => exercise.ToPreviewModel())
                                     .ToList();
         }

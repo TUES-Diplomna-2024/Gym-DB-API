@@ -14,6 +14,9 @@ namespace GymDB.API.Data.Settings.HelperClasses
         public string ImageContainer { get; init; }
 
         [Required]
-        public string AcceptedImageTypes { get; init; }
+        public string AcceptedFileMimeTypes { get; init; }
+
+        [Required]
+        public long MaxFileSize { get; init; }
     }
 }

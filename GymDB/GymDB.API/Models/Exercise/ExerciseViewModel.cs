@@ -22,9 +22,5 @@ namespace GymDB.API.Models.Exercise
         public ExerciseVisibility Visibility { get; set; }
 
         public List<ExerciseImageViewModel>? Images { get; set; }
-
-        public Guid? OwnerId { get; set; }
-
-        public string? OwnerUsername { get; set; }
     }
 }

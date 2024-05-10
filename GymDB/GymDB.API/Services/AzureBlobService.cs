@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MimeDetective;
 using GymDB.API.Data.Settings;
 using GymDB.API.Repositories.Interfaces;
 using GymDB.API.Services.Interfaces;
@@ -10,48 +11,56 @@ namespace GymDB.API.Services
     {
         private readonly AzureSettings azureSettings;
         private readonly IAzureBlobRepository azureBlobRepository;
+        private readonly ContentInspector fileInspector;
 
         public AzureBlobService(IOptions<AzureSettings> settings, IAzureBlobRepository azureBlobRepository)
         {
             azureSettings = settings.Value;
             this.azureBlobRepository = azureBlobRepository;
+
+            fileInspector = new ContentInspectorBuilder()
+            {
+                Definitions = MimeDetective.Definitions.Default.All()
+            }.Build();
         }
 
         public async Task UploadExerciseImageAsync(Guid exerciseId, Guid imageId, IFormFile image)
         {
-            // TODO: Get the image file extension in better way
-            string blobName = azureBlobRepository.GetBlobName(exerciseId, imageId, Path.GetExtension(image.FileName));
+            string blobName = azureBlobRepository.GetBlobName(exerciseId, imageId);
 
-            using MemoryStream fileUploadStream = new MemoryStream();
-            image.CopyTo(fileUploadStream);
-            fileUploadStream.Position = 0;
+            using var stream = image.OpenReadStream();
 
-            await azureBlobRepository.UploadBlobAsync(blobName, fileUploadStream);
+            await azureBlobRepository.UploadBlobAsync(blobName, stream);
         }
 
-        public async Task DeleteExerciseImageAsync(Guid exerciseId, Guid imageId, string fileExtension)
+        public async Task DeleteExerciseImageAsync(Guid exerciseId, Guid imageId)
         {
-            string blobName = azureBlobRepository.GetBlobName(exerciseId, imageId, fileExtension);
+            string blobName = azureBlobRepository.GetBlobName(exerciseId, imageId);
             await azureBlobRepository.DeleteBlobAsync(blobName);
         }
 
-        public Uri GetExerciseImageUri(Guid exerciseId, Guid imageId, string fileExtension)
+        public Uri GetExerciseImageUri(Guid exerciseId, Guid imageId)
         {
-            string blobName = azureBlobRepository.GetBlobName(exerciseId, imageId, fileExtension);
+            string blobName = azureBlobRepository.GetBlobName(exerciseId, imageId);
             return new Uri($"{azureSettings.BaseBlobUri}{azureSettings.ImageContainer}/{blobName}");
         }
 
-        // TODO: Add Better And More Secure Implementation
         public bool IsFileAllowedInContainer(IFormFile file)
         {
-            string fileExtension = Path.GetExtension(file.FileName);
+            string? fileMimeType = GetFileMimeType(file);
 
-            if (fileExtension.IsNullOrEmpty())
-                return false;
+            return !fileMimeType.IsNullOrEmpty() &&
+                    azureSettings.AcceptedFileMimeTypes.Contains(fileMimeType!) &&
+                    file.Length <= azureSettings.MaxFileSize;
+        }
 
-            fileExtension = fileExtension.Replace(".", "");
+        private string? GetFileMimeType(IFormFile file)
+        {
+            using var stream = file.OpenReadStream();
 
-            return azureSettings.AcceptedImageTypes.Contains(fileExtension);
+            var results = fileInspector.Inspect(stream);
+
+            return results.Any() ? results.First().Definition.File.MimeType : null;
         }
     }
 }

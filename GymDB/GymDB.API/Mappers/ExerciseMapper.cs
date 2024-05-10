@@ -53,10 +53,7 @@ namespace GymDB.API.Mappers
                 Difficulty = exercise.Difficulty,
                 Equipment = exercise.Equipment,
                 Visibility = exercise.Visibility,
-                Images = images.IsNullOrEmpty() ? null : images,
-
-                OwnerId = exercise.OwnerId,
-                OwnerUsername = exercise.Owner?.Username
+                Images = images.IsNullOrEmpty() ? null : images
             };
         }
 

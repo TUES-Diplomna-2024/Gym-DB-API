@@ -18,7 +18,7 @@ namespace GymDB.API.Repositories
             blobServiceClient = new BlobServiceClient(azureSettings.BaseBlobUri, azureSettings.Credential);
         }
 
-        public async Task UploadBlobAsync(string blobName, MemoryStream content)
+        public async Task UploadBlobAsync(string blobName, Stream content)
         {
             var blob = GetBlobClient(blobName);
 
@@ -46,8 +46,8 @@ namespace GymDB.API.Repositories
             }
         }
 
-        public string GetBlobName(Guid exerciseId, Guid imageId, string fileExtension)
-            => $"exercises/{exerciseId}/{imageId}{fileExtension}";
+        public string GetBlobName(Guid exerciseId, Guid imageId)
+            => $"exercises/{exerciseId}/{imageId}";
 
         private BlobClient GetBlobClient(string blobName)
         {

@@ -1,4 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
+using GymDB.API.Exceptions;
 using GymDB.API.Mappers;
 using GymDB.API.Models.ExerciseImage;
 using GymDB.API.Repositories.Interfaces;
@@ -23,7 +24,7 @@ namespace GymDB.API.Services
         {
             List<ExerciseImage> exerciseImages = await exerciseImageRepository.GetAllExerciseImagesByExerciseIdAsync(exerciseId);
 
-            return exerciseImages.Select(ei => ei.ToViewModel(azureBlobService.GetExerciseImageUri(exerciseId, ei.Id, ei.FileExtension)))
+            return exerciseImages.Select(ei => ei.ToViewModel(azureBlobService.GetExerciseImageUri(exerciseId, ei.Id)))
                                  .ToList();
         }
 
@@ -32,13 +33,13 @@ namespace GymDB.API.Services
             int lastPosition = exercise.ImageCount;
 
             // Filter all files that are not images
-            images.RemoveAll(file => !azureBlobService.IsFileAllowedInContainer(file));
+            int removedCount = images.RemoveAll(file => !azureBlobService.IsFileAllowedInContainer(file));
 
             try
             {
                 foreach (var image in images)
                 {
-                    ExerciseImage exerciseImage = image.ToEntity(exercise, lastPosition++);
+                    ExerciseImage exerciseImage = exercise.ToExerciseImageEntity(lastPosition++);
 
                     await azureBlobService.UploadExerciseImageAsync(exercise.Id, exerciseImage.Id, image);
                     await exerciseImageRepository.AddExerciseImageAsync(exerciseImage);
@@ -55,6 +56,9 @@ namespace GymDB.API.Services
                     await exerciseRepository.UpdateExerciseAsync(exercise);
                 }
             }
+
+            if (removedCount != 0)
+                throw new OkException($"{removedCount} / {images.Count + removedCount} file(s) were not uploaded because they are either invalid image types or their size is too big!");
         }
 
         public async Task RemoveExerciseImagesAsync(Exercise exercise, List<Guid> exerciseImagesIds)
@@ -67,7 +71,7 @@ namespace GymDB.API.Services
             {
                 foreach (var exerciseImage in toBeRemoved)
                 {
-                    await azureBlobService.DeleteExerciseImageAsync(exercise.Id, exerciseImage.Id, exerciseImage.FileExtension);  // Delete from cloud
+                    await azureBlobService.DeleteExerciseImageAsync(exercise.Id, exerciseImage.Id);  // Delete from cloud
                     await exerciseImageRepository.RemoveExerciseImageAsync(exerciseImage);  // Delete from database
                     removedIds.Add(exerciseImage.Id);
                 }
@@ -113,7 +117,7 @@ namespace GymDB.API.Services
 
             foreach (var exerciseImage in exerciseImages)
             {
-                await azureBlobService.DeleteExerciseImageAsync(exerciseId, exerciseImage.Id, exerciseImage.FileExtension);  // Delete from cloud
+                await azureBlobService.DeleteExerciseImageAsync(exerciseId, exerciseImage.Id);  // Delete from cloud
             }
         }
     }
