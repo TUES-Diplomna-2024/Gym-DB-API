@@ -14,7 +14,7 @@ namespace GymDB.API.Services.Interfaces
 
         Task<UserProfileModel> GetUserProfileByIdAsync(Guid userId);
 
-        Task<List<UserPreviewModel>> GetAllUsersPreviewsAsync();
+        Task<List<UserPreviewModel>> FindUsersPreviewsAsync(HttpContext context, string query);
 
         Task<bool> IsUserWithIdExistAsync(Guid userId);
 

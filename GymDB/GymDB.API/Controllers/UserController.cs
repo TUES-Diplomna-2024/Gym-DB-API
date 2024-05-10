@@ -82,12 +82,12 @@ namespace GymDB.API.Controllers
         }
         
 
-        [HttpGet, CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
-        public async Task<IActionResult> GetAllUsersPreviewsAsync()
+        [HttpGet("search"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
+        public async Task<IActionResult> FindUsersPreviewsAsync([FromQuery] string query)
         {
-            List<UserPreviewModel> usersPreviews = await userService.GetAllUsersPreviewsAsync();
+            List<UserPreviewModel> searchResults = await userService.FindUsersPreviewsAsync(HttpContext, query);
 
-            return Ok(usersPreviews);
+            return Ok(searchResults);
         }
 
 

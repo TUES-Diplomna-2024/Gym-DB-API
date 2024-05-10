@@ -10,7 +10,7 @@ namespace GymDB.API.Repositories.Interfaces
 
         Task<User?> GetUserByEmailAsync(string email);
 
-        Task<List<User>> GetAllUsersAsync();
+        Task<List<User>> FindAllUsersMatchingUsernameOrEmailAsync(string query);
 
         Task AddUserAsync(User user);
 

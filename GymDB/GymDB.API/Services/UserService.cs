@@ -4,6 +4,7 @@ using GymDB.API.Repositories.Interfaces;
 using GymDB.API.Services.Interfaces;
 using GymDB.API.Mappers;
 using GymDB.API.Exceptions;
+using GymDB.API.Data.Enums;
 
 namespace GymDB.API.Services
 {
@@ -77,11 +78,13 @@ namespace GymDB.API.Services
             return user.ToProfileModel();
         }
 
-        public async Task<List<UserPreviewModel>> GetAllUsersPreviewsAsync()
+        public async Task<List<UserPreviewModel>> FindUsersPreviewsAsync(HttpContext context, string query)
         {
-            List<User> usersPreviews = await userRepository.GetAllUsersAsync();
+            User currUser = await userRepository.GetCurrUserAsync(context);
 
-            return usersPreviews.Select(user => user.ToPreviewModel()).ToList();
+            List<User> matchingUsers = await userRepository.FindAllUsersMatchingUsernameOrEmailAsync(query);
+
+            return matchingUsers.Select(user => user.ToPreviewModel(GetAssignableRoleForUser(currUser, user))).ToList();
         }
 
         public async Task<bool> IsUserWithIdExistAsync(Guid userId)
@@ -132,5 +135,19 @@ namespace GymDB.API.Services
 
         private bool IsPasswordCorrect(string plainPassword, string hashedPassword)
             => BCrypt.Net.BCrypt.EnhancedVerify(plainPassword, hashedPassword);
+
+        private AssignableRole? GetAssignableRoleForUser(User currUser, User targetUser)
+        {
+            // Root admin's role cannot be changed.
+            // Admin user cannot change another admin's role. Only the root admin can do so.
+            if (roleService.IsUserSuperAdmin(targetUser) ||
+                (roleService.IsUserAdmin(targetUser) && roleService.IsUserAdmin(currUser)))
+            {
+                return null;
+            }
+
+            // Normal users can be promoted to admins, and admins can be downgraded to normal users
+            return roleService.IsUserNormie(targetUser) ? AssignableRole.Admin : AssignableRole.Normie;           
+        }
     }
 }

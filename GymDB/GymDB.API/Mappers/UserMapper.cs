@@ -75,16 +75,16 @@ namespace GymDB.API.Mappers
             };
         }
 
-        public static UserPreviewModel ToPreviewModel(this User user)
+        public static UserPreviewModel ToPreviewModel(this User user, AssignableRole? assignableRole)
         {
             return new UserPreviewModel
             {
                 Id = user.Id,
                 Username = user.Username,
-                RoleName = user.Role.Name,
+                Email = user.Email,
                 RoleColor = user.Role.Color,
                 OnCreated = user.OnCreated,
-                Age = CalculateAge(user.BirthDate)
+                AssignableRole = assignableRole
             };
         }
 

@@ -45,10 +45,14 @@ namespace GymDB.API.Repositories
                                 .FirstOrDefaultAsync(user => user.Email == email);
         }
 
-        public async Task<List<User>> GetAllUsersAsync()
+        public async Task<List<User>> FindAllUsersMatchingUsernameOrEmailAsync(string query)
         {
             return await context.Users
                                 .Include(user => user.Role)
+                                .Where(user => user.Username.ToLower().Contains(query.ToLower()) ||
+                                               user.Email.ToLower().Contains(query.ToLower()))
+                                .OrderBy(user => user.Username)
+                                .ThenBy(user => user.Email)
                                 .ToListAsync();
         }
 

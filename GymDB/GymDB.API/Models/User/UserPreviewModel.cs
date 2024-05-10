@@ -1,4 +1,6 @@
-﻿namespace GymDB.API.Models.User
+﻿using GymDB.API.Data.Enums;
+
+namespace GymDB.API.Models.User
 {
     public class UserPreviewModel
     {
@@ -6,12 +8,12 @@
 
         public string Username { get; set; }
 
-        public int Age { get; set; }
-
-        public string RoleName { get; set; }
+        public string Email { get; set; }
 
         public string RoleColor { get; set; }
 
         public DateOnly OnCreated { get; set; }
+
+        public AssignableRole? AssignableRole { get; set; }
     }
 }
