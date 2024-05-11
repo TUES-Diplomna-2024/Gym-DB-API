@@ -94,6 +94,7 @@ namespace GymDB.API
             builder.Services.AddScoped<IAzureBlobRepository, AzureBlobRepository>();
             builder.Services.AddScoped<IExerciseImageRepository, ExerciseImageRepository>();
             builder.Services.AddScoped<IWorkoutRepository, WorkoutRepository>();
+            builder.Services.AddScoped<IWorkoutExerciseRepository, WorkoutExerciseRepository>();
 
             // Custom services
             builder.Services.AddScoped<IJwtService, JwtService>();
@@ -103,6 +104,7 @@ namespace GymDB.API
             builder.Services.AddScoped<IAzureBlobService, AzureBlobService>();
             builder.Services.AddScoped<IExerciseImageService, ExerciseImageService>();
             builder.Services.AddScoped<IWorkoutService, WorkoutService>();
+            builder.Services.AddScoped<IWorkoutExerciseService, WorkoutExerciseService>();
         }
 
         public static void ConfigureApplication(WebApplication app)

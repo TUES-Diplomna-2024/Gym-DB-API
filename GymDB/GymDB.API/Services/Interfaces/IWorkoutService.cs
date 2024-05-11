@@ -13,6 +13,8 @@ namespace GymDB.API.Services.Interfaces
 
         Task UpdateWorkoutByIdAsync(HttpContext context, Guid workoutId, WorkoutUpdateModel updateModel);
 
-        Task AddExerciseToWorkoutsAsync(HttpContext context, Guid exerciseId, List<Guid> workoutIds);
+        Task AddExerciseToWorkoutsAsync(HttpContext context, Guid exerciseId, List<Guid> workoutsIds);
+
+        Task RemoveWorkoutByIdAsync(HttpContext context, Guid workoutId);
     }
 }

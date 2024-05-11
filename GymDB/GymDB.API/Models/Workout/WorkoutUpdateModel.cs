@@ -2,6 +2,6 @@
 {
     public class WorkoutUpdateModel : WorkoutCreateModel
     {
-        public List<Guid>? Exercises { get; set; }
+        public List<Guid>? ExercisesIds { get; set; }
     }
 }

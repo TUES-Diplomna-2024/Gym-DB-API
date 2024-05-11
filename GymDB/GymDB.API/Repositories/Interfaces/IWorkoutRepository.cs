@@ -6,6 +6,8 @@ namespace GymDB.API.Repositories.Interfaces
     {
         Task<Workout?> GetWorkoutByIdAsync(Guid id);
 
+        Task<List<Workout>> GetWorkoutRangeAsync(List<Guid> workoutsIds);
+
         Task<List<Workout>> GetAllUserWorkoutsAsync(Guid userId);
 
         Task AddWorkoutAsync(Workout workout);

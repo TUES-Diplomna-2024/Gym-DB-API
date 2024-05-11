@@ -32,6 +32,8 @@ namespace GymDB.API.Repositories
         public async Task UpdateExerciseImagePossitionAsync(ExerciseImage exerciseImage, uint possition)
         {
             exerciseImage.Position = (int)possition;
+
+            context.ExerciseImages.Update(exerciseImage);
             await context.SaveChangesAsync();
         }
 

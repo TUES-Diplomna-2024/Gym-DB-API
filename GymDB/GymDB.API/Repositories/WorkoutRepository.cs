@@ -21,6 +21,14 @@ namespace GymDB.API.Repositories
                                 .FirstOrDefaultAsync(workout => workout.Id == id);
         }
 
+        public async Task<List<Workout>> GetWorkoutRangeAsync(List<Guid> workoutsIds)
+        {
+            return await context.Workouts
+                                .Include(workout => workout.Owner)
+                                .Where(workout => workoutsIds.Contains(workout.Id))
+                                .ToListAsync();
+        }
+
         public async Task<List<Workout>> GetAllUserWorkoutsAsync(Guid userId)
         {
             return await context.Workouts

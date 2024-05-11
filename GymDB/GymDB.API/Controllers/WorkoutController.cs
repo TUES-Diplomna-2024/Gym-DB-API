@@ -2,6 +2,7 @@
 using GymDB.API.Attributes;
 using GymDB.API.Models.Workout;
 using GymDB.API.Services.Interfaces;
+using GymDB.API.Data.Entities;
 
 namespace GymDB.API.Controllers
 {
@@ -65,9 +66,9 @@ namespace GymDB.API.Controllers
 
 
         [HttpPost("/exercises/{exerciseId}/add-to-workouts"), CustomAuthorize]
-        public async Task<IActionResult> AddExerciseToWorkoutsAsync(Guid exerciseId, List<Guid> workoutIds)
+        public async Task<IActionResult> AddExerciseToWorkoutsAsync(Guid exerciseId, List<Guid> workoutsIds)
         {
-            await workoutService.AddExerciseToWorkoutsAsync(HttpContext, exerciseId, workoutIds);
+            await workoutService.AddExerciseToWorkoutsAsync(HttpContext, exerciseId, workoutsIds);
 
             return NoContent();
         }
@@ -76,6 +77,11 @@ namespace GymDB.API.Controllers
         /* ======================================================================== DELETE REQUESTS */
 
         [HttpDelete("{workoutId}"), CustomAuthorize]
-        public async Task<IActionResult> RemoveWorkoutByIdAsync(Guid workoutId) { throw new NotImplementedException(); }
+        public async Task<IActionResult> RemoveWorkoutByIdAsync(Guid workoutId)
+        {
+            await workoutService.RemoveWorkoutByIdAsync(HttpContext, workoutId);
+
+            return NoContent();
+        }
     }
 }
