@@ -6,13 +6,15 @@ namespace GymDB.API.Repositories.Interfaces
     {
         Task<List<WorkoutExercise>> GetAllWorkoutExercisesByWorkoutIdAsync(Guid workoutId);
 
+        Task<List<WorkoutExercise>> GetAllWorkoutExercisesByExerciseIdAsync(Guid exerciseId);
+
         Task<bool> AreAllExercisesInWorkoutAsync(Guid workoutId, List<Guid> exercisesIds);
 
         Task AddWorkoutExerciseAsync(WorkoutExercise workoutExercise);
 
-        Task UpdateWorkoutExercisePossitionAsync(WorkoutExercise workoutExercise, uint possition);
+        Task UpdateWorkoutExerciseRangeAsync(List<WorkoutExercise> workoutExercises);
 
-        Task RemoveWorkoutExerciseAsync(WorkoutExercise workoutExercise);
+        Task RemoveWorkoutExerciseRangeAsync(List<WorkoutExercise> workoutExercises);
 
         Task RemoveAllWorkoutExercisesByWorkoutIdAsync(Guid workoutId);
     }

@@ -2,7 +2,6 @@
 using GymDB.API.Data;
 using GymDB.API.Data.Entities;
 using GymDB.API.Repositories.Interfaces;
-using GymDB.API.Data.Enums;
 
 namespace GymDB.API.Repositories
 {

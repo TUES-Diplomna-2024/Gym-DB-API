@@ -7,6 +7,12 @@ namespace GymDB.API.Services.Interfaces
     {
         Task<List<ExercisePreviewModel>> GetWorkoutExercisesPreviewsAsync(Guid workoutId);
 
+        Task AppendExerciseToWorkoutAsync(Workout workout, Exercise exercise);
+
         Task UpdateWorkoutExercisesAsync(Workout workout, List<Guid>? exercisesIds);
+
+        Task RemoveAllWorkoutExercisesAsync(Workout workout);
+
+        Task RemoveExerciseFromAllWorkoutsAsync(Guid exerciseId);
     }
 }

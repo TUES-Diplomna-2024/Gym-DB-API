@@ -2,7 +2,6 @@
 using GymDB.API.Attributes;
 using GymDB.API.Models.Workout;
 using GymDB.API.Services.Interfaces;
-using GymDB.API.Data.Entities;
 
 namespace GymDB.API.Controllers
 {

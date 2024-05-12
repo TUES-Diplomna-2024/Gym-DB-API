@@ -14,6 +14,8 @@ namespace GymDB.API.Repositories.Interfaces
 
         Task UpdateWorkoutAsync(Workout workout);
 
+        Task UpdateWorkoutRangeAsync(List<Workout> workouts);
+
         Task RemoveWorkoutAsync(Workout workout);
     }
 }

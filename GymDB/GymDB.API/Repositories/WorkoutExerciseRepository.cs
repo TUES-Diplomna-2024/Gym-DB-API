@@ -24,6 +24,15 @@ namespace GymDB.API.Repositories
                                 .ToListAsync();
         }
 
+        public async Task<List<WorkoutExercise>> GetAllWorkoutExercisesByExerciseIdAsync(Guid exerciseId)
+        {
+            return await context.WorkoutsExercises
+                                .Include(we => we.Workout)
+                                .Include(we => we.Exercise)
+                                .Where(we => we.ExerciseId == exerciseId)
+                                .ToListAsync();
+        }
+
         public async Task<bool> AreAllExercisesInWorkoutAsync(Guid workoutId, List<Guid> exercisesIds)
         {
             var workoutExercisesIds = await context.WorkoutsExercises
@@ -39,27 +48,22 @@ namespace GymDB.API.Repositories
             context.WorkoutsExercises.Add(workoutExercise);
             await context.SaveChangesAsync();
         }
-
-        public async Task UpdateWorkoutExercisePossitionAsync(WorkoutExercise workoutExercise, uint possition)
+        public async Task UpdateWorkoutExerciseRangeAsync(List<WorkoutExercise> workoutExercises)
         {
-            workoutExercise.Position = (int)possition;
-
-            context.WorkoutsExercises.Update(workoutExercise);
+            context.WorkoutsExercises.UpdateRange(workoutExercises);
             await context.SaveChangesAsync();
         }
 
-        public async Task RemoveWorkoutExerciseAsync(WorkoutExercise workoutExercise)
+        public async Task RemoveWorkoutExerciseRangeAsync(List<WorkoutExercise> workoutExercises)
         {
-            context.WorkoutsExercises.Remove(workoutExercise);
+            context.WorkoutsExercises.RemoveRange(workoutExercises);
             await context.SaveChangesAsync();
         }
 
         public async Task RemoveAllWorkoutExercisesByWorkoutIdAsync(Guid workoutId)
         {
             List<WorkoutExercise> toBeRemoved = await GetAllWorkoutExercisesByWorkoutIdAsync(workoutId);
-            
-            context.WorkoutsExercises.RemoveRange(toBeRemoved);
-            await context.SaveChangesAsync();
+            await RemoveWorkoutExerciseRangeAsync(toBeRemoved);
         }
     }
 }

@@ -22,6 +22,6 @@ namespace GymDB.API.Services.Interfaces
 
         Task RemoveExerciseByIdAsync(HttpContext context, Guid exerciseId);
 
-        void VerifyUserCanAddExerciseToTheirWorkouts(Exercise? exercise, User user);
+        Task<Exercise> GetExerciseByIdAsync(User user, Guid exerciseId, ExerciseValidation validation = ExerciseValidation.Access);
     }
 }

@@ -5,6 +5,7 @@ using GymDB.API.Repositories.Interfaces;
 using GymDB.API.Services.Interfaces;
 using GymDB.API.Exceptions;
 using GymDB.API.Models.Exercise;
+using GymDB.API.Data.Enums;
 
 namespace GymDB.API.Services
 {
@@ -13,15 +14,13 @@ namespace GymDB.API.Services
         private readonly IExerciseService exerciseService;
         private readonly IWorkoutExerciseService workoutExerciseService;
         private readonly IWorkoutRepository workoutRepository;
-        private readonly IExerciseRepository exerciseRepository;
         private readonly IUserRepository userRepository;
 
-        public WorkoutService(IExerciseService exerciseService, IWorkoutExerciseService workoutExerciseService, IWorkoutRepository workoutRepository, IExerciseRepository exerciseRepository, IUserRepository userRepository)
+        public WorkoutService(IExerciseService exerciseService, IWorkoutExerciseService workoutExerciseService, IWorkoutRepository workoutRepository, IUserRepository userRepository)
         {
             this.exerciseService = exerciseService;
             this.workoutExerciseService = workoutExerciseService;
             this.workoutRepository = workoutRepository;
-            this.exerciseRepository = exerciseRepository;
             this.userRepository = userRepository;
         }
 
@@ -58,20 +57,16 @@ namespace GymDB.API.Services
             User currUser = await userRepository.GetCurrUserAsync(context);
             Workout workout = await GetWorkoutByIdAsync(currUser, workoutId);
 
+            await workoutExerciseService.UpdateWorkoutExercisesAsync(workout, updateModel.ExercisesIds);
+
             workout.ApplyUpdateModel(updateModel);
-
-            // TODO: Update workout exercises - they come as the new order of the workout exercises
-            // if (!updateModel.Exercises.IsNullOrEmpty())
-
             await workoutRepository.UpdateWorkoutAsync(workout);
         }
 
         public async Task AddExerciseToWorkoutsAsync(HttpContext context, Guid exerciseId, List<Guid> workoutsIds)
         {
             User currUser = await userRepository.GetCurrUserAsync(context);
-            Exercise? exercise = await exerciseRepository.GetExerciseByIdAsync(exerciseId);
-
-            exerciseService.VerifyUserCanAddExerciseToTheirWorkouts(exercise, currUser);
+            Exercise exercise = await exerciseService.GetExerciseByIdAsync(currUser, exerciseId, ExerciseValidation.AdditionToWorkouts);
 
             List<Workout> workoutsFound = await workoutRepository.GetWorkoutRangeAsync(workoutsIds);
 
@@ -84,7 +79,12 @@ namespace GymDB.API.Services
             if (workoutsFound.Any(workout => !IsWorkoutOwnedByUser(workout, currUser)))
                 throw new ForbiddenException("You must own all specified workouts to add exercises to them!");
 
-            // TODO: Push back exercise to each workout
+            foreach(var workout in workoutsFound)
+            {
+                await workoutExerciseService.AppendExerciseToWorkoutAsync(workout, exercise!);
+            }
+
+            await workoutRepository.UpdateWorkoutRangeAsync(workoutsFound);
         }
 
         public async Task RemoveWorkoutByIdAsync(HttpContext context, Guid workoutId)
@@ -92,8 +92,7 @@ namespace GymDB.API.Services
             User currUser = await userRepository.GetCurrUserAsync(context);
             Workout workout = await GetWorkoutByIdAsync(currUser, workoutId);
 
-            // TODO: Remove all workout exercises
-
+            await workoutExerciseService.RemoveAllWorkoutExercisesAsync(workout);
             await workoutRepository.RemoveWorkoutAsync(workout);
         }
 

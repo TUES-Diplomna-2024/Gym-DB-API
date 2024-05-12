@@ -1,5 +1,4 @@
-﻿using GymDB.API.Data.Entities;
-using GymDB.API.Models.Workout;
+﻿using GymDB.API.Models.Workout;
 
 namespace GymDB.API.Services.Interfaces
 {

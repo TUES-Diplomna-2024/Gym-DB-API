@@ -53,6 +53,14 @@ namespace GymDB.API.Repositories
             await context.SaveChangesAsync();
         }
 
+        public async Task UpdateWorkoutRangeAsync(List<Workout> workouts)
+        {
+            workouts.ForEach(workout => workout.OnModified = DateTime.UtcNow);
+
+            context.Workouts.UpdateRange(workouts);
+            await context.SaveChangesAsync();
+        }
+
         public async Task RemoveWorkoutAsync(Workout workout)
         {
             context.Workouts.Remove(workout);
