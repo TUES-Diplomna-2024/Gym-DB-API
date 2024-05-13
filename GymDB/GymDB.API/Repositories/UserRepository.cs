@@ -74,9 +74,6 @@ namespace GymDB.API.Repositories
 
         public async Task RemoveUserAsync(User user)
         {
-            // TODO - Remove all user related data
-            /*RemoveUserRelatedData(user);*/
-
             context.Users.Remove(user);
             await context.SaveChangesAsync();
         }

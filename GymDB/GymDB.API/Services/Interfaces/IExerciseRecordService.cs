@@ -15,5 +15,9 @@ namespace GymDB.API.Services.Interfaces
         Task UpdateExerciseRecordByIdAsync(HttpContext context, Guid recordId, ExerciseRecordCreateUpdateModel updateModel);
 
         Task RemoveExerciseRecordByIdAsync(HttpContext context, Guid recordId);
+
+        Task RemoveAllExerciseRecordsByExerciseIdAsync(Guid exerciseId);
+
+        Task RemoveAllUserExerciseRecordsAsync(Guid userId);
     }
 }

@@ -21,6 +21,20 @@ namespace GymDB.API.Repositories
                                 .FirstOrDefaultAsync(record => record.Id == recordId);
         }
 
+        public async Task<List<ExerciseRecord>> GetAllExerciseRecordsByExerciseId(Guid exerciseId)
+        {
+            return await context.ExerciseRecords
+                                .Where(record => record.ExerciseId == exerciseId)
+                                .ToListAsync();
+        }
+
+        public async Task<List<ExerciseRecord>> GetAllExerciseRecordsByOwnerId(Guid ownerId)
+        {
+            return await context.ExerciseRecords
+                                .Where(record => record.OwnerId == ownerId)
+                                .ToListAsync();
+        }
+
         public async Task<List<ExerciseRecord>> GetAllUserExerciseRecordsSinceAsync(Guid userId, Guid exerciseId, StatisticPeriod period)
         {
             DateTime startDate = GetStartDate(period);
@@ -50,6 +64,12 @@ namespace GymDB.API.Repositories
         public async Task RemoveExerciseRecordAsync(ExerciseRecord record)
         {
             context.ExerciseRecords.Remove(record);
+            await context.SaveChangesAsync();
+        }
+
+        public async Task RemoveExerciseRecordRangeAsync(List<ExerciseRecord> exerciseRecords)
+        {
+            context.ExerciseRecords.RemoveRange(exerciseRecords);
             await context.SaveChangesAsync();
         }
 

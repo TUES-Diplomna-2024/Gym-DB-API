@@ -1,4 +1,5 @@
-﻿using GymDB.API.Models.Workout;
+﻿using GymDB.API.Data.Entities;
+using GymDB.API.Models.Workout;
 
 namespace GymDB.API.Services.Interfaces
 {
@@ -15,5 +16,7 @@ namespace GymDB.API.Services.Interfaces
         Task AddExerciseToWorkoutsAsync(HttpContext context, Guid exerciseId, List<Guid> workoutsIds);
 
         Task RemoveWorkoutByIdAsync(HttpContext context, Guid workoutId);
+
+        Task RemoveAllUserWorkoutsAsync(Guid userId);
     }
 }

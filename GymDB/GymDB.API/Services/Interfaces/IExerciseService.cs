@@ -8,6 +8,8 @@ namespace GymDB.API.Services.Interfaces
     {
         Task CreateNewExerciseAsync(HttpContext context, ExerciseCreateModel createModel);
 
+        Task<Exercise> GetExerciseByIdAsync(User user, Guid exerciseId, ExerciseValidation validation = ExerciseValidation.Access);
+
         Task<ExerciseViewModel> GetExerciseViewByIdAsync(HttpContext context, Guid exerciseId);
 
         Task<List<ExercisePreviewModel>> GetCurrUserCustomExercisesPreviewsAsync(HttpContext context);
@@ -22,6 +24,6 @@ namespace GymDB.API.Services.Interfaces
 
         Task RemoveExerciseByIdAsync(HttpContext context, Guid exerciseId);
 
-        Task<Exercise> GetExerciseByIdAsync(User user, Guid exerciseId, ExerciseValidation validation = ExerciseValidation.Access);
+        Task RemoveAllUserCustomExercisesAsync(Guid userId);
     }
 }

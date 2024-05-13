@@ -7,20 +7,23 @@ using GymDB.API.Exceptions;
 using GymDB.API.Mappers;
 using GymDB.API.Data.Enums;
 using GymDB.API.Models.ExerciseImage;
+using GymDB.API.Repositories;
 
 namespace GymDB.API.Services
 {
     public class ExerciseService : IExerciseService
     {
         private readonly IExerciseImageService exerciseImageService;
+        private readonly IExerciseRecordService exerciseRecordService;
+        private readonly IWorkoutExerciseService workoutExerciseService;
         private readonly IRoleService roleService;
         private readonly IExerciseRepository exerciseRepository;
-        private readonly IWorkoutExerciseService workoutExerciseService;
         private readonly IUserRepository userRepository;
 
-        public ExerciseService(IExerciseImageService exerciseImageService, IWorkoutExerciseService workoutExerciseService, IRoleService roleService, IExerciseRepository exerciseRepository, IUserRepository userRepository)
+        public ExerciseService(IExerciseImageService exerciseImageService, IExerciseRecordService exerciseRecordService, IWorkoutExerciseService workoutExerciseService, IRoleService roleService, IExerciseRepository exerciseRepository, IUserRepository userRepository)
         {
             this.exerciseImageService = exerciseImageService;
+            this.exerciseRecordService = exerciseRecordService;
             this.workoutExerciseService = workoutExerciseService;
             this.roleService = roleService;
             this.exerciseRepository = exerciseRepository;
@@ -41,6 +44,43 @@ namespace GymDB.API.Services
 
             if (createModel.Images != null)
                 await exerciseImageService.AddImagesToExerciseAsync(exercise, createModel.Images);
+        }
+
+        public async Task<Exercise> GetExerciseByIdAsync(User user, Guid exerciseId, ExerciseValidation validation = ExerciseValidation.Access)
+        {
+            Exercise? exercise = await exerciseRepository.GetExerciseByIdAsync(exerciseId);
+
+            if (exercise == null)
+                throw new NotFoundException("The specified exercise could not be found!");
+
+            // All users can't access exercises that are custom and not their own
+            if (IsExerciseCustom(exercise) && !IsExerciseOwnedByUser(exercise, user))
+                throw new ForbiddenException("You cannot access custom exercises that are owned by another user!");
+
+            switch (validation)
+            {
+                case ExerciseValidation.AdditionToWorkouts:
+                    if (IsExercisePrivateAdminCreated(exercise))
+                    {
+                        throw new ForbiddenException("You cannot add this exercise in your workouts!");
+                    }
+
+                    break;
+                default:  // Access or Modification cases
+                    // Public exercises turned into private can be only accessed by the root and other admins
+                    if (IsExercisePrivateAdminCreated(exercise) && roleService.IsUserNormie(user))
+                    {
+                        throw new ForbiddenException("You don't have permission to access this exercise!");
+                    }
+
+                    // Normal user can't update/remove public exercises
+                    if (validation == ExerciseValidation.Modification && IsExercisePublic(exercise) && roleService.IsUserNormie(user))
+                        throw new ForbiddenException("Only admin users can update/delete public exercises!");
+
+                    break;
+            }
+
+            return exercise;
         }
 
         public async Task<ExerciseViewModel> GetExerciseViewByIdAsync(HttpContext context, Guid exerciseId)
@@ -128,49 +168,25 @@ namespace GymDB.API.Services
             User currUser = await userRepository.GetCurrUserAsync(context);
             Exercise exercise = await GetExerciseByIdAsync(currUser, exerciseId, ExerciseValidation.Modification);
 
-            // Remove all related data associated with the exercise
-            await exerciseImageService.RemoveAllExerciseImagesAsync(exerciseId);
-            await workoutExerciseService.RemoveExerciseFromAllWorkoutsAsync(exerciseId);
-            // TODO: Remove all exercise records
-
-            await exerciseRepository.RemoveExerciseAsync(exercise);
+            await RemoveExerciseAsync(exercise);
         }
 
-        public async Task<Exercise> GetExerciseByIdAsync(User user, Guid exerciseId, ExerciseValidation validation = ExerciseValidation.Access)
+        public async Task RemoveAllUserCustomExercisesAsync(Guid userId)
         {
-            Exercise? exercise = await exerciseRepository.GetExerciseByIdAsync(exerciseId);
+            List<Exercise> customExercises = await exerciseRepository.GetAllUserCustomExercisesAsync(userId);
 
-            if (exercise == null)
-                throw new NotFoundException("The specified exercise could not be found!");
+            foreach (var exercise in customExercises)
+                await RemoveExerciseAsync(exercise);
+        }
 
-            // All users can't access exercises that are custom and not their own
-            if (IsExerciseCustom(exercise) && !IsExerciseOwnedByUser(exercise, user))
-                throw new ForbiddenException("You cannot access custom exercises that are owned by another user!");
+        private async Task RemoveExerciseAsync(Exercise exercise)
+        {
+            // Remove all related data associated with the exercise
+            await exerciseImageService.RemoveAllExerciseImagesAsync(exercise.Id);  // images
+            await exerciseRecordService.RemoveAllExerciseRecordsByExerciseIdAsync(exercise.Id);  // records
+            await workoutExerciseService.RemoveExerciseFromAllWorkoutsAsync(exercise.Id);  // workout exercises
 
-            switch(validation)
-            {
-                case ExerciseValidation.AdditionToWorkouts:
-                    if (IsExercisePrivateAdminCreated(exercise))
-                    {
-                        throw new ForbiddenException("You cannot add this exercise in your workouts!");
-                    }
-
-                    break;
-                default:  // Access or Modification cases
-                    // Public exercises turned into private can be only accessed by the root and other admins
-                    if (IsExercisePrivateAdminCreated(exercise) && roleService.IsUserNormie(user))
-                    {
-                        throw new ForbiddenException("You don't have permission to access this exercise!");
-                    }
-
-                    // Normal user can't update/remove public exercises
-                    if (validation == ExerciseValidation.Modification && IsExercisePublic(exercise) && roleService.IsUserNormie(user))
-                        throw new ForbiddenException("Only admin users can update/delete public exercises!");
-
-                    break;
-            }
-
-            return exercise;
+            await exerciseRepository.RemoveExerciseAsync(exercise);
         }
 
         private bool IsExerciseOwnedByUser(Exercise exercise, User user)

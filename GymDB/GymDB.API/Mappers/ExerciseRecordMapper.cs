@@ -1,7 +1,5 @@
 ﻿using GymDB.API.Data.Entities;
-using GymDB.API.Models.Exercise;
 using GymDB.API.Models.ExerciseRecord;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace GymDB.API.Mappers
 {
@@ -15,9 +13,7 @@ namespace GymDB.API.Mappers
                 OnCreated = DateTime.UtcNow,
                 OnModified = DateTime.UtcNow,
                 ExerciseId = exercise.Id,
-                Exercise = exercise,
-                OwnerId = owner.Id,
-                Owner = owner
+                OwnerId = owner.Id
             };
 
             record.ApplyUpdateModel(createModel);

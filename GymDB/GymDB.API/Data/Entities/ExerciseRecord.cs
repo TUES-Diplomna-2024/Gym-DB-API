@@ -23,12 +23,8 @@ namespace GymDB.API.Data.Entities
         [ForeignKey(nameof(User))]
         public Guid OwnerId { get; set; }
 
-        public User Owner { get; set; }
-
         [ForeignKey(nameof(Exercise))]
         public Guid ExerciseId { get; set; }
-
-        public Exercise Exercise { get; set; }
 
         public DateTime OnCreated { get; set; }
 

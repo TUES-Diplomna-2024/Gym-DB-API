@@ -92,9 +92,22 @@ namespace GymDB.API.Services
             User currUser = await userRepository.GetCurrUserAsync(context);
             Workout workout = await GetWorkoutByIdAsync(currUser, workoutId);
 
+            await RemoveWorkoutAsync(workout);
+        }
+
+        public async Task RemoveAllUserWorkoutsAsync(Guid userId)
+        {
+            List<Workout> workouts = await workoutRepository.GetAllUserWorkoutsAsync(userId);
+
+            foreach(var workout in workouts)
+                await RemoveWorkoutAsync(workout);
+        }
+
+        private async Task RemoveWorkoutAsync(Workout workout)
+        {
             await workoutExerciseService.RemoveAllWorkoutExercisesAsync(workout);
             await workoutRepository.RemoveWorkoutAsync(workout);
-        }
+        } 
 
         private async Task<Workout> GetWorkoutByIdAsync(User user, Guid workoutId)
         {

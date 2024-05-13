@@ -13,12 +13,18 @@ namespace GymDB.API.Services
         private readonly IUserRepository userRepository;
         private readonly IJwtService jwtService;
         private readonly IRoleService roleService;
+        private readonly IWorkoutService workoutService;
+        private readonly IExerciseService exerciseService;
+        private readonly IExerciseRecordService exericseRecordService;
 
-        public UserService(IUserRepository userRepository, IJwtService jwtService, IRoleService roleService)
+        public UserService(IUserRepository userRepository, IJwtService jwtService, IRoleService roleService, IWorkoutService workoutService, IExerciseService exerciseService, IExerciseRecordService exericseRecordService)
         {
             this.userRepository = userRepository;
             this.jwtService = jwtService;
             this.roleService = roleService;
+            this.workoutService = workoutService;
+            this.exerciseService = exerciseService;
+            this.exericseRecordService = exericseRecordService;
         }
 
         public async Task<UserAuthModel> SignInAsync(UserSignInModel signInModel)
@@ -109,7 +115,7 @@ namespace GymDB.API.Services
             if (!IsPasswordCorrect(password, currUser.Password))
                 throw new UnauthorizedException("Incorrect password!");
 
-            await userRepository.RemoveUserAsync(currUser);
+            await RemoveUserAsync(currUser);
         }
 
         public async Task RemoveUserByIdAsync(HttpContext context, Guid userId)
@@ -126,6 +132,16 @@ namespace GymDB.API.Services
 
             if (roleService.IsUserAdmin(user) && !roleService.IsUserSuperAdmin(currUser))
                 throw new ForbiddenException("You cannot delete another admin user! This can be done only by the root admin!");
+
+            await RemoveUserAsync(user);
+        }
+
+        private async Task RemoveUserAsync(User user)
+        {
+            // Remove all related data associated with the user
+            await workoutService.RemoveAllUserWorkoutsAsync(user.Id);  // workouts
+            await exerciseService.RemoveAllUserCustomExercisesAsync(user.Id);  // custom exercises
+            await exericseRecordService.RemoveAllUserExerciseRecordsAsync(user.Id);  // exercise records
 
             await userRepository.RemoveUserAsync(user);
         }

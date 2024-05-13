@@ -35,6 +35,9 @@ namespace GymDB.API.Services
             // Filter all files that are not images
             int removedCount = images.RemoveAll(file => !azureBlobService.IsFileAllowedInContainer(file));
 
+            if (images.Count == 0)
+                throw new OkException("No images were uploaded. All provided files are either invalid image types or their size is too big!");
+
             try
             {
                 foreach (var image in images)
@@ -59,8 +62,6 @@ namespace GymDB.API.Services
 
             if (removedCount != 0)
                 throw new OkException($"{removedCount} / {images.Count + removedCount} file(s) were not uploaded because they are either invalid image types or their size is too big!");
-        
-            // TODO: Add message when no image was saved
         }
 
         public async Task RemoveExerciseImagesAsync(Exercise exercise, List<Guid> exerciseImagesIds)
@@ -114,8 +115,6 @@ namespace GymDB.API.Services
             List<ExerciseImage> exerciseImages = await exerciseImageRepository.GetAllExerciseImagesByExerciseIdAsync(exerciseId);
 
             await exerciseImageRepository.RemoveExerciseImageRangeAsync(exerciseImages);  // Delete all exercise images from database
-
-            // TODO: If something fails take in consideration how to delete all images from the cloud that could not be deleted at the time
 
             foreach (var exerciseImage in exerciseImages)
             {

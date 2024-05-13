@@ -47,8 +47,6 @@ namespace GymDB.API.Services
             if (records.Count == 0)
                 return null;
 
-            // TODO: Validate calculations & think about ExerciseStatisticsModel? -> exception or null
-
             uint totalSets = 0, totalReps = 0, totalDuration = 0;
             double totalVolume = 0, totalWeight = 0;
             double maxVolume = 0, maxWeight = 0;
@@ -101,16 +99,28 @@ namespace GymDB.API.Services
             await exerciseRecordRepository.RemoveExerciseRecordAsync(record);
         }
 
+        public async Task RemoveAllExerciseRecordsByExerciseIdAsync(Guid exerciseId)
+        {
+            List<ExerciseRecord> toBeRemoved = await exerciseRecordRepository.GetAllExerciseRecordsByExerciseId(exerciseId);
+            await exerciseRecordRepository.RemoveExerciseRecordRangeAsync(toBeRemoved);
+        }
+
+        public async Task RemoveAllUserExerciseRecordsAsync(Guid userId)
+        {
+            List<ExerciseRecord> toBeRemoved = await exerciseRecordRepository.GetAllExerciseRecordsByOwnerId(userId);
+            await exerciseRecordRepository.RemoveExerciseRecordRangeAsync(toBeRemoved);
+        }
+
         private async Task<ExerciseRecord> GetExerciseRecordByIdAsync(HttpContext context, Guid recordId)
         {
             User currUser = await userRepository.GetCurrUserAsync(context);
             ExerciseRecord? record = await exerciseRecordRepository.GetExerciseRecordByIdAsync(recordId);
 
             if (record == null)
-                throw new NotFoundException("");  // TODO: Insert exception message
+                throw new NotFoundException("The specified exercise record could not be found!");
 
             if (!IsExerciseRecordOwnedByUser(record, currUser))
-                throw new ForbiddenException("");  // TODO: Insert exception message
+                throw new ForbiddenException("You cannot access exercise records that are owned by another user!");
 
             return record;
         }
