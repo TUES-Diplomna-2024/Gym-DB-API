@@ -45,7 +45,7 @@ namespace GymDB.API.Services
             List<ExerciseRecord> records = await GetAllUserExerciseRecordsSinceAsync(context, exerciseId, period);
 
             if (records.Count == 0)
-                throw new NoContentException("No statistics available for the selected time period!");
+                throw new OkException("No statistics available for the selected time period!");
 
             uint totalSets = 0, totalReps = 0, totalDuration = 0;
             double totalVolume = 0, totalWeight = 0;
