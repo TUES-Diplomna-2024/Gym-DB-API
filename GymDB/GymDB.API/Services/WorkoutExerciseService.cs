@@ -95,7 +95,7 @@ namespace GymDB.API.Services
 
             // Remove and update marked exercises
             await workoutExerciseRepository.RemoveWorkoutExerciseRangeAsync(wExercisesToBeRemoved);
-            await workoutExerciseRepository.UpdateWorkoutExerciseRangeAsync(origin);
+            await workoutExerciseRepository.UpdateWorkoutExerciseRangeAsync(wExercisesToBeUpdated);
 
             workout.ExerciseCount = exercisesIds?.Count ?? 0;
         }
