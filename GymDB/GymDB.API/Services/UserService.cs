@@ -15,16 +15,16 @@ namespace GymDB.API.Services
         private readonly IRoleService roleService;
         private readonly IWorkoutService workoutService;
         private readonly IExerciseService exerciseService;
-        private readonly IExerciseRecordService exericseRecordService;
+        private readonly IExerciseRecordRepository exerciseRecordRepository;
 
-        public UserService(IUserRepository userRepository, IJwtService jwtService, IRoleService roleService, IWorkoutService workoutService, IExerciseService exerciseService, IExerciseRecordService exericseRecordService)
+        public UserService(IUserRepository userRepository, IJwtService jwtService, IRoleService roleService, IWorkoutService workoutService, IExerciseService exerciseService, IExerciseRecordRepository exerciseRecordRepository)
         {
             this.userRepository = userRepository;
             this.jwtService = jwtService;
             this.roleService = roleService;
             this.workoutService = workoutService;
             this.exerciseService = exerciseService;
-            this.exericseRecordService = exericseRecordService;
+            this.exerciseRecordRepository = exerciseRecordRepository;
         }
 
         public async Task<UserAuthModel> SignInAsync(UserSignInModel signInModel)
@@ -141,7 +141,7 @@ namespace GymDB.API.Services
             // Remove all related data associated with the user
             await workoutService.RemoveAllUserWorkoutsAsync(user.Id);  // workouts
             await exerciseService.RemoveAllUserCustomExercisesAsync(user.Id);  // custom exercises
-            await exericseRecordService.RemoveAllUserExerciseRecordsAsync(user.Id);  // exercise records
+            await exerciseRecordRepository.RemoveAllUserExerciseRecordsAsync(user.Id);  // exercise records
 
             await userRepository.RemoveUserAsync(user);
         }

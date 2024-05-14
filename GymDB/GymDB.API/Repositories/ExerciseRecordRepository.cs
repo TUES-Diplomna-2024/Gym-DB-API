@@ -67,7 +67,19 @@ namespace GymDB.API.Repositories
             await context.SaveChangesAsync();
         }
 
-        public async Task RemoveExerciseRecordRangeAsync(List<ExerciseRecord> exerciseRecords)
+        public async Task RemoveAllExerciseRecordsByExerciseIdAsync(Guid exerciseId)
+        {
+            List<ExerciseRecord> toBeRemoved = await GetAllExerciseRecordsByExerciseId(exerciseId);
+            await RemoveExerciseRecordRangeAsync(toBeRemoved);
+        }
+
+        public async Task RemoveAllUserExerciseRecordsAsync(Guid userId)
+        {
+            List<ExerciseRecord> toBeRemoved = await GetAllExerciseRecordsByOwnerId(userId);
+            await RemoveExerciseRecordRangeAsync(toBeRemoved);
+        }
+
+        private async Task RemoveExerciseRecordRangeAsync(List<ExerciseRecord> exerciseRecords)
         {
             context.ExerciseRecords.RemoveRange(exerciseRecords);
             await context.SaveChangesAsync();

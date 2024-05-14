@@ -81,7 +81,7 @@ namespace GymDB.API.Services
 
             foreach(var workout in workoutsFound)
             {
-                await workoutExerciseService.AppendExerciseToWorkoutAsync(workout, exercise!);
+                await workoutExerciseService.AppendExerciseToWorkoutAsync(workout, exercise);
             }
 
             await workoutRepository.UpdateWorkoutRangeAsync(workoutsFound);

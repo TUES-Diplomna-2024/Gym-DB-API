@@ -10,14 +10,10 @@ namespace GymDB.API.Services.Interfaces
 
         Task<List<ExerciseRecordViewModel>> GetCurrUserExerciseRecordsViewsAsync(HttpContext context, Guid exerciseId, StatisticPeriod period);
 
-        Task<ExerciseStatisticsModel?> GetCurrUserExerciseStatisticsAsync(HttpContext context, Guid exerciseId, StatisticPeriod period, StatisticMeasurement measurement);
+        Task<ExerciseStatisticsModel> GetCurrUserExerciseStatisticsAsync(HttpContext context, Guid exerciseId, StatisticPeriod period, StatisticMeasurement measurement);
 
         Task UpdateExerciseRecordByIdAsync(HttpContext context, Guid recordId, ExerciseRecordCreateUpdateModel updateModel);
 
         Task RemoveExerciseRecordByIdAsync(HttpContext context, Guid recordId);
-
-        Task RemoveAllExerciseRecordsByExerciseIdAsync(Guid exerciseId);
-
-        Task RemoveAllUserExerciseRecordsAsync(Guid userId);
     }
 }

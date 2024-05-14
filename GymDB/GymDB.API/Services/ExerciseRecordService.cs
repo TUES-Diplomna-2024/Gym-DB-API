@@ -40,12 +40,12 @@ namespace GymDB.API.Services
             return records.Select(record => record.ToViewModel()).ToList();
         }
 
-        public async Task<ExerciseStatisticsModel?> GetCurrUserExerciseStatisticsAsync(HttpContext context, Guid exerciseId, StatisticPeriod period, StatisticMeasurement measurement)
+        public async Task<ExerciseStatisticsModel> GetCurrUserExerciseStatisticsAsync(HttpContext context, Guid exerciseId, StatisticPeriod period, StatisticMeasurement measurement)
         {
             List<ExerciseRecord> records = await GetAllUserExerciseRecordsSinceAsync(context, exerciseId, period);
 
             if (records.Count == 0)
-                return null;
+                throw new NoContentException("No records found for the selected time period!");
 
             uint totalSets = 0, totalReps = 0, totalDuration = 0;
             double totalVolume = 0, totalWeight = 0;
@@ -97,18 +97,6 @@ namespace GymDB.API.Services
         {
             ExerciseRecord record = await GetExerciseRecordByIdAsync(context, recordId);
             await exerciseRecordRepository.RemoveExerciseRecordAsync(record);
-        }
-
-        public async Task RemoveAllExerciseRecordsByExerciseIdAsync(Guid exerciseId)
-        {
-            List<ExerciseRecord> toBeRemoved = await exerciseRecordRepository.GetAllExerciseRecordsByExerciseId(exerciseId);
-            await exerciseRecordRepository.RemoveExerciseRecordRangeAsync(toBeRemoved);
-        }
-
-        public async Task RemoveAllUserExerciseRecordsAsync(Guid userId)
-        {
-            List<ExerciseRecord> toBeRemoved = await exerciseRecordRepository.GetAllExerciseRecordsByOwnerId(userId);
-            await exerciseRecordRepository.RemoveExerciseRecordRangeAsync(toBeRemoved);
         }
 
         private async Task<ExerciseRecord> GetExerciseRecordByIdAsync(HttpContext context, Guid recordId)

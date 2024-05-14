@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Hangfire;
-using Hangfire.PostgreSql;
 using Azure.Storage;
 using GymDB.API.Middlewares;
 using GymDB.API.Repositories.Interfaces;
@@ -79,11 +77,6 @@ namespace GymDB.API
             var connectionStrings = builder.Services.BuildServiceProvider()
                                                     .GetService<IOptions<ConnectionStrings>>()!.Value;
 
-            builder.Services.AddHangfire(options =>
-                             options.UsePostgreSqlStorage(c => c.UseNpgsqlConnection(connectionStrings.PostgresConnection)));
-
-            builder.Services.AddHangfireServer();
-
             // Db Context
             builder.Services.AddDbContext<ApplicationContext>(c => c.UseNpgsql(connectionStrings.PostgresConnection));
 
@@ -114,8 +107,7 @@ namespace GymDB.API
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
-                app.UseHangfireDashboard();
+                // app.UseSwaggerUI();
             }
 
             app.UseCors();
@@ -131,7 +123,7 @@ namespace GymDB.API
             app.UseAccessTokens();
             app.UseRefreshTokens();
 
-            app.SeedDBAsync().GetAwaiter().GetResult();
+            app.SeedDbAsync().GetAwaiter().GetResult();
         }
 
         public static void Main(string[] args)

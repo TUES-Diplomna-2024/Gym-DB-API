@@ -46,7 +46,7 @@ namespace GymDB.API.Controllers
         [HttpGet("stats"), CustomAuthorize]
         public async Task<IActionResult> GetCurrUserExerciseStatisticsAsync(Guid exerciseId, StatisticPeriod period, StatisticMeasurement measurement)
         {
-            ExerciseStatisticsModel? statistics = await exerciseRecordService.GetCurrUserExerciseStatisticsAsync(HttpContext, exerciseId, period, measurement);
+            ExerciseStatisticsModel statistics = await exerciseRecordService.GetCurrUserExerciseStatisticsAsync(HttpContext, exerciseId, period, measurement);
 
             return Ok(statistics);
         }

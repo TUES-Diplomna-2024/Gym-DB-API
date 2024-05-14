@@ -19,6 +19,8 @@ namespace GymDB.API.Repositories.Interfaces
 
         Task RemoveExerciseRecordAsync(ExerciseRecord record);
 
-        Task RemoveExerciseRecordRangeAsync(List<ExerciseRecord> exerciseRecords);
+        Task RemoveAllExerciseRecordsByExerciseIdAsync(Guid exerciseId);
+
+        Task RemoveAllUserExerciseRecordsAsync(Guid userId);
     }
 }

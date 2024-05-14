@@ -7,26 +7,25 @@ using GymDB.API.Exceptions;
 using GymDB.API.Mappers;
 using GymDB.API.Data.Enums;
 using GymDB.API.Models.ExerciseImage;
-using GymDB.API.Repositories;
 
 namespace GymDB.API.Services
 {
     public class ExerciseService : IExerciseService
     {
         private readonly IExerciseImageService exerciseImageService;
-        private readonly IExerciseRecordService exerciseRecordService;
         private readonly IWorkoutExerciseService workoutExerciseService;
         private readonly IRoleService roleService;
         private readonly IExerciseRepository exerciseRepository;
+        private readonly IExerciseRecordRepository exerciseRecordRepository;
         private readonly IUserRepository userRepository;
 
-        public ExerciseService(IExerciseImageService exerciseImageService, IExerciseRecordService exerciseRecordService, IWorkoutExerciseService workoutExerciseService, IRoleService roleService, IExerciseRepository exerciseRepository, IUserRepository userRepository)
+        public ExerciseService(IExerciseImageService exerciseImageService, IWorkoutExerciseService workoutExerciseService, IRoleService roleService, IExerciseRepository exerciseRepository, IExerciseRecordRepository exerciseRecordRepository, IUserRepository userRepository)
         {
             this.exerciseImageService = exerciseImageService;
-            this.exerciseRecordService = exerciseRecordService;
             this.workoutExerciseService = workoutExerciseService;
             this.roleService = roleService;
             this.exerciseRepository = exerciseRepository;
+            this.exerciseRecordRepository = exerciseRecordRepository;
             this.userRepository = userRepository;
         }
 
@@ -183,7 +182,7 @@ namespace GymDB.API.Services
         {
             // Remove all related data associated with the exercise
             await exerciseImageService.RemoveAllExerciseImagesAsync(exercise.Id);  // images
-            await exerciseRecordService.RemoveAllExerciseRecordsByExerciseIdAsync(exercise.Id);  // records
+            await exerciseRecordRepository.RemoveAllExerciseRecordsByExerciseIdAsync(exercise.Id);  // records
             await workoutExerciseService.RemoveExerciseFromAllWorkoutsAsync(exercise.Id);  // workout exercises
 
             await exerciseRepository.RemoveExerciseAsync(exercise);
