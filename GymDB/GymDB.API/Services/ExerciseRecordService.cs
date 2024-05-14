@@ -45,7 +45,7 @@ namespace GymDB.API.Services
             List<ExerciseRecord> records = await GetAllUserExerciseRecordsSinceAsync(context, exerciseId, period);
 
             if (records.Count == 0)
-                throw new NoContentException("No records found for the selected time period!");
+                throw new NoContentException("No statistics available for the selected time period!");
 
             uint totalSets = 0, totalReps = 0, totalDuration = 0;
             double totalVolume = 0, totalWeight = 0;
@@ -68,6 +68,9 @@ namespace GymDB.API.Services
             double avgVolume = totalVolume / records.Count;
             double avgWeight = totalWeight / records.Count;
 
+            List<StatisticDataPoint> dataPoints = records.Select(record => record.ToStatisticDataPoint(measurement))
+                                                         .ToList();
+
             return new ExerciseStatisticsModel
             {
                 TotalSets = totalSets,
@@ -81,7 +84,7 @@ namespace GymDB.API.Services
                 MaxVolume = maxVolume,
                 MaxWeight = maxWeight,
 
-                DataPoints = GetStatisticDataPoints(records, measurement)
+                DataPoints = dataPoints
             };
         }
 
@@ -120,32 +123,6 @@ namespace GymDB.API.Services
             await exerciseService.GetExerciseByIdAsync(currUser, exerciseId);
 
             return await exerciseRecordRepository.GetAllUserExerciseRecordsSinceAsync(currUser.Id, exerciseId, period);
-        }
-
-        private List<StatisticDataPoint> GetStatisticDataPoints(List<ExerciseRecord> records, StatisticMeasurement measurement)
-        {
-            List<StatisticDataPoint> points = new();
-
-            switch (measurement)
-            {
-                case StatisticMeasurement.Sets:
-                    points = records.Select(record => new StatisticDataPoint { Value = record.Sets, Date = record.OnCreated }).ToList();
-                    break;
-                case StatisticMeasurement.Reps:
-                    points = records.Select(record => new StatisticDataPoint { Value = record.Reps, Date = record.OnCreated }).ToList();
-                    break;
-                case StatisticMeasurement.Volume:
-                    points = records.Select(record => new StatisticDataPoint { Value = record.Volume, Date = record.OnCreated }).ToList();
-                    break;
-                case StatisticMeasurement.Duration:
-                    points = records.Select(record => new StatisticDataPoint { Value = record.Duration, Date = record.OnCreated }).ToList();
-                    break;
-                case StatisticMeasurement.Weight:
-                    points = records.Select(record => new StatisticDataPoint { Value = record.Weight, Date = record.OnCreated }).ToList();
-                    break;
-            }
-
-            return points;
         }
 
         private bool IsExerciseRecordOwnedByUser(ExerciseRecord record, User user)

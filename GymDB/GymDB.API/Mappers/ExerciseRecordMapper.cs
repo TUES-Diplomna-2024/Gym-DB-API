@@ -1,5 +1,7 @@
 ﻿using GymDB.API.Data.Entities;
+using GymDB.API.Data.Enums;
 using GymDB.API.Models.ExerciseRecord;
+using GymDB.API.Models.Exercise;
 
 namespace GymDB.API.Mappers
 {
@@ -40,6 +42,36 @@ namespace GymDB.API.Mappers
                 Reps = record.Reps,
                 Weight = record.Weight,
                 Duration = record.Duration
+            };
+        }
+
+        public static StatisticDataPoint ToStatisticDataPoint(this ExerciseRecord record, StatisticMeasurement measurement)
+        {
+            dynamic value = null;
+
+            switch (measurement)
+            {
+                case StatisticMeasurement.Sets:
+                    value = record.Sets;
+                    break;
+                case StatisticMeasurement.Reps:
+                    value = record.Reps;
+                    break;
+                case StatisticMeasurement.Volume:
+                    value = record.Volume;
+                    break;
+                case StatisticMeasurement.Duration:
+                    value = record.Duration;
+                    break;
+                case StatisticMeasurement.Weight:
+                    value = record.Weight;
+                    break;
+            }
+
+            return new StatisticDataPoint
+            {
+                Value = value,
+                Date = record.OnCreated
             };
         }
     }
