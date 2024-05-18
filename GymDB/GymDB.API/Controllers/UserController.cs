@@ -117,11 +117,8 @@ namespace GymDB.API.Controllers
         /* ======================================================================== DELETE REQUESTS */
 
         [HttpDelete("current"), CustomAuthorize]
-        public async Task<IActionResult> RemoveCurrUserAsync([FromForm, Password] string password)
+        public async Task<IActionResult> RemoveCurrUserAsync([FromForm] string password)
         {
-            if (!ModelState.IsValid)
-                return BadRequest();
-
             await userService.RemoveCurrUserAsync(HttpContext, password);
 
             return NoContent();
