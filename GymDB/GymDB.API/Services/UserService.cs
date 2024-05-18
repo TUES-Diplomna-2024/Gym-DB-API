@@ -113,7 +113,7 @@ namespace GymDB.API.Services
                 throw new ForbiddenException("The root admin cannot be deleted!");
 
             if (!IsPasswordCorrect(password, currUser.Password))
-                throw new UnauthorizedException("Incorrect password!");
+                throw new ForbiddenException("Incorrect password!");
 
             await RemoveUserAsync(currUser);
         }
