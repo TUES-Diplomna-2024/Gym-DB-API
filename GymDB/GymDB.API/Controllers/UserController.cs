@@ -76,7 +76,7 @@ namespace GymDB.API.Controllers
         [HttpGet("{userId}"), CustomAuthorize]
         public async Task<IActionResult> GetUserProfileByIdAsync(Guid userId)
         {
-            UserProfileModel userProfile = await userService.GetUserProfileByIdAsync(userId);
+            UserProfileExtendedModel userProfile = await userService.GetUserProfileByIdAsync(HttpContext, userId);
 
             return Ok(userProfile);
         }
@@ -85,7 +85,7 @@ namespace GymDB.API.Controllers
         [HttpGet("search"), CustomAuthorize(Roles = "SUPER_ADMIN,ADMIN")]
         public async Task<IActionResult> FindUsersPreviewsAsync([FromQuery] string query)
         {
-            List<UserPreviewModel> searchResults = await userService.FindUsersPreviewsAsync(HttpContext, query);
+            List<UserPreviewModel> searchResults = await userService.FindUsersPreviewsAsync(query);
 
             return Ok(searchResults);
         }

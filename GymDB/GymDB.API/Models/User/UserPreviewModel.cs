@@ -13,7 +13,5 @@ namespace GymDB.API.Models.User
         public string RoleColor { get; set; }
 
         public DateOnly OnCreated { get; set; }
-
-        public AssignableRole? AssignableRole { get; set; }
     }
 }

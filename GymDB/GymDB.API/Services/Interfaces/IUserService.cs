@@ -12,9 +12,9 @@ namespace GymDB.API.Services.Interfaces
 
         Task<UserProfileModel> GetCurrUserProfileAsync(HttpContext context);
 
-        Task<UserProfileModel> GetUserProfileByIdAsync(Guid userId);
+        Task<UserProfileExtendedModel> GetUserProfileByIdAsync(HttpContext context, Guid userId);
 
-        Task<List<UserPreviewModel>> FindUsersPreviewsAsync(HttpContext context, string query);
+        Task<List<UserPreviewModel>> FindUsersPreviewsAsync(string query);
 
         Task<bool> IsUserWithIdExistAsync(Guid userId);
 

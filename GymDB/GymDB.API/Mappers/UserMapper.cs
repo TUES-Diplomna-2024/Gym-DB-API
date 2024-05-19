@@ -75,7 +75,27 @@ namespace GymDB.API.Mappers
             };
         }
 
-        public static UserPreviewModel ToPreviewModel(this User user, AssignableRole? assignableRole)
+        public static UserProfileExtendedModel ToProfileExtendedModel(this User user, AssignableRole? assignableRole, bool isRemovable)
+        {
+            return new UserProfileExtendedModel
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                RoleName = user.Role.Name,
+                RoleColor = user.Role.Color,
+                Gender = user.Gender,
+                Height = user.Height,
+                Weight = user.Weight,
+                BirthDate = user.BirthDate,
+                OnCreated = user.OnCreated,
+
+                AssignableRole = assignableRole,
+                IsRemovable = isRemovable
+            };
+        }
+
+        public static UserPreviewModel ToPreviewModel(this User user)
         {
             return new UserPreviewModel
             {
@@ -83,21 +103,8 @@ namespace GymDB.API.Mappers
                 Username = user.Username,
                 Email = user.Email,
                 RoleColor = user.Role.Color,
-                OnCreated = user.OnCreated,
-                AssignableRole = assignableRole
+                OnCreated = user.OnCreated
             };
-        }
-
-        private static int CalculateAge(DateOnly birthDate)
-        {
-            DateOnly currDate = DateOnly.FromDateTime(DateTime.UtcNow);
-
-            int age = currDate.Year - birthDate.Year;
-
-            if (currDate.DayOfYear < birthDate.DayOfYear)
-                age--;
-
-            return age;
         }
     }
 }

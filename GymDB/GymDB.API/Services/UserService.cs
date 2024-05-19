@@ -74,23 +74,22 @@ namespace GymDB.API.Services
             return currUser.ToProfileModel();
         }
 
-        public async Task<UserProfileModel> GetUserProfileByIdAsync(Guid userId)
+        public async Task<UserProfileExtendedModel> GetUserProfileByIdAsync(HttpContext context, Guid userId)
         {
+            User currUser = await userRepository.GetCurrUserAsync(context);
             User? user = await userRepository.GetUserByIdAsync(userId);
 
             if (user == null)
                 throw new NotFoundException("The specified user could not be found!");
 
-            return user.ToProfileModel();
+            return user.ToProfileExtendedModel(GetAssignableRoleForUser(currUser, user), IsUserRemovable(currUser, user));
         }
 
-        public async Task<List<UserPreviewModel>> FindUsersPreviewsAsync(HttpContext context, string query)
+        public async Task<List<UserPreviewModel>> FindUsersPreviewsAsync(string query)
         {
-            User currUser = await userRepository.GetCurrUserAsync(context);
-
             List<User> matchingUsers = await userRepository.FindAllUsersMatchingUsernameOrEmailAsync(query);
 
-            return matchingUsers.Select(user => user.ToPreviewModel(GetAssignableRoleForUser(currUser, user))).ToList();
+            return matchingUsers.Select(user => user.ToPreviewModel()).ToList();
         }
 
         public async Task<bool> IsUserWithIdExistAsync(Guid userId)
@@ -164,6 +163,17 @@ namespace GymDB.API.Services
 
             // Normal users can be promoted to admins, and admins can be downgraded to normal users
             return roleService.IsUserNormie(targetUser) ? AssignableRole.Admin : AssignableRole.Normie;           
+        }
+
+        private bool IsUserRemovable(User currUser, User targetUser)
+        {
+            if (roleService.IsUserSuperAdmin(targetUser) ||
+                (roleService.IsUserAdmin(targetUser) && roleService.IsUserAdmin(currUser)))
+            {
+                return false;
+            }
+
+            return true;           
         }
     }
 }
