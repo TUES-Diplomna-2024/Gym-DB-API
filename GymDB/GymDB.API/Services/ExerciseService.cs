@@ -89,7 +89,7 @@ namespace GymDB.API.Services
             Exercise exercise = await GetExerciseByIdAsync(currUser, exerciseId);
             List<ExerciseImageViewModel> images = await exerciseImageService.GetExerciseImagesViewsAsync(exerciseId);
 
-            return exercise.ToViewModel(images);
+            return exercise.ToViewModel(IsExerciseCustom(exercise), images);
         }
 
         public async Task<List<ExercisePreviewModel>> GetCurrUserCustomExercisesPreviewsAsync(HttpContext context)

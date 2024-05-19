@@ -40,12 +40,11 @@ namespace GymDB.API.Mappers
             exercise.Equipment = update.Equipment;
         }
 
-        public static ExerciseViewModel ToViewModel(this Exercise exercise, List<ExerciseImageViewModel>? images)
+        public static ExerciseViewModel ToViewModel(this Exercise exercise, bool isCustom, List<ExerciseImageViewModel>? images)
         {
             return new ExerciseViewModel
             {
                 Id = exercise.Id,
-
                 Name = exercise.Name,
                 Instructions = exercise.Instructions,
                 MuscleGroups = exercise.MuscleGroups,
@@ -53,6 +52,7 @@ namespace GymDB.API.Mappers
                 Difficulty = exercise.Difficulty,
                 Equipment = exercise.Equipment,
                 Visibility = exercise.Visibility,
+                IsCustom = isCustom,
                 Images = images.IsNullOrEmpty() ? null : images
             };
         }

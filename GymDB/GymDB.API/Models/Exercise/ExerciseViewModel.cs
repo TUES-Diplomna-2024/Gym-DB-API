@@ -21,6 +21,8 @@ namespace GymDB.API.Models.Exercise
 
         public ExerciseVisibility Visibility { get; set; }
 
+        public bool IsCustom { get; set; }
+
         public List<ExerciseImageViewModel>? Images { get; set; }
     }
 }
