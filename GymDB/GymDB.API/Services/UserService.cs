@@ -82,7 +82,7 @@ namespace GymDB.API.Services
             if (user == null)
                 throw new NotFoundException("The specified user could not be found!");
 
-            return user.ToProfileExtendedModel(GetAssignableRoleForUser(currUser, user), IsUserRemovable(currUser, user));
+            return user.ToProfileExtendedModel(GetAssignableRoleForUser(currUser, user));
         }
 
         public async Task<List<UserPreviewModel>> FindUsersPreviewsAsync(string query)
@@ -163,17 +163,6 @@ namespace GymDB.API.Services
 
             // Normal users can be promoted to admins, and admins can be downgraded to normal users
             return roleService.IsUserNormie(targetUser) ? AssignableRole.Admin : AssignableRole.Normie;           
-        }
-
-        private bool IsUserRemovable(User currUser, User targetUser)
-        {
-            if (roleService.IsUserSuperAdmin(targetUser) ||
-                (roleService.IsUserAdmin(targetUser) && roleService.IsUserAdmin(currUser)))
-            {
-                return false;
-            }
-
-            return true;           
         }
     }
 }

@@ -75,7 +75,7 @@ namespace GymDB.API.Mappers
             };
         }
 
-        public static UserProfileExtendedModel ToProfileExtendedModel(this User user, AssignableRole? assignableRole, bool isRemovable)
+        public static UserProfileExtendedModel ToProfileExtendedModel(this User user, AssignableRole? assignableRole)
         {
             return new UserProfileExtendedModel
             {
@@ -89,9 +89,7 @@ namespace GymDB.API.Mappers
                 Weight = user.Weight,
                 BirthDate = user.BirthDate,
                 OnCreated = user.OnCreated,
-
-                AssignableRole = assignableRole,
-                IsRemovable = isRemovable
+                AssignableRole = assignableRole
             };
         }
 
