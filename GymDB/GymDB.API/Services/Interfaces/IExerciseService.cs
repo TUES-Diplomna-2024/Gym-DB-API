@@ -1,48 +1,29 @@
-﻿using GymDB.API.Data.Entities;
-using GymDB.API.Models.Exercise;
+﻿using GymDB.API.Models.Exercise;
+using GymDB.API.Data.Enums;
+using GymDB.API.Data.Entities;
 
 namespace GymDB.API.Services.Interfaces
 {
     public interface IExerciseService
     {
-        List<Exercise> GetAllPublicExercises();
+        Task CreateNewExerciseAsync(HttpContext context, ExerciseCreateModel createModel);
 
-        List<Exercise> GetAllPrivateAppExercises();
+        Task<Exercise> GetExerciseByIdAsync(User user, Guid exerciseId, ExerciseValidation validation = ExerciseValidation.Access);
 
-        List<Exercise> GetAllUserCustomExercises(User user);
+        Task<ExerciseViewModel> GetExerciseViewByIdAsync(HttpContext context, Guid exerciseId);
 
-        List<Exercise> GetAllUserPublicExercises(User user);
+        Task<List<ExercisePreviewModel>> GetCurrUserCustomExercisesPreviewsAsync(HttpContext context);
 
-        List<Exercise> GetAllUserPrivateExercises(User user);
+        Task<List<ExercisePreviewModel>> FindPublicAndCustomExercisesPreviewsAsync(HttpContext context, string name);
 
-        List<Exercise> GetUserAccessibleExercisesByIds(List<Guid> ids, User user);
+        Task<List<ExercisePreviewModel>> FindAdminCreatedExercisesPreviewsAsync(ExerciseSearchModel searchModel);
 
-        List<Exercise> GetExercisesBySearch(ExerciseSearchModel search, User user);
+        Task UpdateExerciseByIdAsync(HttpContext context, Guid exerciseId, ExerciseUpdateModel updateModel);
 
-        List<ExercisePreviewModel> GetExercisesPreviews(List<Exercise> exercises);
+        Task UpdateExerciseVisibilityAsync(Guid exerciseId, ExerciseVisibility visibility);
 
-        Exercise? GetExerciseById(Guid id);
+        Task RemoveExerciseByIdAsync(HttpContext context, Guid exerciseId);
 
-        List<Uri>? GetExerciseImageUris(Exercise exercise);
-
-        bool IsExerciseOwnedByUser(Exercise exercise, User user);
-
-        void AddExercise(Exercise exercise);
-
-        void AddImagesToExercise(Exercise exercise, List<IFormFile> images);
-
-        void UpdateExerciseVisibility(Exercise exercise, bool isPrivate);
-
-        void UpdateExercise(Exercise exercise, ExerciseUpdateModel update);
-
-        void UpdateExercise(Exercise exercise);
-
-        void RemoveExercise(Exercise exercise);
-
-        void RemoveAllUserPrivateExercises(User user);
-
-        void RemoveUserOwnershipOfPublicExercises(User user);
-
-        void RemoveAllExerciseImages(Exercise exercise);
+        Task RemoveAllUserCustomExercisesAsync(Guid userId);
     }
 }

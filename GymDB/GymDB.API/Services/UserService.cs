@@ -1,119 +1,168 @@
-﻿using GymDB.API.Data;
-using GymDB.API.Data.Entities;
-using GymDB.API.Mappers;
+﻿using GymDB.API.Data.Entities;
 using GymDB.API.Models.User;
+using GymDB.API.Repositories.Interfaces;
 using GymDB.API.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using GymDB.API.Mappers;
+using GymDB.API.Exceptions;
+using GymDB.API.Data.Enums;
 
 namespace GymDB.API.Services
 {
     public class UserService : IUserService
     {
-        private readonly ApplicationContext context;
-
-        private readonly IExerciseService exerciseService;
-        private readonly IExerciseRecordService exerciseRecordService;
+        private readonly IUserRepository userRepository;
+        private readonly IJwtService jwtService;
+        private readonly IRoleService roleService;
         private readonly IWorkoutService workoutService;
+        private readonly IExerciseService exerciseService;
+        private readonly IExerciseRecordRepository exerciseRecordRepository;
 
-        public UserService(ApplicationContext context, IExerciseService exerciseService, IExerciseRecordService exerciseRecordService, IWorkoutService workoutService)
-        {                                              
-            this.context = context;
-            this.exerciseService = exerciseService;
-            this.exerciseRecordService = exerciseRecordService;
+        public UserService(IUserRepository userRepository, IJwtService jwtService, IRoleService roleService, IWorkoutService workoutService, IExerciseService exerciseService, IExerciseRecordRepository exerciseRecordRepository)
+        {
+            this.userRepository = userRepository;
+            this.jwtService = jwtService;
+            this.roleService = roleService;
             this.workoutService = workoutService;
+            this.exerciseService = exerciseService;
+            this.exerciseRecordRepository = exerciseRecordRepository;
         }
 
-        public List<User> GetAllUsers()
-            => context.Users.Include(user => user.Role).ToList();
-
-        public List<UserPreviewModel> GetAllUserPreviews()
-            => GetAllUsers().Select(user => user.ToPreviewModel())
-                            .OrderBy(user => user.RoleName)
-                            .ThenBy(user => user.Username)
-                            .ToList(); 
-
-        public User? GetUserById(Guid id)
-            => context.Users.Include(user => user.Role)
-                            .FirstOrDefault(user => user.Id == id);
-
-        public User? GetCurrUser(HttpContext context)
+        public async Task<UserAuthModel> SignInAsync(UserSignInModel signInModel)
         {
-            Guid id;
+            User? user = await userRepository.GetUserByEmailAsync(signInModel.Email);
 
-            if (Guid.TryParse(context.User.FindFirstValue("userId"), out id))
-                return GetUserById(id);
+            if (user != null && IsPasswordCorrect(signInModel.Password, user.Password))
+            {
+                string accessToken = jwtService.GenerateNewAccessToken(user.Id, user.Role.NormalizedName);
+                string refreshToken = jwtService.GenerateNewRefreshToken(user.Id);
 
-            return null;
+                return new UserAuthModel(accessToken, refreshToken);
+            }
+
+            throw new UnauthorizedException("Invalid sign in attempt!");
         }
 
-        public User? GetUserByEmail(string email)
-            => context.Users.Include(user => user.Role)
-                            .FirstOrDefault(user => user.Email == email);
-
-        public User? GetUserByEmailAndPassword(string email, string password)
+        public async Task<UserAuthModel> SignUpAsync(UserSignUpModel signUpModel)
         {
-            User? user = GetUserByEmail(email);
+            if (await IsUserAlreadyRegisteredWithEmailAsync(signUpModel.Email))
+                throw new ConflictException($"Email '{signUpModel.Email}' is already in use by another user!");
 
-            if (user != null && IsUserPasswordCorrect(user, password))
-                return user;
+            User user = signUpModel.ToEntity();
 
-            return null;
+            await roleService.AssignUserDefaultRoleAsync(user);
+            await userRepository.AddUserAsync(user);
+
+            string accessToken = jwtService.GenerateNewAccessToken(user.Id, user.Role.NormalizedName);
+            string refreshToken = jwtService.GenerateNewRefreshToken(user.Id);
+
+            return new UserAuthModel(accessToken, refreshToken);
         }
 
-        public bool IsUserAlreadyRegisteredWithEmail(string email)
-            => GetUserByEmail(email) != null;
-
-        public bool IsUserPasswordCorrect(User user, string password)
-            => BCrypt.Net.BCrypt.EnhancedVerify(password, user.Password);
-
-        public string GetHashedPassword(string password)
-            => BCrypt.Net.BCrypt.EnhancedHashPassword(password, 13);
-
-        public void AddUser(User user)
+        public async Task<string> RefreshAsync(HttpContext context)
         {
-            user.Password = GetHashedPassword(user.Password);
-            user.Gender = user.Gender.ToLower();
+            User currUser = await userRepository.GetCurrUserAsync(context);
 
-            context.Users.Add(user);
-            context.SaveChanges();
+            string accessToken = jwtService.GenerateNewAccessToken(currUser.Id, currUser.Role.NormalizedName);
+
+            return accessToken;
         }
 
-        public void UpdateUser(User user, UserUpdateModel update)
+        public async Task<UserProfileModel> GetCurrUserProfileAsync(HttpContext context)
         {
-            user.Username = update.Username;
-            user.BirthDate = update.BirthDate;
-            user.Gender = update.Gender;
-            user.Height = update.Height;
-            user.Weight = update.Weight;
+            User currUser = await userRepository.GetCurrUserAsync(context);
 
-            UpdateUser(user);
+            return currUser.ToProfileModel();
         }
 
-        public void UpdateUser(User user)
+        public async Task<UserProfileExtendedModel> GetUserProfileByIdAsync(HttpContext context, Guid userId)
         {
-            user.OnModified = DateTime.UtcNow;
+            User currUser = await userRepository.GetCurrUserAsync(context);
+            User? user = await userRepository.GetUserByIdAsync(userId);
 
-            context.Users.Update(user);
-            context.SaveChanges();
+            if (user == null)
+                throw new NotFoundException("The specified user could not be found!");
+
+            return user.ToProfileExtendedModel(GetAssignableRoleForUser(currUser, user));
         }
 
-        public void RemoveUserRelatedData(User user)
+        public async Task<List<UserPreviewModel>> FindUsersPreviewsAsync(string query)
         {
-            workoutService.RemoveAllUserWorkouts(user);
+            List<User> matchingUsers = await userRepository.FindAllUsersMatchingUsernameOrEmailAsync(query);
 
-            exerciseRecordService.RemoveAllUserRecords(user);
-
-            exerciseService.RemoveAllUserPrivateExercises(user);
-            exerciseService.RemoveUserOwnershipOfPublicExercises(user);
+            return matchingUsers.Select(user => user.ToPreviewModel()).ToList();
         }
 
-        public void RemoveUser(User user)
-        {
-            RemoveUserRelatedData(user);
+        public async Task<bool> IsUserWithIdExistAsync(Guid userId)
+            => (await userRepository.GetUserByIdAsync(userId)) != null;
 
-            context.Users.Remove(user);
-            context.SaveChanges();
+        public async Task UpdateCurrUserAsync(HttpContext context, UserUpdateModel updateModel)
+        {
+            User currUser = await userRepository.GetCurrUserAsync(context);
+
+            currUser.ApplyUpdateModel(updateModel);
+
+            await userRepository.UpdateUserAsync(currUser);
+        }
+
+        public async Task RemoveCurrUserAsync(HttpContext context, string password)
+        {
+            User currUser = await userRepository.GetCurrUserAsync(context);
+
+            if (roleService.IsUserSuperAdmin(currUser))
+                throw new ForbiddenException("The root admin cannot be deleted!");
+
+            if (!IsPasswordCorrect(password, currUser.Password))
+                throw new ForbiddenException("Incorrect password!");
+
+            await RemoveUserAsync(currUser);
+        }
+
+        public async Task RemoveUserByIdAsync(HttpContext context, Guid userId)
+        {
+            User currUser = await userRepository.GetCurrUserAsync(context);
+
+            User? user = await userRepository.GetUserByIdAsync(userId);
+
+            if (user == null)
+                throw new NotFoundException("The specified user could not be found!");
+
+            if (roleService.IsUserSuperAdmin(user))
+                throw new ForbiddenException("The root admin cannot be deleted!");
+
+            if (roleService.IsUserAdmin(user) && !roleService.IsUserSuperAdmin(currUser))
+                throw new ForbiddenException("You cannot delete another admin user! This can be done only by the root admin!");
+
+            await RemoveUserAsync(user);
+        }
+
+        private async Task RemoveUserAsync(User user)
+        {
+            // Remove all related data associated with the user
+            await workoutService.RemoveAllUserWorkoutsAsync(user.Id);  // workouts
+            await exerciseService.RemoveAllUserCustomExercisesAsync(user.Id);  // custom exercises
+            await exerciseRecordRepository.RemoveAllUserExerciseRecordsAsync(user.Id);  // exercise records
+
+            await userRepository.RemoveUserAsync(user);
+        }
+
+        private async Task<bool> IsUserAlreadyRegisteredWithEmailAsync(string email)
+            => (await userRepository.GetUserByEmailAsync(email)) != null;
+
+        private bool IsPasswordCorrect(string plainPassword, string hashedPassword)
+            => BCrypt.Net.BCrypt.EnhancedVerify(plainPassword, hashedPassword);
+
+        private AssignableRole? GetAssignableRoleForUser(User currUser, User targetUser)
+        {
+            // Root admin's role cannot be changed.
+            // Admin user cannot change another admin's role. Only the root admin can do so.
+            if (roleService.IsUserSuperAdmin(targetUser) ||
+                (roleService.IsUserAdmin(targetUser) && roleService.IsUserAdmin(currUser)))
+            {
+                return null;
+            }
+
+            // Normal users can be promoted to admins, and admins can be downgraded to normal users
+            return roleService.IsUserNormie(targetUser) ? AssignableRole.Admin : AssignableRole.Normie;           
         }
     }
 }

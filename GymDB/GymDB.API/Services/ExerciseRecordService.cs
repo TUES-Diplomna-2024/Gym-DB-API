@@ -1,44 +1,51 @@
-﻿using GymDB.API.Data;
-using GymDB.API.Data.Entities;
+﻿using GymDB.API.Data.Entities;
 using GymDB.API.Data.Enums;
 using GymDB.API.Mappers;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Models.ExerciseRecord;
+using GymDB.API.Repositories.Interfaces;
 using GymDB.API.Services.Interfaces;
+using GymDB.API.Exceptions;
 
 namespace GymDB.API.Services
 {
     public class ExerciseRecordService : IExerciseRecordService
     {
-        private readonly ApplicationContext context;
+        private readonly IExerciseRecordRepository exerciseRecordRepository;
+        private readonly IExerciseService exerciseService;
+        private readonly IUserRepository userRepository;
 
-        public ExerciseRecordService(ApplicationContext context)
+        public ExerciseRecordService(IExerciseRecordRepository exerciseRecordRepository, IExerciseService exerciseService, IUserRepository userRepository)
         {
-            this.context = context;
+            this.exerciseRecordRepository = exerciseRecordRepository;
+            this.exerciseService = exerciseService;
+            this.userRepository = userRepository;
         }
 
-        public List<ExerciseRecord> GetUserExerciseRecordsSince(User user, Exercise exercise, StatisticPeriod period)
+        public async Task CreateNewExerciseRecordAsync(HttpContext context, Guid exerciseId, ExerciseRecordCreateUpdateModel createModel)
         {
-            DateTime startDate = GetStartDate(period);
+            // If the user has access to a specific exercise, he can create a record for it
+            User currUser = await userRepository.GetCurrUserAsync(context);
+            Exercise exercise = await exerciseService.GetExerciseByIdAsync(currUser, exerciseId);
 
-            return context.ExerciseRecords.Where(er => er.ExerciseId == exercise.Id &&
-                                                       er.UserId == user.Id &&
-                                                       er.OnCreated >= startDate)
-                                          .OrderByDescending(er => er.OnCreated)
-                                          .ToList();
+            ExerciseRecord record = createModel.ToEntity(exercise, currUser);
+
+            await exerciseRecordRepository.AddExerciseRecordAsync(record);
         }
 
-        public List<ExerciseRecordViewModel> GetRecordsViews(List<ExerciseRecord> records)
-            => records.Select(r => r.ToViewModel()).ToList();
-
-        public ExerciseRecord? GetRecordById(Guid id)
-            => context.ExerciseRecords.FirstOrDefault(er => er.Id == id);
-
-        public ExerciseStatisticsModel? GetUserExerciseStatisticsSince(User user, Exercise exercise, StatisticPeriod period, StatisticMeasurement measurement)
+        public async Task<List<ExerciseRecordViewModel>> GetCurrUserExerciseRecordsViewsAsync(HttpContext context, Guid exerciseId, StatisticPeriod period)
         {
-            List<ExerciseRecord> records = GetUserExerciseRecordsSince(user, exercise, period);
-            
-            if (records.Count == 0) return null;
+            List<ExerciseRecord> records = await GetAllUserExerciseRecordsSinceAsync(context, exerciseId, period);
+
+            return records.Select(record => record.ToViewModel()).ToList();
+        }
+
+        public async Task<ExerciseStatisticsModel> GetCurrUserExerciseStatisticsAsync(HttpContext context, Guid exerciseId, StatisticPeriod period, StatisticMeasurement measurement)
+        {
+            List<ExerciseRecord> records = await GetAllUserExerciseRecordsSinceAsync(context, exerciseId, period);
+
+            if (records.Count == 0)
+                throw new NoContentException();
 
             uint totalSets = 0, totalReps = 0, totalDuration = 0;
             double totalVolume = 0, totalWeight = 0;
@@ -61,7 +68,11 @@ namespace GymDB.API.Services
             double avgVolume = totalVolume / records.Count;
             double avgWeight = totalWeight / records.Count;
 
-            return new ExerciseStatisticsModel {
+            List<StatisticDataPoint> dataPoints = records.Select(record => record.ToStatisticDataPoint(measurement))
+                                                         .ToList();
+
+            return new ExerciseStatisticsModel
+            {
                 TotalSets = totalSets,
                 TotalReps = totalReps,
 
@@ -73,112 +84,48 @@ namespace GymDB.API.Services
                 MaxVolume = maxVolume,
                 MaxWeight = maxWeight,
 
-                DataPoints = GetStatisticDataPoints(records, measurement)
+                DataPoints = dataPoints
             };
         }
 
-        public bool IsRecordBelongsToExercise(ExerciseRecord record, Exercise exercise)
-            => record.ExerciseId == exercise.Id;
-
-        public bool IsRecordOwnedByUser(ExerciseRecord record, User user)
-            => record.UserId == user.Id;
-
-        public void AddRecord(ExerciseRecord record)
+        public async Task UpdateExerciseRecordByIdAsync(HttpContext context, Guid recordId, ExerciseRecordCreateUpdateModel updateModel)
         {
-            context.ExerciseRecords.Add(record);
-            context.SaveChanges();
+            ExerciseRecord record = await GetExerciseRecordByIdAsync(context, recordId);
+
+            record.ApplyUpdateModel(updateModel);
+            await exerciseRecordRepository.UpdateExerciseRecordAsync(record);
         }
 
-        public void UpdateRecord(ExerciseRecord record, ExerciseRecordCreateUpdateModel update)
+        public async Task RemoveExerciseRecordByIdAsync(HttpContext context, Guid recordId)
         {
-            record.Sets = update.Sets;
-            record.Reps = update.Reps;
-            record.Weight = update.Weight ?? 0;
-            record.Volume = update.Weight != null ? (double)(update.Sets * update.Reps * update.Weight) : 0;
-            record.Duration = update.Duration;
-            record.OnModified = DateTime.UtcNow;
-
-            context.ExerciseRecords.Update(record);
-            context.SaveChanges();
+            ExerciseRecord record = await GetExerciseRecordByIdAsync(context, recordId);
+            await exerciseRecordRepository.RemoveExerciseRecordAsync(record);
         }
 
-        public void RemoveRecord(ExerciseRecord record)
+        private async Task<ExerciseRecord> GetExerciseRecordByIdAsync(HttpContext context, Guid recordId)
         {
-            context.ExerciseRecords.Remove(record);
-            context.SaveChanges();
+            User currUser = await userRepository.GetCurrUserAsync(context);
+            ExerciseRecord? record = await exerciseRecordRepository.GetExerciseRecordByIdAsync(recordId);
+
+            if (record == null)
+                throw new NotFoundException("The specified exercise record could not be found!");
+
+            if (!IsExerciseRecordOwnedByUser(record, currUser))
+                throw new ForbiddenException("You cannot access exercise records that are owned by another user!");
+
+            return record;
         }
 
-        public void RemoveAllExerciseRecords(Exercise exercise)
+        private async Task<List<ExerciseRecord>> GetAllUserExerciseRecordsSinceAsync(HttpContext context, Guid exerciseId, StatisticPeriod period)
         {
-            List<ExerciseRecord> recordsToBeRemoved = context.ExerciseRecords.Where(er => er.ExerciseId == exercise.Id).ToList();
+            // Validates if user can access the exercise
+            User currUser = await userRepository.GetCurrUserAsync(context);
+            await exerciseService.GetExerciseByIdAsync(currUser, exerciseId);
 
-            context.ExerciseRecords.RemoveRange(recordsToBeRemoved);
-            context.SaveChanges();
+            return await exerciseRecordRepository.GetAllUserExerciseRecordsSinceAsync(currUser.Id, exerciseId, period);
         }
 
-        public void RemoveAllUserRecords(User user)
-        {
-            List<ExerciseRecord> recordsToBeRemoved = context.ExerciseRecords.Where(er => er.UserId == user.Id).ToList();
-
-            context.ExerciseRecords.RemoveRange(recordsToBeRemoved);
-            context.SaveChanges();
-        }
-
-        private DateTime GetStartDate(StatisticPeriod period)
-        {
-            DateTime startDate = DateTime.MinValue;
-
-            switch(period)
-            {
-                case StatisticPeriod.OneWeek:
-                    startDate = DateTime.UtcNow.AddDays(-7);
-                    break;
-                case StatisticPeriod.OneMonth:
-                    startDate = DateTime.UtcNow.AddMonths(-1);
-                    break;
-                case StatisticPeriod.TwoMonths:
-                    startDate = DateTime.UtcNow.AddMonths(-2);
-                    break;
-                case StatisticPeriod.ThreeMonths:
-                    startDate = DateTime.UtcNow.AddMonths(-3);
-                    break;
-                case StatisticPeriod.SixMonths:
-                    startDate = DateTime.UtcNow.AddMonths(-6);
-                    break;
-                case StatisticPeriod.OneYear:
-                    startDate = DateTime.UtcNow.AddYears(-1);
-                    break;
-                case StatisticPeriod.All:
-                    break;
-            }
-
-            return startDate.Date;
-        }
-
-        private List<StatisticDataPoint> GetStatisticDataPoints(List<ExerciseRecord> records, StatisticMeasurement measurement)
-        {
-            List<StatisticDataPoint> points = new List<StatisticDataPoint>();
-
-            switch (measurement)
-            {
-                case StatisticMeasurement.Sets:
-                    points = records.Select(r => new StatisticDataPoint { Value = r.Sets, Date = r.OnCreated }).ToList();
-                    break;
-                case StatisticMeasurement.Reps:
-                    points = records.Select(r => new StatisticDataPoint { Value = r.Reps, Date = r.OnCreated }).ToList();
-                    break;
-                case StatisticMeasurement.Volume:
-                    points = records.Select(r => new StatisticDataPoint { Value = r.Volume, Date = r.OnCreated }).ToList();
-                    break;
-                case StatisticMeasurement.Duration:
-                    points = records.Select(r => new StatisticDataPoint { Value = r.Duration, Date = r.OnCreated }).ToList();
-                    break;
-                case StatisticMeasurement.Weight:
-                    points = records.Select(r => new StatisticDataPoint { Value = r.Weight, Date = r.OnCreated }).ToList();
-                    break;
-            }
-
-            return points;
-        }
+        private bool IsExerciseRecordOwnedByUser(ExerciseRecord record, User user)
+            => record.OwnerId == user.Id;
     }
 }

@@ -28,10 +28,8 @@ namespace GymDB.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Difficulty")
-                        .IsRequired()
-                        .HasMaxLength(12)
-                        .HasColumnType("character varying(12)");
+                    b.Property<int>("Difficulty")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Equipment")
                         .HasColumnType("text");
@@ -43,9 +41,6 @@ namespace GymDB.API.Migrations
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("character varying(250)");
-
-                    b.Property<bool>("IsPrivate")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("MuscleGroups")
                         .IsRequired()
@@ -62,17 +57,18 @@ namespace GymDB.API.Migrations
                     b.Property<DateTime>("OnModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
-
-                    b.Property<Guid?>("UserId")
+                    b.Property<Guid?>("OwnerId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Visibility")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("Exercises");
                 });
@@ -85,11 +81,6 @@ namespace GymDB.API.Migrations
 
                     b.Property<Guid>("ExerciseId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("FileExtension")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("Position")
                         .HasColumnType("integer");
@@ -119,14 +110,14 @@ namespace GymDB.API.Migrations
                     b.Property<DateTime>("OnModified")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
                     b.Property<long>("Reps")
                         .HasColumnType("bigint");
 
                     b.Property<long>("Sets")
                         .HasColumnType("bigint");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
 
                     b.Property<double>("Volume")
                         .HasColumnType("double precision");
@@ -135,10 +126,6 @@ namespace GymDB.API.Migrations
                         .HasColumnType("double precision");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ExerciseId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("ExerciseRecords");
                 });
@@ -183,10 +170,8 @@ namespace GymDB.API.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                    b.Property<int>("Gender")
+                        .HasColumnType("integer");
 
                     b.Property<double>("Height")
                         .HasColumnType("double precision");
@@ -243,12 +228,12 @@ namespace GymDB.API.Migrations
                     b.Property<DateTime>("OnModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("OwnerId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("Workouts");
                 });
@@ -279,11 +264,11 @@ namespace GymDB.API.Migrations
 
             modelBuilder.Entity("GymDB.API.Data.Entities.Exercise", b =>
                 {
-                    b.HasOne("GymDB.API.Data.Entities.User", "User")
+                    b.HasOne("GymDB.API.Data.Entities.User", "Owner")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("OwnerId");
 
-                    b.Navigation("User");
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("GymDB.API.Data.Entities.ExerciseImage", b =>
@@ -295,25 +280,6 @@ namespace GymDB.API.Migrations
                         .IsRequired();
 
                     b.Navigation("Exercise");
-                });
-
-            modelBuilder.Entity("GymDB.API.Data.Entities.ExerciseRecord", b =>
-                {
-                    b.HasOne("GymDB.API.Data.Entities.Exercise", "Exercise")
-                        .WithMany()
-                        .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GymDB.API.Data.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Exercise");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GymDB.API.Data.Entities.User", b =>
@@ -329,13 +295,13 @@ namespace GymDB.API.Migrations
 
             modelBuilder.Entity("GymDB.API.Data.Entities.Workout", b =>
                 {
-                    b.HasOne("GymDB.API.Data.Entities.User", "User")
+                    b.HasOne("GymDB.API.Data.Entities.User", "Owner")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("GymDB.API.Data.Entities.WorkoutExercise", b =>

@@ -1,6 +1,6 @@
-﻿using GymDB.API.Data.ValidationAttributes;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GymDB.API.Data.Enums;
 
 namespace GymDB.API.Data.Entities
 {
@@ -18,24 +18,20 @@ namespace GymDB.API.Data.Entities
 
         public string MuscleGroups { get; set; }
 
-        [ExerciseType]
-        [StringLength(30)]
-        public string Type { get; set; }
+        public ExerciseType Type { get; set; }
 
-        [ExerciseDifficulty]
-        [StringLength(12)]
-        public string Difficulty { get; set; }
+        public ExerciseDifficulty Difficulty { get; set; }
 
         public string? Equipment { get; set; }
 
         public int ImageCount { get; set; }
 
-        public bool IsPrivate { get; set; }
+        public ExerciseVisibility Visibility { get; set; }
 
         [ForeignKey(nameof(User))]
-        public Guid? UserId { get; set; }
+        public Guid? OwnerId { get; set; }
 
-        public User? User { get; set; }
+        public User? Owner { get; set; }
 
         public DateOnly OnCreated { get; set; }
 

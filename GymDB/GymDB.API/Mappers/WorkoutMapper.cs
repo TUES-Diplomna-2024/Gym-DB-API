@@ -1,12 +1,13 @@
 ﻿using GymDB.API.Data.Entities;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Models.Workout;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GymDB.API.Mappers
 {
     public static class WorkoutMapper
     {
-        public static Workout ToEntity(this WorkoutCreateUpdateModel model, User owner)
+        public static Workout ToEntity(this WorkoutCreateModel createModel, User owner)
         {
             return new Workout
             {
@@ -15,35 +16,28 @@ namespace GymDB.API.Mappers
                 OnModified = DateTime.UtcNow,
                 ExerciseCount = 0,
 
-                Name = model.Name,
-                Description = model.Description,
-                UserId = owner.Id,
-                User = owner
+                Name = createModel.Name,
+                Description = createModel.Description,
+
+                OwnerId = owner.Id,
+                Owner = owner
             };
         }
 
-        public static WorkoutExercise ToWorkoutExerciseEntity(this Workout workout, Exercise exercise, int position)
+        public static void ApplyUpdateModel(this Workout workout, WorkoutUpdateModel update)
         {
-            return new WorkoutExercise
-            {
-                Id = Guid.NewGuid(),
-                WorkoutId = workout.Id,
-                Workout = workout,
-                ExerciseId = exercise.Id,
-                Exercise = exercise,
-                Position = position
-            };
+            workout.Name = update.Name;
+            workout.Description = update.Description;
         }
 
-        public static WorkoutWithExercisesModel ToWorkoutWithExercisesModel(this Workout workout, List<ExercisePreviewModel>? exercises)
+        public static WorkoutViewModel ToViewModel(this Workout workout, List<ExercisePreviewModel>? exercises)
         {
-            return new WorkoutWithExercisesModel
+            return new WorkoutViewModel
             {
                 Id = workout.Id,
                 Name = workout.Name,
                 Description = workout.Description,
-                ExerciseCount = workout.ExerciseCount,
-                Exercises = exercises
+                Exercises = exercises.IsNullOrEmpty() ? null : exercises
             };
         }
 

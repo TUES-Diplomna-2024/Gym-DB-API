@@ -1,24 +1,22 @@
 ﻿using GymDB.API.Data.Entities;
+using GymDB.API.Data.Enums;
 
 namespace GymDB.API.Services.Interfaces
 {
     public interface IRoleService
     {
-        Role? GetRoleByNormalizedName(string normalizedName);
+        Task EnsureRolesCreatedAsync();
 
-        /// <summary>
-        /// Uses role's normalized name
-        /// </summary>
-        bool HasUserRole(User user, string role);
+        Task EnsureRootAdminCreatedAsync();
 
-        /// <summary>
-        /// Uses role's normalized name
-        /// </summary>
-        bool HasUserAnyRole(User user, string[] roles);
+        Task AssignUserDefaultRoleAsync(User user);
 
-        /// <summary>
-        /// Uses role's normalized name
-        /// </summary>
-        bool AssignUserRole(User user, string role);
+        Task AssignUserNewRoleAsync(HttpContext context, Guid userId, AssignableRole role);
+
+        bool IsUserNormie(User user);
+
+        bool IsUserAdmin(User user);
+
+        bool IsUserSuperAdmin(User user);
     }
 }

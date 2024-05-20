@@ -1,5 +1,4 @@
-﻿using GymDB.API.Data.Entities;
-using GymDB.API.Data.Enums;
+﻿using GymDB.API.Data.Enums;
 using GymDB.API.Models.Exercise;
 using GymDB.API.Models.ExerciseRecord;
 
@@ -7,26 +6,14 @@ namespace GymDB.API.Services.Interfaces
 {
     public interface IExerciseRecordService
     {
-        List<ExerciseRecord> GetUserExerciseRecordsSince(User user, Exercise exercise, StatisticPeriod period);
+        Task CreateNewExerciseRecordAsync(HttpContext context, Guid exerciseId, ExerciseRecordCreateUpdateModel createModel);
 
-        List<ExerciseRecordViewModel> GetRecordsViews(List<ExerciseRecord> records);
+        Task<List<ExerciseRecordViewModel>> GetCurrUserExerciseRecordsViewsAsync(HttpContext context, Guid exerciseId, StatisticPeriod period);
 
-        ExerciseRecord? GetRecordById(Guid id);
+        Task<ExerciseStatisticsModel> GetCurrUserExerciseStatisticsAsync(HttpContext context, Guid exerciseId, StatisticPeriod period, StatisticMeasurement measurement);
 
-        ExerciseStatisticsModel? GetUserExerciseStatisticsSince(User user, Exercise exercise, StatisticPeriod period, StatisticMeasurement measurement);
+        Task UpdateExerciseRecordByIdAsync(HttpContext context, Guid recordId, ExerciseRecordCreateUpdateModel updateModel);
 
-        bool IsRecordBelongsToExercise(ExerciseRecord record, Exercise exercise);
-
-        bool IsRecordOwnedByUser(ExerciseRecord record, User user);
-
-        void AddRecord(ExerciseRecord record);
-
-        void UpdateRecord(ExerciseRecord record, ExerciseRecordCreateUpdateModel update);
-
-        void RemoveRecord(ExerciseRecord record);
-
-        void RemoveAllExerciseRecords(Exercise exercise);
-
-        void RemoveAllUserRecords(User user);
+        Task RemoveExerciseRecordByIdAsync(HttpContext context, Guid recordId);
     }
 }

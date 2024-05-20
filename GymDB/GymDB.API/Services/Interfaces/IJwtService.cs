@@ -8,9 +8,5 @@ namespace GymDB.API.Services.Interfaces
         string GenerateNewAccessToken(Guid userId, string roleNormalizedName);
 
         string GenerateNewRefreshToken(Guid userId);
-
-        string GenerateNewJwtToken(DateTime expiration, Claim[] claims);
-
-        SigningCredentials CreateSigningCredentials();
     }
 }

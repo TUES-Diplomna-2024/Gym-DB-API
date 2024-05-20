@@ -1,5 +1,8 @@
 ﻿using GymDB.API.Data.Entities;
+using GymDB.API.Data.Enums;
 using GymDB.API.Models.Exercise;
+using GymDB.API.Models.ExerciseImage;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GymDB.API.Mappers
 {
@@ -20,28 +23,26 @@ namespace GymDB.API.Mappers
                 Type = createModel.Type,
                 Difficulty = createModel.Difficulty,
                 Equipment = createModel.Equipment,
-                IsPrivate = createModel.IsPrivate,
+                Visibility = createModel.Visibility,
 
-                UserId = createModel.IsPrivate ? owner.Id : null,
-                User = createModel.IsPrivate ? owner : null
+                OwnerId = createModel.Visibility == ExerciseVisibility.Private ? owner.Id : null,
+                Owner = createModel.Visibility == ExerciseVisibility.Private ? owner : null
             };
         }
 
-        public static ExerciseImage ToExerciseImageEntity(this Exercise exercise, string fileExtension, int position)
+        public static void ApplyUpdateModel(this Exercise exercise, ExerciseUpdateModel update)
         {
-            return new ExerciseImage
-            {
-                Id = Guid.NewGuid(),
-                ExerciseId = exercise.Id,
-                Exercise = exercise,
-                FileExtension = fileExtension,
-                Position = position
-            };
+            exercise.Name = update.Name;
+            exercise.Instructions = update.Instructions;
+            exercise.MuscleGroups = update.MuscleGroups;
+            exercise.Type = update.Type;
+            exercise.Difficulty = update.Difficulty;
+            exercise.Equipment = update.Equipment;
         }
 
-        public static ExerciseNormalInfoModel ToNormalInfoModel(this Exercise exercise, User? owner, List<Uri>? imageUris)
+        public static ExerciseViewModel ToViewModel(this Exercise exercise, bool isCustom, List<ExerciseImageViewModel>? images)
         {
-            return new ExerciseNormalInfoModel
+            return new ExerciseViewModel
             {
                 Id = exercise.Id,
                 Name = exercise.Name,
@@ -50,35 +51,9 @@ namespace GymDB.API.Mappers
                 Type = exercise.Type,
                 Difficulty = exercise.Difficulty,
                 Equipment = exercise.Equipment,
-                IsPrivate = exercise.IsPrivate,
-                ImageCount = exercise.ImageCount,
-                ImageUris = imageUris,
-
-                OwnerId = owner != null ? owner.Id : null,
-                OwnerUsername = owner != null ? owner.Username : null
-            };
-        }
-
-        public static ExerciseAdvancedInfoModel ToAdvancedInfoModel(this Exercise exercise, User? owner, List<Uri>? imageUris)
-        {
-            return new ExerciseAdvancedInfoModel
-            {
-                Id = exercise.Id,
-                Name = exercise.Name,
-                Instructions = exercise.Instructions,
-                MuscleGroups = exercise.MuscleGroups,
-                Type = exercise.Type,
-                Difficulty = exercise.Difficulty,
-                Equipment = exercise.Equipment,
-                IsPrivate = exercise.IsPrivate,
-                ImageCount = exercise.ImageCount,
-                ImageUris = imageUris,
-
-                OwnerId = owner != null ? owner.Id : null,
-                OwnerUsername = owner != null ? owner.Username : null,
-
-                OnCreated = exercise.OnCreated,
-                OnModified = exercise.OnModified
+                Visibility = exercise.Visibility,
+                IsCustom = isCustom,
+                Images = images.IsNullOrEmpty() ? null : images
             };
         }
 
@@ -91,7 +66,7 @@ namespace GymDB.API.Mappers
                 Type = exercise.Type,
                 Difficulty = exercise.Difficulty,
                 MuscleGroups = exercise.MuscleGroups,
-                IsPrivate = exercise.IsPrivate
+                Visibility = exercise.Visibility
             };
         }
     }

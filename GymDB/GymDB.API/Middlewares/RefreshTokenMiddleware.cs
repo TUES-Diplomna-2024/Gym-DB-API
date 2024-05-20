@@ -1,30 +1,29 @@
-﻿using GymDB.API.Attributes;
-using GymDB.API.Data;
-using GymDB.API.Services.Interfaces;
+﻿using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Linq;
-using System.IdentityModel.Tokens.Jwt;
-using System.Net;
-using System.Text;
+using Microsoft.Extensions.Options;
+using GymDB.API.Attributes;
+using GymDB.API.Services.Interfaces;
+using GymDB.API.Exceptions;
+using GymDB.API.Data.Settings;
 
 namespace GymDB.API.Middlewares
 {
     public class RefreshTokenMiddleware
     {
         private readonly RequestDelegate next;
-        private readonly ApplicationSettings settings;
+        private readonly JwtSettings jwtSettings;
         private readonly TokenValidationParameters validParams;
 
-        public RefreshTokenMiddleware(RequestDelegate next, IConfiguration config)
+        public RefreshTokenMiddleware(RequestDelegate next, IOptions<JwtSettings> settings)
         {
             this.next = next;
-            settings = new ApplicationSettings(config);
+            jwtSettings = settings.Value;
 
             validParams = new TokenValidationParameters
             {
-                ValidIssuer = settings.JwtSettings.Issuer,
-                ValidAudience = settings.JwtSettings.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtSettings.ServerSecretKey)),
+                ValidIssuer = jwtSettings.Issuer,
+                ValidAudience = jwtSettings.Audience,
+                IssuerSigningKey = jwtSettings.GetSymmetricSecurityKey(),
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 ValidateIssuerSigningKey = true,
@@ -43,8 +42,7 @@ namespace GymDB.API.Middlewares
                 return;
             } else if (isRefreshTokenRequired && string.IsNullOrEmpty(refreshToken))
             {
-                Error(context, HttpStatusCode.Unauthorized, "A refresh token is required!");
-                return;
+                throw new UnauthorizedException("A refresh token is required!");
             }
 
             try
@@ -60,28 +58,24 @@ namespace GymDB.API.Middlewares
 
                 if (!Guid.TryParse(userIdValue, out userId) || !long.TryParse(expValue, out unixExp))
                 {
-                    Error(context, HttpStatusCode.Unauthorized, "Invalid or empty 'userId' or 'exp' claims in refresh token!");
-                    return;
+                    throw new UnauthorizedException("Invalid or empty 'userId' or 'exp' claims in refresh token!");
                 }
 
-                if (userService.GetUserById(userId) == null)
+                if (!await userService.IsUserWithIdExistAsync(userId))
                 {
-                    Error(context, HttpStatusCode.Unauthorized, "The current user doesn't exists!");
-                    return;
+                    throw new UnauthorizedException("The current user doesn't exists!");
                 }
 
-                // If Authorization is found in the request headers, it has passed the AccessTokenMiddleware, which has validated it.
-                // This means that context.User contains a valid 'userId' claim.
+                // If 'userId' claim of context.User is not null, it has passed the AccessTokenMiddleware, which has validated it.
 
-                if (!string.IsNullOrEmpty(context.Request.Headers["Authorization"]))
+                if (context.User.FindFirst("userId") != null)
                 {
                     Guid accessTokenUserId;
                     Guid.TryParse(context.User.FindFirst("userId")!.Value, out accessTokenUserId);
 
                     if (userId != accessTokenUserId)
                     {
-                        Error(context, HttpStatusCode.Unauthorized, "The 'userId' claim in the access and refresh tokens do not match!");
-                        return;
+                        throw new UnauthorizedException("The 'userId' claim in the access and refresh tokens do not match!");
                     }
                 }
 
@@ -90,8 +84,7 @@ namespace GymDB.API.Middlewares
 
                 if (isRefreshTokenRequired && DateTime.UtcNow > expDateTime)
                 {
-                    Error(context, HttpStatusCode.Unauthorized, "Refresh token is provided, but is expired!");
-                    return;
+                    throw new UnauthorizedException("Refresh token is provided, but is expired!");
                 }
 
                 string responseRefreshToken = DateTime.UtcNow > expDateTime ? jwtService.GenerateNewRefreshToken(userId) : refreshToken!;
@@ -104,14 +97,17 @@ namespace GymDB.API.Middlewares
                 });
 
                 context.User = claimsPrincipal;
-
-                await next(context);
             }
-            catch (Exception e)
+            catch (HttpException)
             {
-                Console.WriteLine(e.Message);
-                Error(context, HttpStatusCode.Unauthorized, "Invalid refresh token!");
+                throw;
             }
+            catch
+            {
+                throw new UnauthorizedException("Invalid refresh token!");
+            }
+
+            await next(context);
         }
 
         private bool IsRefreshTokenRequiredForEndpoint(HttpContext context)
@@ -122,26 +118,11 @@ namespace GymDB.API.Middlewares
 
             return refreshAttribute != null;
         }
-
-        private void Error(HttpContext context, HttpStatusCode statusCode, string errorMessage)
-        {
-            context.Response.OnStarting((state) =>
-            {
-                var context2 = (HttpContext)state;
-
-                context2.Response.ContentType = "application/json";
-                context2.Response.StatusCode = (int)statusCode;
-
-                context2.Response.WriteAsync(errorMessage);
-
-                return Task.CompletedTask;
-            }, context);
-        }
     }
 
     public static class RefreshTokenMiddlewareExtentions
     {
-        public static IApplicationBuilder UseRefreshToken(this IApplicationBuilder app)
+        public static IApplicationBuilder UseRefreshTokens(this IApplicationBuilder app)
         {
             return app.UseMiddleware<RefreshTokenMiddleware>();
         }

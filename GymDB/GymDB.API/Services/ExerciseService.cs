@@ -1,247 +1,206 @@
-﻿using GymDB.API.Data;
+﻿using Microsoft.IdentityModel.Tokens;
 using GymDB.API.Data.Entities;
-using GymDB.API.Mappers;
 using GymDB.API.Models.Exercise;
+using GymDB.API.Repositories.Interfaces;
 using GymDB.API.Services.Interfaces;
-using Hangfire;
-using Hangfire.States;
-using Hangfire.Storage;
-using Microsoft.EntityFrameworkCore;
+using GymDB.API.Exceptions;
+using GymDB.API.Mappers;
+using GymDB.API.Data.Enums;
+using GymDB.API.Models.ExerciseImage;
 
 namespace GymDB.API.Services
 {
     public class ExerciseService : IExerciseService
     {
-        private readonly ApplicationContext context;
-        private readonly IExerciseRecordService exerciseRecordService;
-        private readonly IAzureBlobService azureBlobService;
+        private readonly IExerciseImageService exerciseImageService;
+        private readonly IWorkoutExerciseService workoutExerciseService;
+        private readonly IRoleService roleService;
+        private readonly IExerciseRepository exerciseRepository;
+        private readonly IExerciseRecordRepository exerciseRecordRepository;
+        private readonly IUserRepository userRepository;
 
-        public ExerciseService(ApplicationContext context, IExerciseRecordService exerciseRecordService, IAzureBlobService azureBlobService)
+        public ExerciseService(IExerciseImageService exerciseImageService, IWorkoutExerciseService workoutExerciseService, IRoleService roleService, IExerciseRepository exerciseRepository, IExerciseRecordRepository exerciseRecordRepository, IUserRepository userRepository)
         {
-            this.context = context;
-            this.exerciseRecordService = exerciseRecordService;
-            this.azureBlobService = azureBlobService;
+            this.exerciseImageService = exerciseImageService;
+            this.workoutExerciseService = workoutExerciseService;
+            this.roleService = roleService;
+            this.exerciseRepository = exerciseRepository;
+            this.exerciseRecordRepository = exerciseRecordRepository;
+            this.userRepository = userRepository;
         }
 
-        public List<Exercise> GetAllPublicExercises()
-            => context.Exercises.Include(exercise => exercise.User)
-                                .Where(exercise => !exercise.IsPrivate)
-                                .ToList();
-
-        public List<Exercise> GetAllPrivateAppExercises()
-            => context.Exercises.Include(exercise => exercise.User)
-                                .Where(exercise => exercise.IsPrivate && exercise.UserId == null)
-                                .ToList();
-
-        public List<Exercise> GetAllUserCustomExercises(User user)
-            => context.Exercises.Include(exercise => exercise.User)
-                                .Where(exercise => exercise.UserId == user.Id)
-                                .OrderByDescending(exercise => exercise.OnModified)
-                                .ToList();
-
-        public List<Exercise> GetAllUserPublicExercises(User user)
-            => context.Exercises.Include(exercise => exercise.User)
-                                .Where(exercise => !exercise.IsPrivate && exercise.UserId == user.Id)
-                                .ToList();
-
-        public List<Exercise> GetAllUserPrivateExercises(User user)
-            => context.Exercises.Include(exercise => exercise.User)
-                                .Where(exercise => exercise.IsPrivate && exercise.UserId == user.Id)
-                                .ToList();
-
-        public List<Exercise> GetUserAccessibleExercisesByIds(List<Guid> ids, User user)
+        public async Task CreateNewExerciseAsync(HttpContext context, ExerciseCreateModel createModel)
         {
-            List<Exercise> result = new List<Exercise>();
+            User currUser = await userRepository.GetCurrUserAsync(context);
 
-            foreach(var id in ids)
+            // Only the root admin and admin users can create public exercises
+            if (createModel.Visibility == ExerciseVisibility.Public && roleService.IsUserNormie(currUser))
+                throw new ForbiddenException("Users without admin permissions cannot create public еxercises!");
+
+            Exercise exercise = createModel.ToEntity(currUser);
+
+            await exerciseRepository.AddExerciseAsync(exercise);
+
+            if (createModel.Images != null)
+                await exerciseImageService.AddImagesToExerciseAsync(exercise, createModel.Images);
+        }
+
+        public async Task<Exercise> GetExerciseByIdAsync(User user, Guid exerciseId, ExerciseValidation validation = ExerciseValidation.Access)
+        {
+            Exercise? exercise = await exerciseRepository.GetExerciseByIdAsync(exerciseId);
+
+            if (exercise == null)
+                throw new NotFoundException("The specified exercise could not be found!");
+
+            // All users can't access exercises that are custom and not their own
+            if (IsExerciseCustom(exercise) && !IsExerciseOwnedByUser(exercise, user))
+                throw new ForbiddenException("You cannot access custom exercises that are owned by another user!");
+
+            switch (validation)
             {
-                Exercise? exercise = GetExerciseById(id);
-                
-                if (exercise != null && (!exercise.IsPrivate || exercise.UserId == user.Id))
-                    result.Add(exercise);
-            }
-
-            return result;                
-        }
-
-        public List<Exercise> GetExercisesBySearch(ExerciseSearchModel search, User user)
-            => context.Exercises.Include(exercise => exercise.User)
-                                .Where(exercise => (!exercise.IsPrivate || exercise.UserId == user.Id) && 
-                                                    exercise.Name.ToLower().Contains(search.Name.ToLower()))
-                                .OrderByDescending(exercise => exercise.UserId == user.Id)
-                                .ToList();
-
-        public List<ExercisePreviewModel> GetExercisesPreviews(List<Exercise> exercises)
-            => exercises.Select(exercise => exercise.ToPreviewModel()).ToList();
-
-        public Exercise? GetExerciseById(Guid id)
-            => context.Exercises.Include(exercise => exercise.User)
-                                .FirstOrDefault(exercise => exercise.Id == id);
-
-        public List<Uri>? GetExerciseImageUris(Exercise exercise)
-        {
-            if (exercise.ImageCount == 0)
-                return null;
-
-            List<Uri> imageUris = context.ExerciseImages.Include(ei => ei.Exercise)
-                                                        .Where(ei => ei.ExerciseId == exercise.Id)
-                                                        .OrderBy(ei => ei.Position)
-                                                        .Select(ei => azureBlobService.GetBlobUri(ei)).ToList();
-            return imageUris;
-        }
-
-        public bool IsExerciseOwnedByUser(Exercise exercise, User user)
-            => exercise.UserId == user.Id;
-
-        public void AddExercise(Exercise exercise)
-        {
-            exercise.Type = exercise.Type.ToLower().Replace(" ", "_");
-            exercise.Difficulty = exercise.Difficulty.ToLower();
-
-            context.Exercises.Add(exercise);
-            context.SaveChanges();
-        }
-
-        public void AddImagesToExercise(Exercise exercise, List<IFormFile> images)
-        {
-            int lastPosition = exercise.ImageCount;
-
-            List<ExerciseImage> exerciseImages = images.Select(image => exercise.ToExerciseImageEntity(Path.GetExtension(image.FileName), lastPosition++))
-                                                       .ToList();
-
-            List<Guid> notSaved = new List<Guid>();
-
-            for (int i = 0; i < images.Count; i++)
-            {
-                bool isSaved = azureBlobService.UploadExerciseImage(exercise, images[i], exerciseImages[i].Id);
-
-                if (!isSaved)
-                    notSaved.Add(exerciseImages[i].Id);
-            }
-
-            if (notSaved.Count > 0)
-            {
-                exerciseImages.RemoveAll(ei => notSaved.Contains(ei.Id));
-
-                lastPosition = exercise.ImageCount;
-
-                foreach (var ei in exerciseImages)
-                    ei.Position = lastPosition++;
-            }
-
-            exercise.ImageCount = lastPosition;
-
-            context.Exercises.Update(exercise);
-            context.ExerciseImages.AddRange(exerciseImages);
-
-            context.SaveChanges();
-        }
-
-        public void UpdateExerciseVisibility(Exercise exercise, bool isPrivate)
-        {
-            // TODO: Finish removing the exercise from all workouts not owned by the owner of the exercise
-
-            if (isPrivate) {
-                string jobId = BackgroundJob.Enqueue<IWorkoutService>(workoutService => workoutService.RemoveExerciseFromAllWorkouts(exercise, true));
-
-                using (var connection = JobStorage.Current.GetConnection())
-                {
-                    JobData jobData;
-                    do
+                case ExerciseValidation.AdditionToWorkouts:
+                    if (IsExercisePrivateAdminCreated(exercise))
                     {
-                        jobData = connection.GetJobData(jobId);
-                        Thread.Sleep(2);
-                    } while (jobData.State != SucceededState.StateName && jobData.State != DeletedState.StateName);
-                }
+                        throw new ForbiddenException("You cannot add this exercise in your workouts!");
+                    }
+
+                    break;
+                default:  // Access or Modification cases
+                    // Public exercises turned into private can be only accessed by the root and other admins
+                    if (IsExercisePrivateAdminCreated(exercise) && roleService.IsUserNormie(user))
+                    {
+                        throw new ForbiddenException("You don't have permission to access this exercise!");
+                    }
+
+                    // Normal user can't update/remove public exercises
+                    if (validation == ExerciseValidation.Modification && IsExercisePublic(exercise) && roleService.IsUserNormie(user))
+                        throw new ForbiddenException("Only admin users can update/delete public exercises!");
+
+                    break;
             }
 
-            exercise.IsPrivate = isPrivate;
-
-            UpdateExercise(exercise);
+            return exercise;
         }
 
-        public void UpdateExercise(Exercise exercise, ExerciseUpdateModel update)
+        public async Task<ExerciseViewModel> GetExerciseViewByIdAsync(HttpContext context, Guid exerciseId)
         {
-            exercise.Name         = update.Name;
-            exercise.Instructions = update.Instructions;
-            exercise.MuscleGroups = update.MuscleGroups;
-            exercise.Type         = update.Type;
-            exercise.Difficulty   = update.Difficulty;
-            exercise.Equipment    = update.Equipment;
+            User currUser = await userRepository.GetCurrUserAsync(context);
+            
+            Exercise exercise = await GetExerciseByIdAsync(currUser, exerciseId);
+            List<ExerciseImageViewModel> images = await exerciseImageService.GetExerciseImagesViewsAsync(exerciseId);
 
-            UpdateExercise(exercise);
+            return exercise.ToViewModel(IsExerciseCustom(exercise), images);
         }
 
-        public void UpdateExercise(Exercise exercise)
+        public async Task<List<ExercisePreviewModel>> GetCurrUserCustomExercisesPreviewsAsync(HttpContext context)
         {
-            exercise.OnModified = DateTime.UtcNow;
+            User currUser = await userRepository.GetCurrUserAsync(context);
 
-            context.Exercises.Update(exercise);
-            context.SaveChanges();
+            List<Exercise> customExercises = await exerciseRepository.GetAllUserCustomExercisesAsync(currUser.Id);
+
+            return customExercises.Select(exercise => exercise.ToPreviewModel()).ToList();
         }
 
-        public void RemoveExercise(Exercise exercise)
+        public async Task<List<ExercisePreviewModel>> FindPublicAndCustomExercisesPreviewsAsync(HttpContext context, string name)
         {
-            string jobId = BackgroundJob.Enqueue<IWorkoutService>(workoutService => workoutService.RemoveExerciseFromAllWorkouts(exercise, false));
+            User currUser = await userRepository.GetCurrUserAsync(context);
 
-            using (var connection = JobStorage.Current.GetConnection())
-            {
-                JobData jobData;
-                do
-                {
-                    jobData = connection.GetJobData(jobId);
-                    Thread.Sleep(2);
-                } while (jobData.State != SucceededState.StateName && jobData.State != DeletedState.StateName);
-            }
+            List<Exercise> matchingExercises = await exerciseRepository.FindAllExercisesMatchingNameAsync(name);
 
-            exerciseRecordService.RemoveAllExerciseRecords(exercise);
-            RemoveAllExerciseImages(exercise);
+            // Users have access to all public exercises and their custom ones
 
-            context.Exercises.Remove(exercise);
-            context.SaveChanges();
+            return matchingExercises.Where(exercise => IsExercisePublic(exercise) || IsExerciseOwnedByUser(exercise, currUser))
+                                    .OrderByDescending(exercise => exercise.OwnerId == currUser.Id)  // Place user's own exercises first
+                                    .ThenBy(exercise => exercise.Name)
+                                    .Select(exercise => exercise.ToPreviewModel())
+                                    .ToList();
         }
 
-        public void RemoveAllUserPrivateExercises(User user)
+        public async Task<List<ExercisePreviewModel>> FindAdminCreatedExercisesPreviewsAsync(ExerciseSearchModel searchModel)
         {
-            List<Exercise> toBeRemoved = GetAllUserPrivateExercises(user);
+            List<Exercise> matchingExercises = await exerciseRepository.FindAllExercisesMatchingNameAsync(searchModel.Name);
 
-            foreach(var exercise in toBeRemoved)
-            {
-                exerciseRecordService.RemoveAllExerciseRecords(exercise);
-                RemoveAllExerciseImages(exercise);
-            }
+            // The root admin and all admin users can search for public and private exercises created by admins.
 
-            context.Exercises.RemoveRange(toBeRemoved);
-            context.SaveChanges();
+            return matchingExercises.Where(exercise => !IsExerciseCustom(exercise) && exercise.Visibility == searchModel.Visibility)
+                                    .OrderBy(exercise => exercise.Name)
+                                    .Select(exercise => exercise.ToPreviewModel())
+                                    .ToList();
         }
 
-        public void RemoveUserOwnershipOfPublicExercises(User user)
+        public async Task UpdateExerciseByIdAsync(HttpContext context, Guid exerciseId, ExerciseUpdateModel updateModel)
         {
-            List<Exercise> publicExercises = GetAllUserPublicExercises(user);
+            User currUser = await userRepository.GetCurrUserAsync(context);
+            Exercise exercise = await GetExerciseByIdAsync(currUser, exerciseId, ExerciseValidation.Modification);
 
-            foreach (var exercise in publicExercises)
-            {
-                exercise.UserId = null;
-                exercise.User = null;
-            }
+            exercise.ApplyUpdateModel(updateModel);
+            await exerciseRepository.UpdateExerciseAsync(exercise);
 
-            context.Exercises.UpdateRange(publicExercises);
-            context.SaveChanges();
+            if (!updateModel.ImagesToBeRemoved.IsNullOrEmpty())
+                await exerciseImageService.RemoveExerciseImagesAsync(exercise, updateModel.ImagesToBeRemoved!);
+
+            if (!updateModel.ImagesToBeAdded.IsNullOrEmpty())
+                await exerciseImageService.AddImagesToExerciseAsync(exercise, updateModel.ImagesToBeAdded!);
         }
 
-        public void RemoveAllExerciseImages(Exercise exercise)
+        public async Task UpdateExerciseVisibilityAsync(Guid exerciseId, ExerciseVisibility visibility)
         {
-            List<ExerciseImage> toBeRemoved = context.ExerciseImages.Include(ei => ei.Exercise)
-                                                                    .Where(ei => ei.ExerciseId == exercise.Id).ToList();
+            Exercise? exercise = await exerciseRepository.GetExerciseByIdAsync(exerciseId);
 
-            toBeRemoved.ForEach(ei => azureBlobService.DeleteExerciseImage(ei));
+            if (exercise == null)
+                throw new NotFoundException("The specified exercise could not be found!");
 
-            context.ExerciseImages.RemoveRange(toBeRemoved);
+            if (IsExerciseCustom(exercise))
+                throw new ForbiddenException("The visibility of custom exercises can't be changed!");
 
-            exercise.ImageCount = 0;
-            context.Exercises.Update(exercise);
+            if (exercise.Visibility == visibility)
+                throw new ForbiddenException("The specified exercise already has this visibility!");
 
-            context.SaveChanges();
+            await workoutExerciseService.RemoveExerciseFromAllWorkoutsAsync(exerciseId);
+
+            exercise.Visibility = visibility;
+            await exerciseRepository.UpdateExerciseAsync(exercise);
         }
+
+        public async Task RemoveExerciseByIdAsync(HttpContext context, Guid exerciseId)
+        {
+            User currUser = await userRepository.GetCurrUserAsync(context);
+            Exercise exercise = await GetExerciseByIdAsync(currUser, exerciseId, ExerciseValidation.Modification);
+
+            await RemoveExerciseAsync(exercise);
+        }
+
+        public async Task RemoveAllUserCustomExercisesAsync(Guid userId)
+        {
+            List<Exercise> customExercises = await exerciseRepository.GetAllUserCustomExercisesAsync(userId);
+
+            foreach (var exercise in customExercises)
+                await RemoveExerciseAsync(exercise);
+        }
+
+        private async Task RemoveExerciseAsync(Exercise exercise)
+        {
+            // Remove all related data associated with the exercise
+            await exerciseImageService.RemoveAllExerciseImagesAsync(exercise.Id);  // images
+            await exerciseRecordRepository.RemoveAllExerciseRecordsByExerciseIdAsync(exercise.Id);  // records
+            await workoutExerciseService.RemoveExerciseFromAllWorkoutsAsync(exercise.Id);  // workout exercises
+
+            await exerciseRepository.RemoveExerciseAsync(exercise);
+        }
+
+        private bool IsExerciseOwnedByUser(Exercise exercise, User user)
+            => exercise.OwnerId == user.Id;
+
+        private bool IsExerciseCustom(Exercise exercise)
+            => exercise.OwnerId != null;
+
+        private bool IsExercisePublic(Exercise exercise)
+            => exercise.Visibility == ExerciseVisibility.Public;
+
+        private bool IsExercisePrivate(Exercise exercise)
+            => exercise.Visibility == ExerciseVisibility.Private;
+
+        private bool IsExercisePrivateAdminCreated(Exercise exercise)
+            => IsExercisePrivate(exercise) && !IsExerciseCustom(exercise);
     }
 }

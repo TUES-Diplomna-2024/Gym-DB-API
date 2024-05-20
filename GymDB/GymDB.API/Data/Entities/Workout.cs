@@ -16,9 +16,9 @@ namespace GymDB.API.Data.Entities
         public string? Description { get; set; }
 
         [ForeignKey(nameof(User))]
-        public Guid UserId { get; set; }
+        public Guid OwnerId { get; set; }
 
-        public User User { get; set; }
+        public User Owner { get; set; }
 
         public int ExerciseCount { get; set; }
 

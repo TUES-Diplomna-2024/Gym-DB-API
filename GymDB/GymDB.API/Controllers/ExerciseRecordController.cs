@@ -1,11 +1,9 @@
-﻿using GymDB.API.Attributes;
-using GymDB.API.Data.Entities;
+﻿using Microsoft.AspNetCore.Mvc;
+using GymDB.API.Attributes;
 using GymDB.API.Data.Enums;
-using GymDB.API.Mappers;
-using GymDB.API.Models.Exercise;
 using GymDB.API.Models.ExerciseRecord;
 using GymDB.API.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
+using GymDB.API.Models.Exercise;
 
 namespace GymDB.API.Controllers
 {
@@ -13,148 +11,69 @@ namespace GymDB.API.Controllers
     [Route("exercises/{exerciseId}")]
     public class ExerciseRecordController : ControllerBase
     {
-        private readonly IUserService userService;
-        private readonly IExerciseService exerciseService;
         private readonly IExerciseRecordService exerciseRecordService;
 
-        public ExerciseRecordController(IUserService userService, IExerciseService exerciseService, IExerciseRecordService exerciseRecordService)
+        public ExerciseRecordController(IExerciseRecordService exerciseRecordService)
         {
-            this.userService = userService;
-            this.exerciseService = exerciseService;
             this.exerciseRecordService = exerciseRecordService;
         }
 
-        /* POST REQUESTS */
+        /* ======================================================================== POST REQUESTS */
 
         [HttpPost("records/create"), CustomAuthorize]
-        public IActionResult CreateNewExerciseRecord(Guid exerciseId, ExerciseRecordCreateUpdateModel createAttempt)
+        public async Task<IActionResult> CreateNewExerciseRecordAsync(Guid exerciseId, ExerciseRecordCreateUpdateModel createModel)
         {
-            User currUser = userService.GetCurrUser(HttpContext)!;
-
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            Exercise? exercise = exerciseService.GetExerciseById(exerciseId);
+            await exerciseRecordService.CreateNewExerciseRecordAsync(HttpContext, exerciseId, createModel);
 
-            if (exercise == null)
-                return NotFound($"Exercise with id '{exerciseId}' could not be found!");
-
-            bool isCurrUserExerciseOwner = exerciseService.IsExerciseOwnedByUser(exercise, currUser);
-
-            if (exercise.IsPrivate && !isCurrUserExerciseOwner)
-                return StatusCode(403, "You cannot access custom exercises that are owned by another user!");
-
-            ExerciseRecord record = createAttempt.ToEntity(exercise, currUser);
-            exerciseRecordService.AddRecord(record);
-
-            return Ok();
+            return NoContent();
         }
 
-        /* GET REQUESTS */
+
+        /* ======================================================================== GET REQUESTS */
 
         [HttpGet("records"), CustomAuthorize]
-        public IActionResult GetCurrUserExerciseRecordsViews(Guid exerciseId, StatisticPeriod period)
+        public async Task<IActionResult> GetCurrUserExerciseRecordsViewsAsync(Guid exerciseId, StatisticPeriod period)
         {
-            User currUser = userService.GetCurrUser(HttpContext)!;
-            Exercise? exercise = exerciseService.GetExerciseById(exerciseId);
+            List<ExerciseRecordViewModel> recordsViews = await exerciseRecordService.GetCurrUserExerciseRecordsViewsAsync(HttpContext, exerciseId, period);
 
-            if (exercise == null)
-                return NotFound($"Exercise with id '{exerciseId}' could not be found!");
-
-            bool isCurrUserExerciseOwner = exerciseService.IsExerciseOwnedByUser(exercise, currUser);
-
-            if (exercise.IsPrivate && !isCurrUserExerciseOwner)
-                return StatusCode(403, "You cannot access custom exercises that are owned by another user!");
-
-            List<ExerciseRecord> records = exerciseRecordService.GetUserExerciseRecordsSince(currUser, exercise, period);
-
-            return Ok(exerciseRecordService.GetRecordsViews(records));
+            return Ok(recordsViews);
         }
 
+
         [HttpGet("stats"), CustomAuthorize]
-        public IActionResult GetCurrUserExerciseStatistics(Guid exerciseId, StatisticPeriod period, StatisticMeasurement measurement)
+        public async Task<IActionResult> GetCurrUserExerciseStatisticsAsync(Guid exerciseId, StatisticPeriod period, StatisticMeasurement measurement)
         {
-            User currUser = userService.GetCurrUser(HttpContext)!;
-            Exercise? exercise = exerciseService.GetExerciseById(exerciseId);
-
-            if (exercise == null)
-                return NotFound($"Exercise with id '{exerciseId}' could not be found!");
-
-            bool isCurrUserExerciseOwner = exerciseService.IsExerciseOwnedByUser(exercise, currUser);
-
-            if (exercise.IsPrivate && !isCurrUserExerciseOwner)
-                return StatusCode(403, "You cannot access custom exercises that are owned by another user!");
-
-            ExerciseStatisticsModel? statistics = exerciseRecordService.GetUserExerciseStatisticsSince(currUser, exercise, period, measurement);
+            ExerciseStatisticsModel statistics = await exerciseRecordService.GetCurrUserExerciseStatisticsAsync(HttpContext, exerciseId, period, measurement);
 
             return Ok(statistics);
         }
 
-        /* PUT REQUESTS */
 
-        [HttpPut("records/{recordId}"), CustomAuthorize]
-        public IActionResult UpdateExerciseRecordById(Guid exerciseId, Guid recordId, ExerciseRecordCreateUpdateModel updateAttempt)
+        /* ======================================================================== PUT REQUESTS */
+
+        [HttpPut("/exercises/records/{recordId}"), CustomAuthorize]
+        public async Task<IActionResult> UpdateExerciseRecordByIdAsync(Guid recordId, ExerciseRecordCreateUpdateModel updateModel)
         {
-            User currUser = userService.GetCurrUser(HttpContext)!;
-
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            Exercise? exercise = exerciseService.GetExerciseById(exerciseId);
-
-            if (exercise == null)
-                return NotFound($"Exercise with id '{exerciseId}' could not be found!");
-
-            bool isCurrUserExerciseOwner = exerciseService.IsExerciseOwnedByUser(exercise, currUser);
-
-            if (exercise.IsPrivate && !isCurrUserExerciseOwner)
-                return StatusCode(403, "You cannot access custom exercises that are owned by another user!");
-
-            ExerciseRecord? record = exerciseRecordService.GetRecordById(recordId);
-
-            if (record == null)
-                return NotFound($"Record with id '{recordId}' could not be found!");
-
-            if (!exerciseRecordService.IsRecordOwnedByUser(record, currUser))
-                return StatusCode(403, "You cannot access records that are owned by another user!");
-
-            if (!exerciseRecordService.IsRecordBelongsToExercise(record, exercise))
-                return BadRequest("This record does not belong to the specified exercise!");
-
-            exerciseRecordService.UpdateRecord(record, updateAttempt);
-
-            return Ok();
+            await exerciseRecordService.UpdateExerciseRecordByIdAsync(HttpContext, recordId, updateModel);
+            
+            return NoContent();
         }
 
-        /* DELETE REQUESTS */
-        [HttpDelete("records/{recordId}"), CustomAuthorize]
-        public IActionResult DeleteExerciseRecordById(Guid exerciseId, Guid recordId)
+
+        /* ======================================================================== DELETE REQUESTS */
+
+        [HttpDelete("/exercises/records/{recordId}"), CustomAuthorize]
+        public async Task<IActionResult> RemoveExerciseRecordByIdAsync(Guid recordId)
         {
-            User currUser = userService.GetCurrUser(HttpContext)!;
-            Exercise? exercise = exerciseService.GetExerciseById(exerciseId);
+            await exerciseRecordService.RemoveExerciseRecordByIdAsync(HttpContext, recordId);
 
-            if (exercise == null)
-                return NotFound($"Exercise with id '{exerciseId}' could not be found!");
-
-            bool isCurrUserExerciseOwner = exerciseService.IsExerciseOwnedByUser(exercise, currUser);
-
-            if (exercise.IsPrivate && !isCurrUserExerciseOwner)
-                return StatusCode(403, "You cannot access custom exercises that are owned by another user!");
-
-            ExerciseRecord? record = exerciseRecordService.GetRecordById(recordId);
-
-            if (record == null)
-                return NotFound($"Record with id '{recordId}' could not be found!");
-
-            if (!exerciseRecordService.IsRecordOwnedByUser(record, currUser))
-                return StatusCode(403, "You cannot access records that are owned by another user!");
-
-            if (!exerciseRecordService.IsRecordBelongsToExercise(record, exercise))
-                return BadRequest("This record does not belong to the specified exercise!");
-
-            exerciseRecordService.RemoveRecord(record);
-
-            return Ok();
+            return NoContent();
         }
     }
 }

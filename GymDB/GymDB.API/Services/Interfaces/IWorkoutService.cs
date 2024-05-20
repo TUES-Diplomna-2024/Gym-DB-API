@@ -5,36 +5,18 @@ namespace GymDB.API.Services.Interfaces
 {
     public interface IWorkoutService
     {
-        List<Workout> GetUserWorkouts(User user);
+        Task CreateNewWorkoutAsync(HttpContext context, WorkoutCreateModel createModel);
 
-        List<WorkoutPreviewModel> GetWorkoutsPreviews(List<Workout> workouts);
+        Task<WorkoutViewModel> GetWorkoutViewByIdAsync(HttpContext context, Guid workoutId);
 
-        List<Workout> GetWorkoutsContainingExercise(Exercise exercise);
+        Task<List<WorkoutPreviewModel>> GetCurrUserWorkoutsPreviewsAsync(HttpContext context);
 
-        List<Exercise> GetWorkoutExercises(Workout workout);
+        Task UpdateWorkoutByIdAsync(HttpContext context, Guid workoutId, WorkoutUpdateModel updateModel);
 
-        WorkoutWithExercisesModel GetWorkoutWithExercises(Workout workout);
+        Task AddExerciseToWorkoutsAsync(HttpContext context, Guid exerciseId, List<Guid> workoutsIds);
 
-        Workout? GetWorkoutById(Guid id);
+        Task RemoveWorkoutByIdAsync(HttpContext context, Guid workoutId);
 
-        bool IsWorkoutOwnedByUser(Workout workout, User user);
-
-        void AddWorkout(Workout workout);
-
-        void PushBackExerciseInWorkout(Workout workout, Exercise exercise);
-
-        void AddExercisesToWorkout(Workout workout, List<Exercise> exercises);
-
-        Guid[]? AddExercisesToWorkout(Workout workout, List<Guid> exercisesIds, User owner);
-
-        Guid[]? UpdateWorkout(Workout workout, WorkoutCreateUpdateModel update, User owner);
-
-        void RemoveAllWorkoutExercises(Workout workout);
-
-        void RemoveExerciseFromAllWorkouts(Exercise exercise, bool excludeOwnerWorkouts);
-
-        void RemoveWorkout(Workout workout);
-
-        void RemoveAllUserWorkouts(User user);
+        Task RemoveAllUserWorkoutsAsync(Guid userId);
     }
 }

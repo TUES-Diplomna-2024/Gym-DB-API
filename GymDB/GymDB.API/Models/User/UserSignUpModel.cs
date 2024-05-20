@@ -1,4 +1,5 @@
-﻿using GymDB.API.Data.ValidationAttributes;
+﻿using GymDB.API.Data.Enums;
+using GymDB.API.Attributes.DataValidation;
 using System.ComponentModel.DataAnnotations;
 
 namespace GymDB.API.Models.User
@@ -18,8 +19,7 @@ namespace GymDB.API.Models.User
         [BirthDate]
         public DateOnly BirthDate { get; set; }
 
-        [Gender]
-        public string Gender { get; set; }
+        public Gender Gender { get; set; }
 
         [Range(minimum: 63, maximum: 251, ErrorMessage = "Height must be between 63 and 251 cm!")]
         public double Height { get; set; }

@@ -1,37 +1,27 @@
-﻿using GymDB.API.Data.Entities;
-using GymDB.API.Models;
-using GymDB.API.Models.User;
+﻿using GymDB.API.Models.User;
 
 namespace GymDB.API.Services.Interfaces
 {
     public interface IUserService
     {
-        List<User> GetAllUsers();
+        Task<UserAuthModel> SignInAsync(UserSignInModel signInModel);
 
-        List<UserPreviewModel> GetAllUserPreviews();
+        Task<UserAuthModel> SignUpAsync(UserSignUpModel signUpModel);
 
-        User? GetUserById(Guid id);
+        Task<string> RefreshAsync(HttpContext context);
 
-        User? GetCurrUser(HttpContext context);
+        Task<UserProfileModel> GetCurrUserProfileAsync(HttpContext context);
 
-        User? GetUserByEmail(string email);
+        Task<UserProfileExtendedModel> GetUserProfileByIdAsync(HttpContext context, Guid userId);
 
-        User? GetUserByEmailAndPassword(string email, string password);
+        Task<List<UserPreviewModel>> FindUsersPreviewsAsync(string query);
 
-        bool IsUserAlreadyRegisteredWithEmail(string email);
+        Task<bool> IsUserWithIdExistAsync(Guid userId);
 
-        bool IsUserPasswordCorrect(User user, string password);
+        Task UpdateCurrUserAsync(HttpContext context, UserUpdateModel updateModel);
 
-        string GetHashedPassword(string password);
+        Task RemoveCurrUserAsync(HttpContext context, string password);
 
-        void AddUser(User user);
-
-        void UpdateUser(User user, UserUpdateModel update);
-
-        void UpdateUser(User user);
-
-        void RemoveUserRelatedData(User user);
-
-        void RemoveUser(User user);
+        Task RemoveUserByIdAsync(HttpContext context, Guid userId);
     }
 }

@@ -1,10 +1,7 @@
-﻿using GymDB.API.Data.Entities;
-using GymDB.API.Mappers;
+﻿using Microsoft.AspNetCore.Mvc;
+using GymDB.API.Attributes;
 using GymDB.API.Models.Workout;
 using GymDB.API.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using GymDB.API.Attributes;
 
 namespace GymDB.API.Controllers
 {
@@ -12,118 +9,78 @@ namespace GymDB.API.Controllers
     [Route("users/current/workouts")]
     public class WorkoutController : ControllerBase
     {
-        private readonly IUserService userService;
         private readonly IWorkoutService workoutService;
 
-        public WorkoutController(IUserService userService, IWorkoutService workoutService)
+        public WorkoutController(IWorkoutService workoutService)
         {
-            this.userService = userService;
             this.workoutService = workoutService;
         }
 
-        /* POST REQUESTS */
+        /* ======================================================================== POST REQUESTS */
 
         [HttpPost("create"), CustomAuthorize]
-        public IActionResult CreateNewWorkout(WorkoutCreateUpdateModel createAttempt)
+        public async Task<IActionResult> CreateNewWorkoutAsync(WorkoutCreateModel createModel)
         {
-            User currUser = userService.GetCurrUser(HttpContext)!;
-
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            Workout workout = createAttempt.ToEntity(currUser);
+            await workoutService.CreateNewWorkoutAsync(HttpContext, createModel);
 
-            workoutService.AddWorkout(workout);
-
-            if (!createAttempt.Exercises!.IsNullOrEmpty())
-            {
-                Guid[]? notFoundExerciseIds = workoutService.AddExercisesToWorkout(workout, createAttempt.Exercises!, currUser);
-
-                if (notFoundExerciseIds != null)
-                {
-                    string notFound = string.Join(", ", notFoundExerciseIds.Select(nfi => $"'{nfi}'"));
-                    return Ok($"Workout was created without exercises with ids {notFound} because they cannot be found or are not available to you!");
-                }
-            }
-
-            return Ok();
+            return NoContent();
         }
 
-        /* GET REQUESTS */
+
+        /* ======================================================================== GET REQUESTS */
+
+        [HttpGet("{workoutId}"), CustomAuthorize]
+        public async Task<IActionResult> GetWorkoutViewByIdAsync(Guid workoutId)
+        {
+            WorkoutViewModel workoutView = await workoutService.GetWorkoutViewByIdAsync(HttpContext, workoutId);
+
+            return Ok(workoutView);
+        }
+
 
         [HttpGet, CustomAuthorize]
-        public IActionResult GetCurrUserWorkoutsPreviews()
+        public async Task<IActionResult> GetCurrUserWorkoutsPreviewsAsync()
         {
-            User currUser = userService.GetCurrUser(HttpContext)!;
+            List<WorkoutPreviewModel> workoutsPreviews = await workoutService.GetCurrUserWorkoutsPreviewsAsync(HttpContext);
 
-            List<Workout> workouts = workoutService.GetUserWorkouts(currUser);
-
-            return Ok(workoutService.GetWorkoutsPreviews(workouts));
+            return Ok(workoutsPreviews);
         }
 
-        [HttpGet("{id}"), CustomAuthorize]
-        public IActionResult GetWorkoutById(Guid id)
+
+        /* ======================================================================== PUT REQUESTS */
+
+        [HttpPut("{workoutId}"), CustomAuthorize]
+        public async Task<IActionResult> UpdateWorkoutByIdAsync(Guid workoutId, WorkoutUpdateModel updateModel)
         {
-            User currUser = userService.GetCurrUser(HttpContext)!;
-
-            Workout? workout = workoutService.GetWorkoutById(id);
-
-            if (workout == null)
-                return NotFound($"Workout with id '{id}' could not be found!");
-
-            if (!workoutService.IsWorkoutOwnedByUser(workout, currUser))
-                return StatusCode(403, "You cannot access workouts that are owned by another user!");
-
-            return Ok(workoutService.GetWorkoutWithExercises(workout));
-        }
-
-        /* PUT REQUESTS */
-
-        [HttpPut("{id}"), CustomAuthorize]
-        public IActionResult UpdateWorkoutById(Guid id, WorkoutCreateUpdateModel updateAttempt)
-        {
-            User currUser = userService.GetCurrUser(HttpContext)!;
-
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            Workout? workout = workoutService.GetWorkoutById(id);
+            await workoutService.UpdateWorkoutByIdAsync(HttpContext, workoutId, updateModel);
 
-            if (workout == null)
-                return NotFound($"Workout with id '{id}' could not be found!");
-
-            if (!workoutService.IsWorkoutOwnedByUser(workout, currUser))
-                return StatusCode(403, "You cannot access workouts that are owned by another user!");
-
-            Guid[]? notFoundExerciseIds = workoutService.UpdateWorkout(workout, updateAttempt, currUser);
-
-            if (notFoundExerciseIds != null)
-            {
-                string notFound = string.Join(", ", notFoundExerciseIds.Select(nfi => $"'{nfi}'"));
-                return Ok($"Workout was updated without adding exercises with ids {notFound} because they cannot be found or are not available to you!");
-            }
-                
-            return Ok();
+            return NoContent();
         }
 
-        /* DELETE REQUESTS */
 
-        [HttpDelete("{id}"), CustomAuthorize]
-        public IActionResult DeleteWorkoutById(Guid id)
+        [HttpPost("/exercises/{exerciseId}/add-to-workouts"), CustomAuthorize]
+        public async Task<IActionResult> AddExerciseToWorkoutsAsync(Guid exerciseId, List<Guid> workoutsIds)
         {
-            User currUser = userService.GetCurrUser(HttpContext)!;
+            await workoutService.AddExerciseToWorkoutsAsync(HttpContext, exerciseId, workoutsIds);
 
-            Workout? workout = workoutService.GetWorkoutById(id);
+            return NoContent();
+        }
 
-            if (workout == null)
-                return NotFound($"Workout with id '{id}' could not be found!");
 
-            if (!workoutService.IsWorkoutOwnedByUser(workout, currUser))
-                return StatusCode(403, "You cannot delete workouts that are owned by another user!");
+        /* ======================================================================== DELETE REQUESTS */
 
-            workoutService.RemoveWorkout(workout);
+        [HttpDelete("{workoutId}"), CustomAuthorize]
+        public async Task<IActionResult> RemoveWorkoutByIdAsync(Guid workoutId)
+        {
+            await workoutService.RemoveWorkoutByIdAsync(HttpContext, workoutId);
 
-            return Ok();
+            return NoContent();
         }
     }
 }

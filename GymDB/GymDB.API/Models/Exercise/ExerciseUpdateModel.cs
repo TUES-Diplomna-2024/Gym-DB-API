@@ -1,4 +1,4 @@
-﻿using GymDB.API.Data.ValidationAttributes;
+﻿using GymDB.API.Data.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace GymDB.API.Models.Exercise
@@ -13,12 +13,14 @@ namespace GymDB.API.Models.Exercise
 
         public string MuscleGroups { get; set; }
 
-        [ExerciseType]
-        public string Type { get; set; }
+        public ExerciseType Type { get; set; }
 
-        [ExerciseDifficulty]
-        public string Difficulty { get; set; }
+        public ExerciseDifficulty Difficulty { get; set; }
 
         public string? Equipment { get; set; }
+
+        public List<Guid>? ImagesToBeRemoved { get; set; }
+
+        public List<IFormFile>? ImagesToBeAdded { get; set; }
     }
 }

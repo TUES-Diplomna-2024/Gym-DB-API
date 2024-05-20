@@ -1,29 +1,29 @@
-﻿using GymDB.API.Attributes;
-using GymDB.API.Data;
-using GymDB.API.Services.Interfaces;
+﻿using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Net;
-using System.Text;
+using Microsoft.Extensions.Options;
+using GymDB.API.Attributes;
+using GymDB.API.Services.Interfaces;
+using GymDB.API.Exceptions;
+using GymDB.API.Data.Settings;
 
 namespace GymDB.API.Middlewares
 {
     public class AccessTokenMiddleware
     {
         private readonly RequestDelegate next;
-        private readonly ApplicationSettings settings;
+        private readonly JwtSettings jwtSettings;
         private readonly TokenValidationParameters validParams;
 
-        public AccessTokenMiddleware(RequestDelegate next, IConfiguration config)
+        public AccessTokenMiddleware(RequestDelegate next, IOptions<JwtSettings> settings)
         {
             this.next = next;
-            settings = new ApplicationSettings(config);
+            jwtSettings = settings.Value;
 
             validParams = new TokenValidationParameters
             {
-                ValidIssuer = settings.JwtSettings.Issuer,
-                ValidAudience = settings.JwtSettings.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtSettings.ServerSecretKey)),
+                ValidIssuer = jwtSettings.Issuer,
+                ValidAudience = jwtSettings.Audience,
+                IssuerSigningKey = jwtSettings.GetSymmetricSecurityKey(),
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 ValidateIssuerSigningKey = true,
@@ -45,8 +45,7 @@ namespace GymDB.API.Middlewares
 
             if (string.IsNullOrEmpty(auth) || !auth.StartsWith("Bearer "))
             {
-                Error(context, HttpStatusCode.Unauthorized, "Invalid or missing access token!");
-                return;
+                throw new UnauthorizedException("Invalid or missing access token!");
             }
 
             string token = auth.Substring("Bearer ".Length).Trim();
@@ -63,31 +62,32 @@ namespace GymDB.API.Middlewares
 
                 if (!Guid.TryParse(userIdValue, out userId) || roleValue.IsNullOrEmpty())
                 {
-                    Error(context, HttpStatusCode.Unauthorized, "Invalid or empty 'userId' or 'role' claims in access token!");
-                    return;
+                    throw new UnauthorizedException("Invalid or empty 'userId' or 'role' claims in access token!");
                 }
 
-                if (userService.GetUserById(userId) == null)
+                if (!await userService.IsUserWithIdExistAsync(userId))
                 {
-                    Error(context, HttpStatusCode.Unauthorized, "The current user doesn't exists!");
-                    return;
+                    throw new UnauthorizedException("The current user doesn't exists!");
                 }
 
                 if (endpointAuth.Roles != null && !endpointAuth.Roles.Contains(roleValue!))
                 {
-                    Error(context, HttpStatusCode.Forbidden, "You are not authorized to access this endpoint!");
-                    return;
+                    throw new ForbiddenException("You are not authorized to access this endpoint!");
                 }
 
                 context.User = claimsPrincipal;
-
-                await next(context);  // Call the next delegate/middleware in the pipeline.
+            }
+            catch (HttpException)
+            {
+                throw;
             }
             catch
             {
-                Error(context, HttpStatusCode.Unauthorized, "Invalid access token!");
-                return;
+                throw new UnauthorizedException("Invalid access token!");
             }
+
+            // Call the next delegate/middleware in the pipeline.
+            await next(context);
         }
 
         private CustomAuthorizeAttribute? GetEndpointAuthorization(HttpContext context)
@@ -98,26 +98,11 @@ namespace GymDB.API.Middlewares
 
             return authorizeAttribute;
         }
-
-        private void Error(HttpContext context, HttpStatusCode statusCode, string errorMessage)
-        {
-            context.Response.OnStarting((state) =>
-            {
-                var context2 = (HttpContext)state;
-
-                context2.Response.ContentType = "application/json";
-                context2.Response.StatusCode = (int)statusCode;
-
-                context2.Response.WriteAsync(errorMessage);
-
-                return Task.CompletedTask;
-            }, context);
-        }
     }
 
     public static class AccessTokenMiddlewareExtensions
     {
-        public static IApplicationBuilder UseAccessToken(this IApplicationBuilder app)
+        public static IApplicationBuilder UseAccessTokens(this IApplicationBuilder app)
         {
             return app.UseMiddleware<AccessTokenMiddleware>();
         }
